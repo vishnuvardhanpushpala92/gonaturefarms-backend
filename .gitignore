@@ -6,3 +6,5 @@ target/
 uploads/
 .env
 *.log
+backend.log
+.DS_Store
