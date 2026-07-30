@@ -4,15 +4,23 @@ services:
     runtime: docker
     plan: free
     envVars:
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: gonaturefarms-db
-          property: connectionString
-      - key: DATABASE_USERNAME
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: gonaturefarms-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: gonaturefarms-db
+          property: databaseName
+      - key: DB_USER
         fromDatabase:
           name: gonaturefarms-db
           property: user
-      - key: DATABASE_PASSWORD
+      - key: DB_PASSWORD
         fromDatabase:
           name: gonaturefarms-db
           property: password

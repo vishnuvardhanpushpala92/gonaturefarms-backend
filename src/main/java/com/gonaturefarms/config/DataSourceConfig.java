@@ -24,18 +24,41 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
+        // Read individual database connection properties from environment variables
+        String dbHost = System.getenv("DB_HOST");
+        String dbPort = System.getenv("DB_PORT");
+        String dbName = System.getenv("DB_NAME");
+        String dbUser = System.getenv("DB_USER");
+        String dbPassword = System.getenv("DB_PASSWORD");
+        
+        // Check if we have all required environment variables (Render deployment)
+        if (dbHost != null && !dbHost.isEmpty() && 
+            dbPort != null && !dbPort.isEmpty() && 
+            dbName != null && !dbName.isEmpty() && 
+            dbUser != null && !dbUser.isEmpty() && 
+            dbPassword != null && !dbPassword.isEmpty()) {
+            
+            // Build JDBC URL from individual properties
+            String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+            
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(jdbcUrl);
+            config.setUsername(dbUser);
+            config.setPassword(dbPassword);
+            config.setDriverClassName("org.postgresql.Driver");
+            
+            return new HikariDataSource(config);
+        }
+        
+        // Fallback: Try DATABASE_URL format (for compatibility with other setups)
         String databaseUrl = System.getenv("DATABASE_URL");
-        String username = System.getenv("DATABASE_USERNAME");
-        String password = System.getenv("DATABASE_PASSWORD");
-        
-        // Check if running on Render
-        boolean isRender = System.getenv("RENDER") != null || 
-                          System.getenv("RENDER_SERVICE_NAME") != null;
-        
         if (databaseUrl != null && !databaseUrl.isEmpty()) {
             try {
-                // Parse Render's DATABASE_URL format: postgresql://user:password@host:port/database
+                // Parse DATABASE_URL format: postgresql://user:password@host:port/database
                 URI uri = new URI(databaseUrl);
+                
+                String username = dbUser;
+                String password = dbPassword;
                 
                 // Extract username and password from URL if not provided separately
                 if ((username == null || username.isEmpty()) && uri.getUserInfo() != null) {
@@ -63,24 +86,19 @@ public class DataSourceConfig {
             } catch (URISyntaxException e) {
                 throw new RuntimeException("Invalid DATABASE_URL format: " + databaseUrl, e);
             }
-        } else {
-            // On Render, DATABASE_URL must be set. If not, throw an error.
-            if (isRender) {
-                throw new RuntimeException("DATABASE_URL environment variable is not set on Render. Please check render.yaml configuration.");
-            }
-            
-            // For local development, use localhost fallback
-            String url = "jdbc:postgresql://localhost:5432/gonaturefarms";
-            String user = System.getenv().getOrDefault("DATABASE_USERNAME", "postgres");
-            String pass = System.getenv().getOrDefault("DATABASE_PASSWORD", "918252");
-            
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(url);
-            config.setUsername(user);
-            config.setPassword(pass);
-            config.setDriverClassName("org.postgresql.Driver");
-            
-            return new HikariDataSource(config);
         }
+        
+        // For local development, use localhost fallback
+        String url = "jdbc:postgresql://localhost:5432/gonaturefarms";
+        String user = System.getenv().getOrDefault("DB_USER", "postgres");
+        String pass = System.getenv().getOrDefault("DB_PASSWORD", "918252");
+        
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setUsername(user);
+        config.setPassword(pass);
+        config.setDriverClassName("org.postgresql.Driver");
+        
+        return new HikariDataSource(config);
     }
 }
