@@ -10,6 +10,14 @@ services:
         fromDatabase:
           name: gonaturefarms-db
           property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: gonaturefarms-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: gonaturefarms-db
+          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
