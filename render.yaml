@@ -6,15 +6,15 @@ services:
     envVars:
       - key: PORT
         value: 8081
-      - key: DATABASE_URL
+      - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: gonaturefarms-db
           property: connectionString
-      - key: DATABASE_USERNAME
+      - key: SPRING_DATASOURCE_USERNAME
         fromDatabase:
           name: gonaturefarms-db
           property: user
-      - key: DATABASE_PASSWORD
+      - key: SPRING_DATASOURCE_PASSWORD
         fromDatabase:
           name: gonaturefarms-db
           property: password
