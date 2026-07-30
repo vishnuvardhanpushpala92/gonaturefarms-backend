@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -21,6 +23,8 @@ import com.zaxxer.hikari.HikariDataSource;
 @Configuration
 public class DataSourceConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(DataSourceConfig.class);
+
     @Bean
     @Primary
     public DataSource dataSource() {
@@ -31,6 +35,13 @@ public class DataSourceConfig {
         String dbUser = System.getenv("DB_USER");
         String dbPassword = System.getenv("DB_PASSWORD");
         
+        log.info("Initializing DataSource with environment variables:");
+        log.info("DB_HOST: {}", dbHost != null ? "***" : "null");
+        log.info("DB_PORT: {}", dbPort != null ? "***" : "null");
+        log.info("DB_NAME: {}", dbName != null ? "***" : "null");
+        log.info("DB_USER: {}", dbUser != null ? "***" : "null");
+        log.info("DB_PASSWORD: {}", dbPassword != null ? "***" : "null");
+        
         // Check if we have all required environment variables (Render deployment)
         if (dbHost != null && !dbHost.isEmpty() && 
             dbPort != null && !dbPort.isEmpty() && 
@@ -40,6 +51,7 @@ public class DataSourceConfig {
             
             // Build JDBC URL from individual properties
             String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+            log.info("Using JDBC URL: {}", jdbcUrl.replace(dbPassword, "***"));
             
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(jdbcUrl);
@@ -52,6 +64,8 @@ public class DataSourceConfig {
         
         // Fallback: Try DATABASE_URL format (for compatibility with other setups)
         String databaseUrl = System.getenv("DATABASE_URL");
+        log.info("DATABASE_URL: {}", databaseUrl != null ? "***" : "null");
+        
         if (databaseUrl != null && !databaseUrl.isEmpty()) {
             try {
                 // Parse DATABASE_URL format: postgresql://user:password@host:port/database
@@ -75,6 +89,8 @@ public class DataSourceConfig {
                                  (uri.getPort() != -1 ? ":" + uri.getPort() : "") + 
                                  uri.getPath();
                 
+                log.info("Using JDBC URL from DATABASE_URL: {}", jdbcUrl.replace(password, "***"));
+                
                 HikariConfig config = new HikariConfig();
                 config.setJdbcUrl(jdbcUrl);
                 config.setUsername(username);
@@ -88,10 +104,26 @@ public class DataSourceConfig {
             }
         }
         
+        // Check if running on Render - if so, fail fast instead of falling back to localhost
+        boolean isRender = System.getenv("RENDER") != null || 
+                          System.getenv("RENDER_SERVICE_NAME") != null ||
+                          System.getenv("RENDER_EXTERNAL_URL") != null;
+        
+        if (isRender) {
+            String errorMsg = "Running on Render but no database environment variables found. " +
+                              "Required: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD (or DATABASE_URL). " +
+                              "Please check render.yaml configuration.";
+            log.error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
+        
         // For local development, use localhost fallback
+        log.warn("No database environment variables found, using localhost fallback for local development");
         String url = "jdbc:postgresql://localhost:5432/gonaturefarms";
         String user = System.getenv().getOrDefault("DB_USER", "postgres");
         String pass = System.getenv().getOrDefault("DB_PASSWORD", "918252");
+        
+        log.info("Using local development JDBC URL: {}", url);
         
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
