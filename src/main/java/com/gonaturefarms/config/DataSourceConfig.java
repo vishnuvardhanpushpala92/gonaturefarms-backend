@@ -1,14 +1,16 @@
 package com.gonaturefarms.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import javax.sql.DataSource;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import javax.sql.DataSource;
-import java.net.URI;
-import java.net.URISyntaxException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * DataSource configuration to handle Render's DATABASE_URL format.
@@ -25,6 +27,10 @@ public class DataSourceConfig {
         String databaseUrl = System.getenv("DATABASE_URL");
         String username = System.getenv("DATABASE_USERNAME");
         String password = System.getenv("DATABASE_PASSWORD");
+        
+        // Check if running on Render
+        boolean isRender = System.getenv("RENDER") != null || 
+                          System.getenv("RENDER_SERVICE_NAME") != null;
         
         if (databaseUrl != null && !databaseUrl.isEmpty()) {
             try {
@@ -58,8 +64,13 @@ public class DataSourceConfig {
                 throw new RuntimeException("Invalid DATABASE_URL format: " + databaseUrl, e);
             }
         } else {
-            // Fallback to individual environment variables or defaults
-            String url = System.getenv().getOrDefault("DATABASE_URL", "jdbc:postgresql://localhost:5432/gonaturefarms");
+            // On Render, DATABASE_URL must be set. If not, throw an error.
+            if (isRender) {
+                throw new RuntimeException("DATABASE_URL environment variable is not set on Render. Please check render.yaml configuration.");
+            }
+            
+            // For local development, use localhost fallback
+            String url = "jdbc:postgresql://localhost:5432/gonaturefarms";
             String user = System.getenv().getOrDefault("DATABASE_USERNAME", "postgres");
             String pass = System.getenv().getOrDefault("DATABASE_PASSWORD", "918252");
             
