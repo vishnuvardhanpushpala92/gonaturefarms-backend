@@ -51,7 +51,7 @@ public class DataSourceConfig {
             
             // Build JDBC URL from individual properties
             String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
-            log.info("Using JDBC URL: {}", jdbcUrl.replace(dbPassword, "***"));
+            log.info("Using JDBC URL: jdbc:postgresql://{}:{}/{}", dbHost, dbPort, dbName);
             
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(jdbcUrl);
@@ -89,7 +89,10 @@ public class DataSourceConfig {
                                  (uri.getPort() != -1 ? ":" + uri.getPort() : "") + 
                                  uri.getPath();
                 
-                log.info("Using JDBC URL from DATABASE_URL: {}", jdbcUrl.replace(password, "***"));
+                log.info("Using JDBC URL from DATABASE_URL: jdbc:postgresql://{}:{}{}", 
+                         uri.getHost(), 
+                         uri.getPort() != -1 ? ":" + uri.getPort() : "", 
+                         uri.getPath());
                 
                 HikariConfig config = new HikariConfig();
                 config.setJdbcUrl(jdbcUrl);
