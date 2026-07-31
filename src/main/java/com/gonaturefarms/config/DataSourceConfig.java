@@ -35,26 +35,23 @@ public class DataSourceConfig {
         String dbUser = System.getenv("DB_USER");
         String dbPassword = System.getenv("DB_PASSWORD");
         
+        // First, try DATABASE_URL (Render provides this in JDBC format: jdbc:postgresql://...)
+        String databaseUrl = System.getenv("DATABASE_URL");
+        
         log.info("Initializing DataSource with environment variables:");
+        log.info("DATABASE_URL: {}", databaseUrl != null ? "***" : "null");
         log.info("DB_HOST: {}", dbHost != null ? "***" : "null");
         log.info("DB_PORT: {}", dbPort != null ? "***" : "null");
         log.info("DB_NAME: {}", dbName != null ? "***" : "null");
         log.info("DB_USER: {}", dbUser != null ? "***" : "null");
         log.info("DB_PASSWORD: {}", dbPassword != null ? "***" : "null");
         
-        // Check if we have all required environment variables (Render deployment)
-        if (dbHost != null && !dbHost.isEmpty() && 
-            dbPort != null && !dbPort.isEmpty() && 
-            dbName != null && !dbName.isEmpty() && 
-            dbUser != null && !dbUser.isEmpty() && 
-            dbPassword != null && !dbPassword.isEmpty()) {
-            
-            // Build JDBC URL from individual properties
-            String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
-            log.info("Using JDBC URL: jdbc:postgresql://{}:{}/{}", dbHost, dbPort, dbName);
+        // If DATABASE_URL is provided and starts with jdbc:, use it directly
+        if (databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("jdbc:postgresql://")) {
+            log.info("Using JDBC-format DATABASE_URL directly");
             
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(jdbcUrl);
+            config.setJdbcUrl(databaseUrl);
             config.setUsername(dbUser);
             config.setPassword(dbPassword);
             config.setDriverClassName("org.postgresql.Driver");
@@ -62,13 +59,9 @@ public class DataSourceConfig {
             return new HikariDataSource(config);
         }
         
-        // Fallback: Try DATABASE_URL format (for compatibility with other setups)
-        String databaseUrl = System.getenv("DATABASE_URL");
-        log.info("DATABASE_URL: {}", databaseUrl != null ? "***" : "null");
-        
-        if (databaseUrl != null && !databaseUrl.isEmpty()) {
+        // If DATABASE_URL is in postgresql:// format, convert to JDBC format
+        if (databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("postgresql://")) {
             try {
-                // Parse DATABASE_URL format: postgresql://user:password@host:port/database
                 URI uri = new URI(databaseUrl);
                 
                 String username = dbUser;
@@ -89,7 +82,7 @@ public class DataSourceConfig {
                                  (uri.getPort() != -1 ? ":" + uri.getPort() : "") + 
                                  uri.getPath();
                 
-                log.info("Using JDBC URL from DATABASE_URL: jdbc:postgresql://{}:{}{}", 
+                log.info("Converted postgresql:// to JDBC URL: jdbc:postgresql://{}:{}{}", 
                          uri.getHost(), 
                          uri.getPort() != -1 ? ":" + uri.getPort() : "", 
                          uri.getPath());
@@ -107,14 +100,35 @@ public class DataSourceConfig {
             }
         }
         
+        // Check if we have all required individual environment variables (Render deployment)
+        if (dbHost != null && !dbHost.isEmpty() && 
+            dbPort != null && !dbPort.isEmpty() && 
+            dbName != null && !dbName.isEmpty() && 
+            dbUser != null && !dbUser.isEmpty() && 
+            dbPassword != null && !dbPassword.isEmpty()) {
+            
+            // Build JDBC URL from individual properties
+            String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+            log.info("Using JDBC URL from individual DB_* variables: jdbc:postgresql://{}:{}/{}", dbHost, dbPort, dbName);
+            
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(jdbcUrl);
+            config.setUsername(dbUser);
+            config.setPassword(dbPassword);
+            config.setDriverClassName("org.postgresql.Driver");
+            
+            return new HikariDataSource(config);
+        }
+        
         // Check if running on Render - if so, fail fast instead of falling back to localhost
         boolean isRender = System.getenv("RENDER") != null || 
                           System.getenv("RENDER_SERVICE_NAME") != null ||
                           System.getenv("RENDER_EXTERNAL_URL") != null;
         
         if (isRender) {
-            String errorMsg = "Running on Render but no database environment variables found. " +
-                              "Required: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD (or DATABASE_URL). " +
+            String errorMsg = "Running on Render but no valid database configuration found. " +
+                              "Required: DATABASE_URL (jdbc:postgresql:// or postgresql:// format) " +
+                              "or individual DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD. " +
                               "Please check render.yaml configuration.";
             log.error(errorMsg);
             throw new RuntimeException(errorMsg);
