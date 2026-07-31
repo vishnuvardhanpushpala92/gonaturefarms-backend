@@ -15,10 +15,13 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 /**
- * DataSource configuration to handle Render's DATABASE_URL format.
+ * DataSource configuration to handle Render and Railway PostgreSQL databases.
+ * 
  * Render provides DATABASE_URL in format: postgresql://user:password@host:port/database
+ * Railway provides PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD environment variables
+ * 
  * Spring Boot expects JDBC URL format: jdbc:postgresql://host:port/database
- * This configuration parses the Render URL and converts it to JDBC format.
+ * This configuration parses the platform-specific formats and converts to JDBC format.
  */
 @Configuration
 public class DataSourceConfig {
@@ -28,44 +31,67 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        // Read individual database connection properties from environment variables
+        // Detect if running on production platform
+        boolean isRender = System.getenv("RENDER") != null || 
+                          System.getenv("RENDER_SERVICE_NAME") != null ||
+                          System.getenv("RENDER_EXTERNAL_URL") != null;
+        
+        boolean isRailway = System.getenv("RAILWAY_ENVIRONMENT") != null || 
+                           System.getenv("RAILWAY_SERVICE_NAME") != null ||
+                           System.getenv("RAILWAY_PROJECT_NAME") != null;
+        
+        boolean isProduction = isRender || isRailway;
+        
+        log.info("Environment Detection - Render: {}, Railway: {}, Production: {}", isRender, isRailway, isProduction);
+        
+        // Read Render/Railway database connection properties
+        String databaseUrl = System.getenv("DATABASE_URL");
         String dbHost = System.getenv("DB_HOST");
         String dbPort = System.getenv("DB_PORT");
         String dbName = System.getenv("DB_NAME");
         String dbUser = System.getenv("DB_USER");
         String dbPassword = System.getenv("DB_PASSWORD");
         
-        // First, try DATABASE_URL (Render provides this in JDBC format: jdbc:postgresql://...)
-        String databaseUrl = System.getenv("DATABASE_URL");
+        // Read Railway-specific PostgreSQL environment variables
+        String pgHost = System.getenv("PGHOST");
+        String pgPort = System.getenv("PGPORT");
+        String pgDatabase = System.getenv("PGDATABASE");
+        String pgUser = System.getenv("PGUSER");
+        String pgPassword = System.getenv("PGPASSWORD");
         
-        log.info("Initializing DataSource with environment variables:");
+        log.info("Environment Variables:");
         log.info("DATABASE_URL: {}", databaseUrl != null ? "***" : "null");
         log.info("DB_HOST: {}", dbHost != null ? "***" : "null");
         log.info("DB_PORT: {}", dbPort != null ? "***" : "null");
         log.info("DB_NAME: {}", dbName != null ? "***" : "null");
         log.info("DB_USER: {}", dbUser != null ? "***" : "null");
         log.info("DB_PASSWORD: {}", dbPassword != null ? "***" : "null");
+        log.info("PGHOST: {}", pgHost != null ? "***" : "null");
+        log.info("PGPORT: {}", pgPort != null ? "***" : "null");
+        log.info("PGDATABASE: {}", pgDatabase != null ? "***" : "null");
+        log.info("PGUSER: {}", pgUser != null ? "***" : "null");
+        log.info("PGPASSWORD: {}", pgPassword != null ? "***" : "null");
         
-        // If DATABASE_URL is provided and starts with jdbc:, use it directly
+        // Priority 1: DATABASE_URL in JDBC format (Render provides this)
         if (databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("jdbc:postgresql://")) {
             log.info("Using JDBC-format DATABASE_URL directly");
             
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(databaseUrl);
-            config.setUsername(dbUser);
-            config.setPassword(dbPassword);
+            config.setUsername(dbUser != null ? dbUser : pgUser);
+            config.setPassword(dbPassword != null ? dbPassword : pgPassword);
             config.setDriverClassName("org.postgresql.Driver");
             
             return new HikariDataSource(config);
         }
         
-        // If DATABASE_URL is in postgresql:// format, convert to JDBC format
+        // Priority 2: DATABASE_URL in postgresql:// format (Render)
         if (databaseUrl != null && !databaseUrl.isEmpty() && databaseUrl.startsWith("postgresql://")) {
             try {
                 URI uri = new URI(databaseUrl);
                 
-                String username = dbUser;
-                String password = dbPassword;
+                String username = dbUser != null ? dbUser : pgUser;
+                String password = dbPassword != null ? dbPassword : pgPassword;
                 
                 // Extract username and password from URL if not provided separately
                 if ((username == null || username.isEmpty()) && uri.getUserInfo() != null) {
@@ -100,16 +126,34 @@ public class DataSourceConfig {
             }
         }
         
-        // Check if we have all required individual environment variables (Render deployment)
+        // Priority 3: Railway PostgreSQL environment variables (PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD)
+        if (pgHost != null && !pgHost.isEmpty() && 
+            pgPort != null && !pgPort.isEmpty() && 
+            pgDatabase != null && !pgDatabase.isEmpty() && 
+            pgUser != null && !pgUser.isEmpty() && 
+            pgPassword != null && !pgPassword.isEmpty()) {
+            
+            String jdbcUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDatabase;
+            log.info("Using Railway PostgreSQL JDBC URL: jdbc:postgresql://{}:{}/{}", pgHost, pgPort, pgDatabase);
+            
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(jdbcUrl);
+            config.setUsername(pgUser);
+            config.setPassword(pgPassword);
+            config.setDriverClassName("org.postgresql.Driver");
+            
+            return new HikariDataSource(config);
+        }
+        
+        // Priority 4: Individual DB_* variables (Render fallback)
         if (dbHost != null && !dbHost.isEmpty() && 
             dbPort != null && !dbPort.isEmpty() && 
             dbName != null && !dbName.isEmpty() && 
             dbUser != null && !dbUser.isEmpty() && 
             dbPassword != null && !dbPassword.isEmpty()) {
             
-            // Build JDBC URL from individual properties
             String jdbcUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
-            log.info("Using JDBC URL from individual DB_* variables: jdbc:postgresql://{}:{}/{}", dbHost, dbPort, dbName);
+            log.info("Using individual DB_* JDBC URL: jdbc:postgresql://{}:{}/{}", dbHost, dbPort, dbName);
             
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(jdbcUrl);
@@ -120,22 +164,19 @@ public class DataSourceConfig {
             return new HikariDataSource(config);
         }
         
-        // Check if running on Render - if so, fail fast instead of falling back to localhost
-        boolean isRender = System.getenv("RENDER") != null || 
-                          System.getenv("RENDER_SERVICE_NAME") != null ||
-                          System.getenv("RENDER_EXTERNAL_URL") != null;
-        
-        if (isRender) {
-            String errorMsg = "Running on Render but no valid database configuration found. " +
+        // Production: Fail fast if no database configuration found
+        if (isProduction) {
+            String errorMsg = "Running on production (" + (isRender ? "Render" : "Railway") + ") but no valid database configuration found. " +
                               "Required: DATABASE_URL (jdbc:postgresql:// or postgresql:// format) " +
-                              "or individual DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD. " +
-                              "Please check render.yaml configuration.";
+                              "or Railway: PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD " +
+                              "or Render: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD. " +
+                              "Please check your platform configuration.";
             log.error(errorMsg);
             throw new RuntimeException(errorMsg);
         }
         
-        // For local development, use localhost fallback
-        log.warn("No database environment variables found, using localhost fallback for local development");
+        // Local development only: Use localhost fallback
+        log.warn("No database environment variables found, using localhost fallback for local development only");
         String url = "jdbc:postgresql://localhost:5432/gonaturefarms";
         String user = System.getenv().getOrDefault("DB_USER", "postgres");
         String pass = System.getenv().getOrDefault("DB_PASSWORD", "918252");
