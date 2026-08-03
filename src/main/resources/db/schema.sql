@@ -88,14 +88,11 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 
-INSERT INTO products (id, name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at) VALUES
-(1, 'Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP),
-(2, 'Fresh A2 Milk', 'Farm-fresh A2 milk, unprocessed and delivered same day.', 80, 95, 0, '0401', 'Dairy', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400', 'current', 100, CURRENT_TIMESTAMP),
-(3, 'Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and antioxidants.', 428, 600, 5, '0409', 'Natural', 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400', 'current', 100, CURRENT_TIMESTAMP),
-(4, 'Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP)
-ON CONFLICT (id) DO NOTHING;
--- Keep the sequence in sync after explicit-id inserts above
-SELECT setval(pg_get_serial_sequence('products','id'), (SELECT MAX(id) FROM products));
+INSERT INTO products (name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at) VALUES
+('Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP),
+('Fresh A2 Milk', 'Farm-fresh A2 milk, unprocessed and delivered same day.', 80, 95, 0, '0401', 'Dairy', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400', 'current', 100, CURRENT_TIMESTAMP),
+('Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and antioxidants.', 428, 600, 5, '0409', 'Natural', 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400', 'current', 100, CURRENT_TIMESTAMP),
+('Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP);
 
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
@@ -241,12 +238,10 @@ CREATE TABLE IF NOT EXISTS slides (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO slides (id, image_url, caption, sub_text, sort_order, created_at) VALUES
-(1, 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP),
-(2, 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1920&h=700&fit=crop', 'Farm Fresh Every Day', 'Pure · Natural · Chemical-Free', 2, CURRENT_TIMESTAMP),
-(3, 'https://images.unsplash.com/photo-1506484381205-f7945653044d?w=1920&h=700&fit=crop', 'Straight From the Farm', '100% Organic Certified', 3, CURRENT_TIMESTAMP)
-ON CONFLICT (id) DO NOTHING;
-SELECT setval(pg_get_serial_sequence('slides','id'), (SELECT MAX(id) FROM slides));
+INSERT INTO slides (image_url, caption, sub_text, sort_order, created_at) VALUES
+('https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP),
+('https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1920&h=700&fit=crop', 'Farm Fresh Every Day', 'Pure · Natural · Chemical-Free', 2, CURRENT_TIMESTAMP),
+('https://images.unsplash.com/photo-1506484381205-f7945653044d?w=1920&h=700&fit=crop', 'Straight From the Farm', '100% Organic Certified', 3, CURRENT_TIMESTAMP);
 
 -- ── FAQs ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS faqs (
