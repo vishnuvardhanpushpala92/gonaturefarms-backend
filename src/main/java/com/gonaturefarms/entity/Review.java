@@ -32,7 +32,7 @@ public class Review {
     private Long productId;
 
     @Column(nullable = false)
-    private Integer rating;
+    private Short rating;
 
     @Column(columnDefinition = "TEXT")
     private String comment;

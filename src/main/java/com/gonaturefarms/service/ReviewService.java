@@ -1,5 +1,14 @@
 package com.gonaturefarms.service;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.review.AdminReviewRequest;
 import com.gonaturefarms.dto.review.ReviewRequest;
@@ -8,14 +17,6 @@ import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.repository.ProductRepository;
 import com.gonaturefarms.repository.ReviewRepository;
 import com.gonaturefarms.repository.UserRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /** Business logic for product reviews and their admin moderation workflow. Mirrors routes/reviews.js. */
 @Service
@@ -67,7 +68,7 @@ public class ReviewService {
         }
         Review review = reviewRepository.findByUserIdAndProductId(userId, productId)
                 .orElseGet(() -> Review.builder().userId(userId).productId(productId).build());
-        review.setRating(req.getRating());
+        review.setRating(req.getRating().shortValue());
         review.setComment(req.getComment());
         review.setStatus(Review.ReviewStatus.pending);
         review.setCreatedAt(java.time.LocalDateTime.now());
@@ -126,7 +127,7 @@ public class ReviewService {
         Review review = Review.builder()
                 .userId(adminUserId)
                 .productId(productId)
-                .rating(req.getRating())
+                .rating(req.getRating().shortValue())
                 .comment(req.getComment())
                 .customerName(req.getUserName())
                 .status(Review.ReviewStatus.approved)
@@ -149,7 +150,7 @@ public class ReviewService {
         Review review = Review.builder()
                 .userId(adminUserId)
                 .productId(req.getProductId())
-                .rating(req.getRating())
+                .rating(req.getRating().shortValue())
                 .comment(req.getComment())
                 .customerName(req.getUserName())
                 .status(Review.ReviewStatus.approved)
@@ -166,7 +167,7 @@ public class ReviewService {
             if (req.getRating() < 1 || req.getRating() > 5) {
                 throw new ApiException("Rating must be 1-5");
             }
-            review.setRating(req.getRating());
+            review.setRating(req.getRating().shortValue());
         }
         if (req.getUserName() != null && !req.getUserName().isBlank()) {
             review.setCustomerName(req.getUserName());
