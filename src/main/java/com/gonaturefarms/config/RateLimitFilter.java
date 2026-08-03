@@ -40,11 +40,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                      @NonNull HttpServletResponse response,
                                      @NonNull FilterChain filterChain) throws ServletException, IOException {
-        // Temporarily disable rate limiting to isolate CORS issues
-        filterChain.doFilter(request, response);
-        return;
-        
-        /* Original rate limiting logic - temporarily disabled
         String path = request.getRequestURI();
         String method = request.getMethod();
         
@@ -54,7 +49,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
         
+        // Skip rate limiting for non-API requests
         if (!path.startsWith("/api/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+        // Skip rate limiting for public API endpoints
+        if (isPublicEndpoint(path, method)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -71,7 +73,34 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-        */
+    }
+    
+    private boolean isPublicEndpoint(String path, String method) {
+        // Public GET endpoints
+        if ("GET".equalsIgnoreCase(method)) {
+            return path.equals("/api/health") ||
+                   path.startsWith("/api/products") ||
+                   path.equals("/api/products/categories") ||
+                   path.equals("/api/videos") ||
+                   path.startsWith("/api/reviews") ||
+                   path.equals("/api/admin/settings/public") ||
+                   path.equals("/api/admin/slides") ||
+                   path.equals("/api/admin/faqs") ||
+                   path.equals("/api/admin/zones") ||
+                   path.equals("/api/admin/scroll-content");
+        }
+        
+        // Public POST endpoints
+        if ("POST".equalsIgnoreCase(method)) {
+            return path.equals("/api/auth/register") ||
+                   path.equals("/api/auth/login") ||
+                   path.equals("/api/auth/admin-login") ||
+                   path.equals("/api/orders") ||
+                   path.equals("/api/coupons/validate") ||
+                   path.equals("/api/support");
+        }
+        
+        return false;
     }
 
     private boolean exceeded(ConcurrentHashMap<String, Window> store, String key, int limit) {

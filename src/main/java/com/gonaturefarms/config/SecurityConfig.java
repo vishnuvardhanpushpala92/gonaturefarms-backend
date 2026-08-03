@@ -157,16 +157,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         if (frontendUrl == null || frontendUrl.isBlank() || "*".equals(frontendUrl)) {
-            // Reflect request origin when not explicitly configured, matching the Node app's
-            // `origin: process.env.FRONTEND_URL || true` behaviour (wildcard is invalid with credentials).
+            // Reflect request origin when not explicitly configured
             configuration.setAllowedOriginPatterns(List.of("*"));
+            configuration.setAllowCredentials(false);
         } else {
-            // Use allowedOriginPatterns for specific URLs to ensure proper CORS handling
-            configuration.setAllowedOriginPatterns(List.of(frontendUrl));
+            // Use specific origin for Railway frontend
+            configuration.setAllowedOrigins(List.of(frontendUrl));
+            configuration.setAllowCredentials(true);
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
