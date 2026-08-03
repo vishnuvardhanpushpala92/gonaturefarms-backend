@@ -1,8 +1,7 @@
 package com.gonaturefarms.config;
 
-import com.gonaturefarms.util.JsonUtil;
-import com.gonaturefarms.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +18,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.gonaturefarms.security.JwtAuthenticationFilter;
+import com.gonaturefarms.util.JsonUtil;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Central security configuration. Replaces:
@@ -41,10 +43,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final CorsFilter corsFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter, CorsFilter corsFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.corsFilter = corsFilter;
     }
 
     @Bean
@@ -63,6 +67,14 @@ public class SecurityConfig {
     @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
             RateLimitFilter filter) {
+        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<CorsFilter> disableCorsFilterAutoRegistration(
+            CorsFilter filter) {
         var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
@@ -89,6 +101,9 @@ public class SecurityConfig {
                     .authenticationEntryPoint(this::handleUnauthenticated)
                     .accessDeniedHandler(this::handleForbidden))
             .authorizeHttpRequests(auth -> auth
+                    // ── CORS preflight ─────────────────────────────────────────
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                     // ── Static frontend & health ──────────────────────────────
                     .requestMatchers("/", "/index.html", "/script.js", "/favicon.ico", "/uploads/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
@@ -98,7 +113,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
 
                     // ── Products (public reads, admin writes) ───────────────────
-                    .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/products/categories").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/products").authenticated()
                     .requestMatchers(HttpMethod.PUT, "/api/products/**").authenticated()
                     .requestMatchers(HttpMethod.DELETE, "/api/products/**").authenticated()
@@ -156,11 +171,13 @@ public class SecurityConfig {
             // `origin: process.env.FRONTEND_URL || true` behaviour (wildcard is invalid with credentials).
             configuration.setAllowedOriginPatterns(List.of("*"));
         } else {
-            configuration.setAllowedOrigins(List.of(frontendUrl));
+            // Use allowedOriginPatterns for specific URLs to ensure proper CORS handling
+            configuration.setAllowedOriginPatterns(List.of(frontendUrl));
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

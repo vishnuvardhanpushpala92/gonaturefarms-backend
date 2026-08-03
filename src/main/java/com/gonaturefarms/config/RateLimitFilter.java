@@ -41,6 +41,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                      @NonNull HttpServletResponse response,
                                      @NonNull FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        // Skip rate limiting for OPTIONS preflight requests (CORS)
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         if (!path.startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
