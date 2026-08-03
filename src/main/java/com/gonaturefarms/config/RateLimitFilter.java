@@ -40,6 +40,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                      @NonNull HttpServletResponse response,
                                      @NonNull FilterChain filterChain) throws ServletException, IOException {
+        // Temporarily disable rate limiting to isolate CORS issues
+        filterChain.doFilter(request, response);
+        return;
+        
+        /* Original rate limiting logic - temporarily disabled
         String path = request.getRequestURI();
         String method = request.getMethod();
         
@@ -66,6 +71,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+        */
     }
 
     private boolean exceeded(ConcurrentHashMap<String, Window> store, String key, int limit) {
