@@ -44,11 +44,10 @@ public class SecurityConfig {
     private String frontendUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final RateLimitFilter rateLimitFilter;
+    // private final RateLimitFilter rateLimitFilter; // Temporarily disabled
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -69,13 +68,13 @@ public class SecurityConfig {
         return registration;
     }
 
-    @Bean
-    public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
-            RateLimitFilter filter) {
-        org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
-        registration.setEnabled(false);
-        return registration;
-    }
+    // @Bean
+    // public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
+    //         RateLimitFilter filter) {
+    //     org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+    //     registration.setEnabled(false);
+    //     return registration;
+    // }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -154,8 +153,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/videos/**").authenticated()
 
                     .anyRequest().authenticated())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class); // Temporarily disabled
 
         return http.build();
     }
@@ -181,15 +180,17 @@ public class SecurityConfig {
         return source;
     }
 
-    private void handleUnauthenticated(jakarta.servlet.http.HttpServletRequest request,
+    @SuppressWarnings("unused")
+    private void handleUnauthenticated(jakarta.servlet.http.HttpServletRequest _request,
                                         HttpServletResponse response,
-                                        org.springframework.security.core.AuthenticationException authException) throws java.io.IOException {
+                                        org.springframework.security.core.AuthenticationException _authException) throws java.io.IOException {
         writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
     }
 
-    private void handleForbidden(jakarta.servlet.http.HttpServletRequest request,
+    @SuppressWarnings("unused")
+    private void handleForbidden(jakarta.servlet.http.HttpServletRequest _request,
                                   HttpServletResponse response,
-                                  org.springframework.security.access.AccessDeniedException accessDeniedException) throws java.io.IOException {
+                                  org.springframework.security.access.AccessDeniedException _accessDeniedException) throws java.io.IOException {
         writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
     }
 
