@@ -68,13 +68,21 @@ public class SecurityConfig {
         return registration;
     }
 
-    // @Bean
-    // public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
-    //         RateLimitFilter filter) {
-    //     org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
-    //     registration.setEnabled(false);
-    //     return registration;
-    // }
+    // RateLimitFilter is a @Component, so Spring Boot auto-registers it as a raw
+    // servlet filter on every request by default. The bean below was previously
+    // commented out while addFilterBefore(rateLimitFilter, ...) below was ALSO
+    // commented out — leaving RateLimitFilter running uncontrolled outside the
+    // Spring Security chain (same double-registration class of bug that
+    // disableJwtFilterAutoRegistration exists to prevent for the JWT filter).
+    // Re-enabled here so its state matches the "temporarily disabled" intent:
+    // fully inert until someone deliberately re-wires it with addFilterBefore.
+    @Bean
+    public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
+            RateLimitFilter filter) {
+        org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -167,8 +175,19 @@ public class SecurityConfig {
             configuration.setAllowedOriginPatterns(List.of("*"));
             configuration.setAllowCredentials(false);
         } else {
-            // Use specific origin for Railway frontend
-            configuration.setAllowedOrigins(List.of(frontendUrl));
+            // FRONTEND_URL supports a comma-separated list (e.g. Railway prod domain +
+            // a custom domain, or prod + a preview deploy) so one missing/extra origin
+            // doesn't take every client down. Each entry is trimmed and any trailing
+            // slash stripped, since Spring's origin match is an exact string comparison
+            // and a copy-pasted "https://app.example.com/" (trailing slash) will never
+            // match the browser's actual Origin header ("https://app.example.com"),
+            // silently producing a 403 on every cross-origin request.
+            List<String> origins = java.util.Arrays.stream(frontendUrl.split(","))
+                    .map(String::trim)
+                    .filter(o -> !o.isEmpty())
+                    .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+                    .toList();
+            configuration.setAllowedOrigins(origins);
             configuration.setAllowCredentials(true);
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

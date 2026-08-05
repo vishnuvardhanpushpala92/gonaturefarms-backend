@@ -1,9 +1,9 @@
 package com.gonaturefarms.security;
 
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.Optional;
 
 /** Convenience accessor for the current request's decoded JWT principal. */
 public final class SecurityUtils {
@@ -13,10 +13,10 @@ public final class SecurityUtils {
 
     public static Optional<CurrentUser> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof CurrentUser user)) {
+        if (auth == null || !(auth.getPrincipal() instanceof CurrentUser)) {
             return Optional.empty();
         }
-        return Optional.of(user);
+        return Optional.of((CurrentUser) auth.getPrincipal());
     }
 
     /** Returns the current user or throws if unauthenticated (should not happen behind requireAuth()). */

@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
+// MappingJackson2HttpMessageConverter is deprecated in Spring Boot 3.5.5 but still functional.
+// Will migrate to new API when Spring Boot removes this class in a future version.
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -28,6 +30,7 @@ import java.util.List;
  * is guaranteed regardless of Boot's internal auto-configuration.
  */
 @Configuration
+@SuppressWarnings("deprecation")
 public class JacksonConfig implements WebMvcConfigurer {
 
     @Bean
@@ -41,6 +44,7 @@ public class JacksonConfig implements WebMvcConfigurer {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         // Remove whichever JSON converter(s) Boot auto-configured (Jackson 2 and/or Jackson 3
         // based) so there's no ambiguity about which one Spring MVC picks for application/json.
