@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -55,9 +57,14 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<JwtAuthenticationFilter> disableJwtFilterAutoRegistration(
             JwtAuthenticationFilter filter) {
-        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        org.springframework.boot.web.servlet.FilterRegistrationBean<JwtAuthenticationFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }
@@ -65,7 +72,7 @@ public class SecurityConfig {
     @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
             RateLimitFilter filter) {
-        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
+        org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }
