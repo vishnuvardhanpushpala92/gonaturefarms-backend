@@ -7,8 +7,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <!-- Latest stable Spring Boot release as of July 2026 -->
-        <version>4.1.0</version>
+        <!-- Spring Boot 3.5.x for compatibility with current security configuration -->
+        <version>3.5.5</version>
         <relativePath/>
     </parent>
 
@@ -31,16 +31,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Boot 4 defaults to Jackson 3 (tools.jackson.*). This compatibility
-             module keeps the classic com.fasterxml.jackson.databind.ObjectMapper API
-             available, which SupportService uses to (de)serialize the dynamic,
-             admin-configurable support-ticket JSON payload, and which JacksonConfig
-             uses to explicitly wire Jackson 2 as the HTTP message converter (see
-             JacksonConfig for why this is done explicitly rather than left implicit). -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-jackson2</artifactId>
-        </dependency>
+        <!-- Jackson for JSON serialization -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>

@@ -20,15 +20,12 @@ import java.util.List;
  * global snake_case property naming strategy.
  * <p>
  * Why this is explicit rather than left to {@code spring.jackson.property-naming-strategy} in
- * application.properties: Spring Boot 4 defaults to Jackson 3 (package {@code tools.jackson.*})
- * for HTTP message conversion, which is a materially different engine from classic Jackson 2 and
- * is configured through different property keys. Since the entire frontend/backend contract in
- * this app depends on every controller consistently emitting/accepting snake_case JSON (to match
- * the original database column names the frontend already expects — see api/client.js on the
- * frontend), leaving that behavior to whichever engine Boot's auto-configuration happens to pick
- * is too risky. This class removes any JSON-capable converter Boot auto-configured and installs
- * one backed by an explicit, hand-built Jackson 2 ObjectMapper as the sole/primary JSON converter,
- * so the naming strategy is guaranteed regardless of Boot's internal Jackson 2 vs 3 wiring.
+ * application.properties: The entire frontend/backend contract in this app depends on every
+ * controller consistently emitting/accepting snake_case JSON (to match the original database
+ * column names the frontend already expects — see api/client.js on the frontend). This class
+ * removes any JSON-capable converter Boot auto-configured and installs one backed by an explicit,
+ * hand-built Jackson 2 ObjectMapper as the sole/primary JSON converter, so the naming strategy
+ * is guaranteed regardless of Boot's internal auto-configuration.
  */
 @Configuration
 public class JacksonConfig implements WebMvcConfigurer {
