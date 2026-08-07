@@ -1,20 +1,21 @@
 package com.gonaturefarms.security;
 
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Equivalent to middleware/auth.js's requireAuth logic, but applied globally as a
- * stateless filter: if a valid "Authorization: Bearer &lt;token&gt;" header is present,
+ * stateless filter: if a valid "Authorization: Bearer <token>" header is present,
  * the resulting CurrentUser is placed into the SecurityContext. Requests without a
  * token, or with an invalid one, simply proceed unauthenticated — endpoint-level
  * access rules (see SecurityConfig / @PreAuthorize) decide whether that's allowed.
@@ -26,6 +27,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // Skip JWT validation for auth endpoints (login, register, admin-login)
+        return path.startsWith("/api/auth/");
     }
 
     @Override
