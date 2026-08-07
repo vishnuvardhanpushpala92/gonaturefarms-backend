@@ -2,6 +2,7 @@ package com.gonaturefarms.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,6 +39,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
+
+    @Value("${app.frontend-url:*}")
+    private String frontendUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     // private final RateLimitFilter rateLimitFilter; // Temporarily disabled
@@ -166,9 +170,26 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Local development configuration - allow all origins
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowCredentials(false);
+        if (frontendUrl == null || frontendUrl.isBlank() || "*".equals(frontendUrl)) {
+            // Reflect request origin when not explicitly configured
+            configuration.setAllowedOriginPatterns(List.of("*"));
+            configuration.setAllowCredentials(false);
+        } else {
+            // FRONTEND_URL supports a comma-separated list (e.g. Netlify prod domain +
+            // local dev, or prod + a preview deploy) so one missing/extra origin
+            // doesn't take every client down. Each entry is trimmed and any trailing
+            // slash stripped, since Spring's origin match is an exact string comparison
+            // and a copy-pasted "https://app.example.com/" (trailing slash) will never
+            // match the browser's actual Origin header ("https://app.example.com"),
+            // silently producing a 403 on every cross-origin request.
+            List<String> origins = java.util.Arrays.stream(frontendUrl.split(","))
+                    .map(String::trim)
+                    .filter(o -> !o.isEmpty())
+                    .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+                    .toList();
+            configuration.setAllowedOrigins(origins);
+            configuration.setAllowCredentials(true);
+        }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setMaxAge(3600L);
