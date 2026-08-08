@@ -40,7 +40,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Value("${app.frontend-url:*}")
+    @Value("${app.frontend-url:https://gonaturefarms-frontend.netlify.app,http://localhost:5173}")
     private String frontendUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -87,7 +87,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(org.springframework.security.config.Customizer.withDefaults())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable()) // stateless JSON API secured by JWT, not cookies
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
