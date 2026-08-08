@@ -6,8 +6,6 @@
     "watchPatterns": ["src/**", "pom.xml"]
   },
   "deploy": {
-    "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
