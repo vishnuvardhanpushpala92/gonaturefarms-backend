@@ -1,13 +1,19 @@
 package com.gonaturefarms.controller;
 
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.gonaturefarms.dto.auth.AdminLoginRequest;
 import com.gonaturefarms.dto.auth.LoginRequest;
 import com.gonaturefarms.dto.auth.RegisterRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.AuthService;
+
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.*;
 
 /** REST controller for authentication. Mirrors routes/auth.js. */
 @RestController
