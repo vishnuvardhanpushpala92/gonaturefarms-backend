@@ -43,10 +43,16 @@ CREATE TABLE IF NOT EXISTS users (
   pincode       VARCHAR(10)  NULL,
   role          VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer','admin')),
   is_verified   BOOLEAN DEFAULT FALSE,
-  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  reset_code    VARCHAR(10) NULL,
+  reset_code_expires_at TIMESTAMP NULL
 );
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Add password reset columns for existing databases (ignore if already exists)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
 
 -- Default admin user (password: 918252) — CHANGE THIS PASSWORD AFTER FIRST LOGIN!
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)

@@ -1,8 +1,21 @@
 package com.gonaturefarms.service;
 
+import java.math.BigDecimal;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gonaturefarms.dto.auth.AdminLoginRequest;
+import com.gonaturefarms.dto.auth.ForgotPasswordRequest;
 import com.gonaturefarms.dto.auth.LoginRequest;
 import com.gonaturefarms.dto.auth.RegisterRequest;
+import com.gonaturefarms.dto.auth.ResetPasswordRequest;
 import com.gonaturefarms.dto.auth.UserSummary;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.User;
@@ -12,14 +25,6 @@ import com.gonaturefarms.repository.OrderRepository;
 import com.gonaturefarms.repository.UserRepository;
 import com.gonaturefarms.security.CurrentUser;
 import com.gonaturefarms.security.JwtService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Business logic for account registration, login, admin login, and the "/me" profile
@@ -31,6 +36,7 @@ import java.util.regex.Pattern;
 public class AuthService {
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\d{10}$");
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final DeliveryZoneRepository deliveryZoneRepository;
@@ -168,6 +174,67 @@ public class AuthService {
                         "total_orders", totalOrders,
                         "total_spent", totalSpent,
                         "delivered", delivered));
+    }
+
+    @Transactional
+    public ApiResponse forgotPassword(ForgotPasswordRequest req) {
+        if (isBlank(req.getIdentifier())) {
+            throw new ApiException("Phone or email is required");
+        }
+        String identifier = req.getIdentifier().trim();
+        User user = userRepository.findByPhoneOrEmail(identifier, identifier)
+                .orElse(null);
+
+        if (user == null) {
+            // For security, always return success even if user doesn't exist
+            return ApiResponse.ok("If an account exists with this phone/email, a reset code has been sent.");
+        }
+
+        // Generate 6-digit reset code
+        String resetCode = String.format("%06d", RANDOM.nextInt(1000000));
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(15);
+
+        user.setResetCode(resetCode);
+        user.setResetCodeExpiresAt(expiresAt);
+        userRepository.save(user);
+
+        // In production, send SMS/email with the reset code
+        // For now, return the code in response (for development only)
+        return ApiResponse.ok("Password reset code: " + resetCode + " (valid for 15 minutes)")
+                .with("code", resetCode);
+    }
+
+    @Transactional
+    public ApiResponse resetPassword(ResetPasswordRequest req) {
+        if (isBlank(req.getIdentifier()) || isBlank(req.getCode()) || isBlank(req.getNewPassword())) {
+            throw new ApiException("Identifier, code and new password are required");
+        }
+        if (req.getNewPassword().length() < 6) {
+            throw new ApiException("Password must be at least 6 characters");
+        }
+
+        String identifier = req.getIdentifier().trim();
+        User user = userRepository.findByPhoneOrEmail(identifier, identifier)
+                .orElseThrow(() -> new ApiException("Account not found"));
+
+        if (user.getResetCode() == null || user.getResetCodeExpiresAt() == null) {
+            throw new ApiException("No reset code requested. Please request a password reset first.");
+        }
+
+        if (LocalDateTime.now().isAfter(user.getResetCodeExpiresAt())) {
+            throw new ApiException("Reset code has expired. Please request a new one.");
+        }
+
+        if (!user.getResetCode().equals(req.getCode())) {
+            throw new ApiException("Invalid reset code");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
+        user.setResetCode(null);
+        user.setResetCodeExpiresAt(null);
+        userRepository.save(user);
+
+        return ApiResponse.ok("Password reset successfully. Please login with your new password.");
     }
 
     private UserSummary toSummary(User user) {

@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gonaturefarms.dto.auth.AdminLoginRequest;
+import com.gonaturefarms.dto.auth.ForgotPasswordRequest;
 import com.gonaturefarms.dto.auth.LoginRequest;
 import com.gonaturefarms.dto.auth.RegisterRequest;
+import com.gonaturefarms.dto.auth.ResetPasswordRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.AuthService;
@@ -44,5 +46,15 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse me() {
         return authService.me(SecurityUtils.requireCurrentUser());
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return authService.forgotPassword(request);
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return authService.resetPassword(request);
     }
 }
