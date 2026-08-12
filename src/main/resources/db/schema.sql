@@ -94,11 +94,30 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 
-INSERT INTO products (name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at) VALUES
-('Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP),
-('Fresh A2 Milk', 'Farm-fresh A2 milk, unprocessed and delivered same day.', 80, 95, 0, '0401', 'Dairy', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400', 'current', 100, CURRENT_TIMESTAMP),
-('Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and antioxidants.', 428, 600, 5, '0409', 'Natural', 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400', 'current', 100, CURRENT_TIMESTAMP),
-('Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP);
+-- Clean up duplicate products (keep the one with the smallest ID for each name)
+DELETE FROM products p1
+WHERE EXISTS (
+    SELECT 1 FROM products p2
+    WHERE p2.name = p1.name
+    AND p2.id < p1.id
+);
+
+-- Note: UNIQUE constraint is enforced at application level in ProductService.createProduct()
+-- to avoid schema migration issues on repeated runs
+
+-- Insert base products only if they don't already exist (idempotent)
+INSERT INTO products (name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at)
+SELECT 'Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Desi Ghee')
+UNION ALL
+SELECT 'Fresh A2 Milk', 'Farm-fresh A2 milk, unprocessed and delivered same day.', 80, 95, 0, '0401', 'Dairy', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh A2 Milk')
+UNION ALL
+SELECT 'Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and antioxidants.', 428, 600, 5, '0409', 'Natural', 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Natural Forest Honey')
+UNION ALL
+SELECT 'Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil');
 
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (

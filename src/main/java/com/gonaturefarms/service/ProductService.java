@@ -72,6 +72,15 @@ public class ProductService {
         if (req.getName() == null || req.getName().isBlank() || req.getPrice() == null) {
             throw new ApiException("Name and price are required");
         }
+        
+        // Check if product with same name already exists
+        boolean productExists = productRepository.findAll().stream()
+                .anyMatch(p -> p.getName().equalsIgnoreCase(req.getName()));
+        
+        if (productExists) {
+            throw new ApiException("Product with name '" + req.getName() + "' already exists");
+        }
+        
         Product product = Product.builder()
                 .name(req.getName())
                 .description(req.getDescription() == null ? "" : req.getDescription())
