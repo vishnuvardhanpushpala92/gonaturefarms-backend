@@ -263,10 +263,19 @@ CREATE TABLE IF NOT EXISTS slides (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO slides (image_url, caption, sub_text, sort_order, created_at) VALUES
-('https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP),
-('https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1920&h=700&fit=crop', 'Farm Fresh Every Day', 'Pure · Natural · Chemical-Free', 2, CURRENT_TIMESTAMP),
-('https://images.unsplash.com/photo-1506484381205-f7945653044d?w=1920&h=700&fit=crop', 'Straight From the Farm', '100% Organic Certified', 3, CURRENT_TIMESTAMP);
+-- Ensure at least one slide exists with ID 1 (idempotent)
+INSERT INTO slides (id, image_url, caption, sub_text, sort_order, created_at)
+SELECT 1, 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM slides WHERE id = 1)
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert additional slides (idempotent)
+INSERT INTO slides (image_url, caption, sub_text, sort_order, created_at)
+SELECT 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1920&h=700&fit=crop', 'Farm Fresh Every Day', 'Pure · Natural · Chemical-Free', 2, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM slides WHERE caption = 'Farm Fresh Every Day')
+UNION ALL
+SELECT 'https://images.unsplash.com/photo-1506484381205-f7945653044d?w=1920&h=700&fit=crop', 'Straight From the Farm', '100% Organic Certified', 3, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM slides WHERE caption = 'Straight From the Farm');
 
 -- ── FAQs ─────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS faqs (

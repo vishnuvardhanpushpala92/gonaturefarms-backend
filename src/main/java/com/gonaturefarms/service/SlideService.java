@@ -31,7 +31,7 @@ public class SlideService {
                 .imageUrl(req.getImageUrl())
                 .caption(req.getCaption() == null ? "" : req.getCaption())
                 .subText(req.getSubText() == null ? "" : req.getSubText())
-                .sortOrder(req.getSortOrder() == null ? 0 : req.getSortOrder())
+                .sortOrder(req.getSortOrder() != null ? req.getSortOrder() : Integer.valueOf(0))
                 .build();
         slide = slideRepository.save(slide);
         return ApiResponse.ok("Slide added").with("id", slide.getId());
@@ -50,7 +50,9 @@ public class SlideService {
 
     @Transactional
     public ApiResponse delete(Long id) {
-        slideRepository.deleteById(id);
+        Slide slide = slideRepository.findById(id)
+                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Slide not found"));
+        slideRepository.delete(slide);
         return ApiResponse.ok("Slide deleted");
     }
 }

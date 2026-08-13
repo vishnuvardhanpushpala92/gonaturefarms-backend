@@ -1,9 +1,12 @@
 package com.gonaturefarms.exception;
 
-import com.gonaturefarms.dto.common.ApiResponse;
-import jakarta.validation.ConstraintViolationException;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,7 +19,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.stream.Collectors;
+import com.gonaturefarms.dto.common.ApiResponse;
+
+import jakarta.validation.ConstraintViolationException;
 
 /**
  * Centralized exception handling for the whole API, equivalent to the Express
@@ -37,6 +42,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail(ex.getMessage()));
+    }
+
+    /** NoSuchElementException from Optional.orElseThrow() -> HTTP 404. */
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiResponse> handleNoSuchElement(NoSuchElementException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail("Resource not found"));
+    }
+
+    /** EmptyResultDataAccessException from deleteById() when entity doesn't exist -> HTTP 404. */
+    @ExceptionHandler(EmptyResultDataAccessException.class)
+    public ResponseEntity<ApiResponse> handleEmptyResult(EmptyResultDataAccessException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.fail("Resource not found"));
+    }
+
+    /** DataIntegrityViolationException (foreign key constraint, etc.) -> HTTP 409 Conflict. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation:", ex);
+        String message = "Cannot delete: resource is referenced by other records";
+        if (ex.getMessage() != null && ex.getMessage().contains("foreign key")) {
+            message = "Cannot delete: resource is referenced by other records";
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(message));
     }
 
     /** Bean Validation failures on @Valid request bodies -> HTTP 400 with the first violation message. */
