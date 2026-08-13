@@ -32,7 +32,7 @@ public class SlideService {
                 .imageUrl(req.getImageUrl())
                 .caption(req.getCaption() == null ? "" : req.getCaption())
                 .subText(req.getSubText() == null ? "" : req.getSubText())
-                .sortOrder(req.getSortOrder() == null ? 0 : req.getSortOrder())
+                .sortOrder(req.getSortOrder() != null ? req.getSortOrder().intValue() : 0)
                 .build();
         slide = slideRepository.save(slide);
         return ApiResponse.ok("Slide added").with("id", slide.getId());
