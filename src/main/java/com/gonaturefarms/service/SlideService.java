@@ -1,12 +1,13 @@
 package com.gonaturefarms.service;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gonaturefarms.dto.admin.SlideRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.Slide;
 import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.repository.SlideRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SlideService {
@@ -31,7 +32,7 @@ public class SlideService {
                 .imageUrl(req.getImageUrl())
                 .caption(req.getCaption() == null ? "" : req.getCaption())
                 .subText(req.getSubText() == null ? "" : req.getSubText())
-                .sortOrder(req.getSortOrder() != null ? req.getSortOrder() : Integer.valueOf(0))
+                .sortOrder(req.getSortOrder() == null ? 0 : req.getSortOrder())
                 .build();
         slide = slideRepository.save(slide);
         return ApiResponse.ok("Slide added").with("id", slide.getId());
