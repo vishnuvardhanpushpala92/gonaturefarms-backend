@@ -264,10 +264,10 @@ CREATE TABLE IF NOT EXISTS slides (
 );
 
 -- Ensure at least one slide exists with ID 1 (idempotent)
-INSERT INTO slides OVERRIDING SYSTEM VALUE (id, image_url, caption, sub_text, sort_order, created_at)
+INSERT INTO slides (id, image_url, caption, sub_text, sort_order, created_at)
+OVERRIDING SYSTEM VALUE
 SELECT 1, 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM slides WHERE id = 1)
-ON CONFLICT (id) DO NOTHING;
+WHERE NOT EXISTS (SELECT 1 FROM slides WHERE id = 1);
 
 -- Insert additional slides (idempotent)
 INSERT INTO slides (image_url, caption, sub_text, sort_order, created_at)
@@ -313,8 +313,7 @@ INSERT INTO delivery_zones (pincode, area, city, state, charge) VALUES
 ON CONFLICT (pincode) DO NOTHING;
 
 -- ── VIDEOS ───────────────────────────────────────────────────────
-DROP TABLE IF EXISTS videos;
-CREATE TABLE videos (
+CREATE TABLE IF NOT EXISTS videos (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   title      VARCHAR(200) NOT NULL,
   file_path  TEXT NOT NULL,
