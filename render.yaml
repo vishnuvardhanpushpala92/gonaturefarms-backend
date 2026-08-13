@@ -4,25 +4,23 @@ services:
     runtime: docker
     plan: free
     envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: production
-      - key: DB_HOST
+      - key: PGHOST
         fromDatabase:
           name: gonaturefarms-db
           property: host
-      - key: DB_PORT
+      - key: PGPORT
         fromDatabase:
           name: gonaturefarms-db
           property: port
-      - key: DB_NAME
+      - key: PGDATABASE
         fromDatabase:
           name: gonaturefarms-db
           property: databaseName
-      - key: DB_USER
+      - key: PGUSER
         fromDatabase:
           name: gonaturefarms-db
           property: user
-      - key: DB_PASSWORD
+      - key: PGPASSWORD
         fromDatabase:
           name: gonaturefarms-db
           property: password
