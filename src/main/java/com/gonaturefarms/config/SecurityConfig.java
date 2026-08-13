@@ -40,7 +40,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    @Value("${app.frontend-url:https://gonaturefarms-frontend.netlify.app,http://localhost:5173}")
+    @Value("${app.frontend-url:https://gonaturefarms-frontend-fvn3mbf18-gonatuefarms.vercel.app,http://localhost:5173,http://localhost:5174}")
     private String frontendUrl;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;

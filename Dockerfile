@@ -12,5 +12,5 @@ WORKDIR /app
 COPY --from=build /app/target/gonaturefarms-backend.jar app.jar
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
-EXPOSE 8081
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

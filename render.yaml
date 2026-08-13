@@ -4,10 +4,8 @@ services:
     runtime: docker
     plan: free
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gonaturefarms-db
-          property: connectionString
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
       - key: DB_HOST
         fromDatabase:
           name: gonaturefarms-db
@@ -33,14 +31,14 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        value: https://your-frontend-url.com
+        value: https://gonaturefarms-frontend-fvn3mbf18-gonatuefarms.vercel.app
       - key: ADMIN_DEFAULT_USER
-        value: admin
+        value: Vishnu
       - key: ADMIN_DEFAULT_PASS
-        generateValue: true
+        value: 918252
 
 databases:
   - name: gonaturefarms-db
-    databaseName: gonaturefarms
-    user: gonaturefarms
+    databaseName: gnf_y4iw
+    user: gnf_y4iw_user
     plan: free
