@@ -323,8 +323,7 @@ CREATE TABLE IF NOT EXISTS videos (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX idx_videos_enabled ON videos(enabled);
-
+CREATE INDEX IF NOT EXISTS idx_videos_enabled ON videos(enabled);
 -- ── SCROLL BLOCKS ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS scroll_blocks (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
