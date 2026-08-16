@@ -30,7 +30,8 @@ public class VideoService {
         return ApiResponse.ok().with("videos", videos);
     }
 
-    // FIXED: Added try-catch to prevent 500 crashes when files are missing or Hibernate hits issues
+    // FIXED: Added Transactional and try-catch to prevent 500 crashes
+    @Transactional(readOnly = true)
     public ApiResponse adminAll() {
         try {
             List<Video> videos = videoRepository.findAll();
@@ -38,7 +39,7 @@ public class VideoService {
         } catch (Exception e) {
             System.err.println("!!! CRITICAL ERROR IN Admin Videos Service !!!");
             e.printStackTrace();
-            // This ensures the frontend receives a proper message instead of crashing with 500
+            // This ensures the frontend gets a clear message instead of crashing with 500
             return ApiResponse.fail("Error loading admin videos: " + e.getMessage());
         }
     }
