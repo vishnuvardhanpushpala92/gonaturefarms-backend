@@ -29,7 +29,7 @@ public class AdminSettingsController {
 
     private static final Set<String> ALLOWED_KEYS = Set.of(
             "site_name", "tagline", "footer_text", "payment_instructions", "store_location",
-            "qr_code", "logo_url", "hdr_bg", "hdr_text", "ftr_bg", "ftr_text",
+            "qr_code", "hdr_bg", "hdr_text", "ftr_bg", "ftr_text",
             "banner_msgs", "free_delivery_above", "delivery_charge_below", "whatsapp_number", "screenshot_number",
             "trust_badges", "footer_desc", "footer_phone", "support_fields", "footer_bg_image"
     );
