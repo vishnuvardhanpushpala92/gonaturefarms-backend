@@ -87,6 +87,12 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+         <!-- ========== NEW: Cloudinary for permanent video storage ========== -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http44</artifactId>
+            <version>1.39.0</version>
+        </dependency>
 
         <!-- Testing -->
         <dependency>
