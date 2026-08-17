@@ -1,21 +1,51 @@
 package com.gonaturefarms.service;
 
+import java.io.IOException;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.gonaturefarms.dto.admin.SlideRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.Slide;
 import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.repository.SlideRepository;
 
+import jakarta.annotation.PostConstruct;
+
 @Service
 public class SlideService {
 
     private final SlideRepository slideRepository;
+    private Cloudinary cloudinary;
+
+    // Inject Cloudinary credentials from application.properties
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
+
+    @Value("${cloudinary.api-key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api-secret}")
+    private String apiSecret;
 
     public SlideService(SlideRepository slideRepository) {
         this.slideRepository = slideRepository;
+    }
+
+    // Initialize Cloudinary once the Spring bean is created
+    @PostConstruct
+    public void init() {
+        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
+            "cloud_name", cloudName,
+            "api_key", apiKey,
+            "api_secret", apiSecret
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -55,5 +85,25 @@ public class SlideService {
                 .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Slide not found"));
         slideRepository.delete(slide);
         return ApiResponse.ok("Slide deleted");
+    }
+
+    @Transactional
+    public ApiResponse uploadSlideImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ApiResponse.fail("No file uploaded");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ApiException("Only image files allowed");
+        }
+
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap("resource_type", "image"));
+            String secureUrl = (String) uploadResult.get("secure_url");
+            return ApiResponse.ok("Image uploaded successfully").with("url", secureUrl);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image to Cloudinary", e);
+        }
     }
 }

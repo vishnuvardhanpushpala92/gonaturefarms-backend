@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.product.ProductRequest;
@@ -26,6 +27,12 @@ public class ProductController {
 
     public ProductController(ProductService productService) {
         this.productService = productService;
+    }
+
+    @PostMapping("/upload-image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse uploadImage(@RequestParam("file") MultipartFile file) {
+        return productService.uploadProductImage(file);
     }
 
     @GetMapping

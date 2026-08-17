@@ -1,5 +1,20 @@
 package com.gonaturefarms.service;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.product.ProductRequest;
 import com.gonaturefarms.entity.Product;
@@ -7,15 +22,8 @@ import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.exception.ResourceNotFoundException;
 import com.gonaturefarms.repository.CategoryRepository;
 import com.gonaturefarms.repository.ProductRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /** Business logic for browsing and (admin) managing products. Mirrors routes/products.js. */
 @Service
@@ -23,10 +31,31 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private Cloudinary cloudinary;
+
+    // Inject Cloudinary credentials from application.properties
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
+
+    @Value("${cloudinary.api-key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api-secret}")
+    private String apiSecret;
 
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+    }
+
+    // Initialize Cloudinary once the Spring bean is created
+    @PostConstruct
+    public void init() {
+        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
+            "cloud_name", cloudName,
+            "api_key", apiKey,
+            "api_secret", apiSecret
+        ));
     }
 
     @Transactional(readOnly = true)
@@ -127,6 +156,26 @@ public class ProductService {
             return Product.ProductStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
             return Product.ProductStatus.current;
+        }
+    }
+
+    @Transactional
+    public ApiResponse uploadProductImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ApiResponse.fail("No file uploaded");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ApiException("Only image files allowed");
+        }
+
+        try {
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap("resource_type", "image"));
+            String secureUrl = (String) uploadResult.get("secure_url");
+            return ApiResponse.ok("Image uploaded successfully").with("url", secureUrl);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload image to Cloudinary", e);
         }
     }
 }
