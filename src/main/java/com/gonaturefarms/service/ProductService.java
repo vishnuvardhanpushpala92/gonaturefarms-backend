@@ -1,20 +1,5 @@
 package com.gonaturefarms.service;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.product.ProductRequest;
 import com.gonaturefarms.entity.Product;
@@ -22,8 +7,23 @@ import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.exception.ResourceNotFoundException;
 import com.gonaturefarms.repository.CategoryRepository;
 import com.gonaturefarms.repository.ProductRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /** Business logic for browsing and (admin) managing products. Mirrors routes/products.js. */
 @Service
@@ -31,31 +31,15 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private Cloudinary cloudinary;
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-    // Inject Cloudinary credentials from application.properties
-    @Value("${cloudinary.cloud-name}")
-    private String cloudName;
-
-    @Value("${cloudinary.api-key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api-secret}")
-    private String apiSecret;
+    @Value("${app.upload.dir:./uploads}")
+    private String uploadDir;
 
     public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
-    }
-
-    // Initialize Cloudinary once the Spring bean is created
-    @PostConstruct
-    public void init() {
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", cloudName,
-            "api_key", apiKey,
-            "api_secret", apiSecret
-        ));
     }
 
     @Transactional(readOnly = true)
@@ -170,12 +154,27 @@ public class ProductService {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
-            return ApiResponse.ok("Image uploaded successfully").with("url", secureUrl);
+            Path dir = Path.of(uploadDir + "/products");
+            Files.createDirectories(dir);
+
+            String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
+            String ext = original.contains(".") ? original.substring(original.lastIndexOf('.')) : "";
+            String filename = System.currentTimeMillis() + "_" + randomSuffix(6) + ext;
+
+            Path target = dir.resolve(filename);
+            file.transferTo(target);
+
+            return ApiResponse.ok("Image uploaded successfully").with("url", "/uploads/products/" + filename);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload image to Cloudinary", e);
+            throw new RuntimeException("Failed to store file", e);
         }
+    }
+
+    private String randomSuffix(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+        }
+        return sb.toString();
     }
 }

@@ -1,8 +1,13 @@
 package com.gonaturefarms.controller;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,12 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.service.SiteSettingService;
-
-import jakarta.annotation.PostConstruct;
 
 /** GET /api/admin/settings/public (public) and PUT /api/admin/settings (admin). */
 @RestController
@@ -36,30 +37,12 @@ public class AdminSettingsController {
     );
 
     private final SiteSettingService siteSettingService;
-    private Cloudinary cloudinary;
 
-    // Inject Cloudinary credentials from application.properties
-    @Value("${cloudinary.cloud-name}")
-    private String cloudName;
-
-    @Value("${cloudinary.api-key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api-secret}")
-    private String apiSecret;
+    @Value("${app.upload.dir:./uploads}")
+    private String uploadDir;
 
     public AdminSettingsController(SiteSettingService siteSettingService) {
         this.siteSettingService = siteSettingService;
-    }
-
-    // Initialize Cloudinary once the Spring bean is created
-    @PostConstruct
-    public void init() {
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", cloudName,
-            "api_key", apiKey,
-            "api_secret", apiSecret
-        ));
     }
 
     @GetMapping("/settings/public")
@@ -87,14 +70,24 @@ public class AdminSettingsController {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
+            String uploadDirPath = uploadDir + "/footer";
+            File directory = new File(uploadDirPath);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDirPath, filename);
+            Files.write(filePath, file.getBytes());
+
+            String fileUrl = "/uploads/footer/" + filename;
             
-            Map<String, String> updates = Map.of("footer_bg_image", secureUrl);
+            Map<String, String> updates = Map.of("footer_bg_image", fileUrl);
             siteSettingService.update(updates);
             
-            return ApiResponse.ok("Footer background image uploaded").with("url", secureUrl);
+            return ApiResponse.ok("Footer background image uploaded").with("url", fileUrl);
         } catch (IOException e) {
             return ApiResponse.fail("Failed to upload file: " + e.getMessage());
         }
@@ -108,14 +101,24 @@ public class AdminSettingsController {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
+            String uploadDirPath = uploadDir + "/qr";
+            File directory = new File(uploadDirPath);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDirPath, filename);
+            Files.write(filePath, file.getBytes());
+
+            String fileUrl = "/uploads/qr/" + filename;
             
-            Map<String, String> updates = Map.of("qr_code", secureUrl);
+            Map<String, String> updates = Map.of("qr_code", fileUrl);
             siteSettingService.update(updates);
             
-            return ApiResponse.ok("QR code uploaded").with("url", secureUrl);
+            return ApiResponse.ok("QR code uploaded").with("url", fileUrl);
         } catch (IOException e) {
             return ApiResponse.fail("Failed to upload file: " + e.getMessage());
         }
@@ -129,14 +132,24 @@ public class AdminSettingsController {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
+            String uploadDirPath = uploadDir + "/logo";
+            File directory = new File(uploadDirPath);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDirPath, filename);
+            Files.write(filePath, file.getBytes());
+
+            String fileUrl = "/uploads/logo/" + filename;
             
-            Map<String, String> updates = Map.of("logo", secureUrl);
+            Map<String, String> updates = Map.of("logo", fileUrl);
             siteSettingService.update(updates);
             
-            return ApiResponse.ok("Logo uploaded").with("url", secureUrl);
+            return ApiResponse.ok("Logo uploaded").with("url", fileUrl);
         } catch (IOException e) {
             return ApiResponse.fail("Failed to upload file: " + e.getMessage());
         }
@@ -150,14 +163,24 @@ public class AdminSettingsController {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
+            String uploadDirPath = uploadDir + "/favicon";
+            File directory = new File(uploadDirPath);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDirPath, filename);
+            Files.write(filePath, file.getBytes());
+
+            String fileUrl = "/uploads/favicon/" + filename;
             
-            Map<String, String> updates = Map.of("favicon", secureUrl);
+            Map<String, String> updates = Map.of("favicon", fileUrl);
             siteSettingService.update(updates);
             
-            return ApiResponse.ok("Favicon uploaded").with("url", secureUrl);
+            return ApiResponse.ok("Favicon uploaded").with("url", fileUrl);
         } catch (IOException e) {
             return ApiResponse.fail("Failed to upload file: " + e.getMessage());
         }

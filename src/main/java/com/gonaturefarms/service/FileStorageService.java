@@ -1,47 +1,31 @@
 package com.gonaturefarms.service;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
-import com.gonaturefarms.dto.common.ApiResponse;
-import com.gonaturefarms.exception.ApiException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.SecureRandom;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Map;
-
-import jakarta.annotation.PostConstruct;
+import com.gonaturefarms.dto.common.ApiResponse;
+import com.gonaturefarms.exception.ApiException;
 
 /**
- * Stores uploaded images to Cloudinary, replacing local disk storage.
- * Images are permanently stored on Cloudinary and the secure_url is returned.
+ * Stores uploaded images on disk, equivalent to the multer diskStorage configuration
+ * in routes/admin.js. Files are written under app.upload.dir (default ./uploads) and
+ * served back via the "/uploads/**" resource handler configured in WebConfig.
  */
 @Service
 public class FileStorageService {
 
-    private Cloudinary cloudinary;
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-    // Inject Cloudinary credentials from application.properties
-    @Value("${cloudinary.cloud-name}")
-    private String cloudName;
-
-    @Value("${cloudinary.api-key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api-secret}")
-    private String apiSecret;
-
-    // Initialize Cloudinary once the Spring bean is created
-    @PostConstruct
-    public void init() {
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", cloudName,
-            "api_key", apiKey,
-            "api_secret", apiSecret
-        ));
-    }
+    @Value("${app.upload.dir:./uploads}")
+    private String uploadDir;
 
     public ApiResponse store(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -53,12 +37,27 @@ public class FileStorageService {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                ObjectUtils.asMap("resource_type", "image"));
-            String secureUrl = (String) uploadResult.get("secure_url");
-            return ApiResponse.ok("File uploaded").with("url", secureUrl);
+            Path dir = Path.of(uploadDir);
+            Files.createDirectories(dir);
+
+            String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "" : file.getOriginalFilename());
+            String ext = original.contains(".") ? original.substring(original.lastIndexOf('.')) : "";
+            String filename = System.currentTimeMillis() + "_" + randomSuffix(6) + ext;
+
+            Path target = dir.resolve(filename);
+            file.transferTo(target);
+
+            return ApiResponse.ok("File uploaded").with("url", "/uploads/" + filename);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload image to Cloudinary", e);
+            throw new RuntimeException("Failed to store file", e);
         }
+    }
+
+    private String randomSuffix(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+        }
+        return sb.toString();
     }
 }
