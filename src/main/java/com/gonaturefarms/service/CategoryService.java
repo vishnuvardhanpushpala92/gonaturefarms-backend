@@ -27,7 +27,7 @@ public class CategoryService {
         // INSERT IGNORE semantics
         if (categoryRepository.findByName(name).isEmpty()) {
             try {
-                categoryRepository.save(new Category(null, name));
+                categoryRepository.save(Category.builder().name(name).build());
             } catch (DataIntegrityViolationException ignored) {
                 // already exists, treat as success
             }
