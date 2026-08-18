@@ -144,7 +144,7 @@ public class Order {
     }
 
     public enum OrderStatus {
-        Placed, Confirmed, Processing, Packed, Shipped, OutForDelivery, Delivered, Cancelled, PaymentVerificationPending
+        Pending,Placed, Confirmed, Processing, Packed, Shipped, OutForDelivery, Delivered, Cancelled, PaymentVerificationPending
     }
 
     public enum PaymentStatus {
