@@ -41,11 +41,20 @@ public class Slide {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // Manual getters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public String getImageUrl() { return imageUrl; }
+    public String getCaption() { return caption; }
+    public String getSubText() { return subText; }
+    public Integer getSortOrder() { return sortOrder; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
     // Additional setters for manual construction
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setCaption(String caption) { this.caption = caption; }
     public void setSubText(String subText) { this.subText = subText; }
 

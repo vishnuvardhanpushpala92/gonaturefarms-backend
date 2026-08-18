@@ -48,4 +48,45 @@ public class SiteSetting {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static SiteSettingBuilder builder() {
+        return new SiteSettingBuilder();
+    }
+
+    public static class SiteSettingBuilder {
+        private Long id;
+        private String key;
+        private String value;
+        private LocalDateTime updatedAt = LocalDateTime.now();
+
+        public SiteSettingBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public SiteSettingBuilder key(String key) {
+            this.key = key;
+            return this;
+        }
+
+        public SiteSettingBuilder value(String value) {
+            this.value = value;
+            return this;
+        }
+
+        public SiteSettingBuilder updatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public SiteSetting build() {
+            SiteSetting setting = new SiteSetting();
+            setting.id = this.id;
+            setting.key = this.key;
+            setting.value = this.value;
+            setting.updatedAt = this.updatedAt;
+            return setting;
+        }
+    }
 }

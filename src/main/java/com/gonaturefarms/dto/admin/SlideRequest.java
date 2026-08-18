@@ -13,4 +13,5 @@ public class SlideRequest {
     public String getImageUrl() { return imageUrl; }
     public String getCaption() { return caption; }
     public String getSubText() { return subText; }
+    public Integer getSortOrder() { return sortOrder; }
 }

@@ -153,82 +153,244 @@ public class Order {
         Pending, Paid, Failed, Refunded
     }
 
-    // Manual getters and setters as failsafe for Lombok processing issues
+    // Manual getters as failsafe for Lombok processing issues
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
 
     public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
 
     public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
 
     public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
 
     public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
 
     public String getArea() { return area; }
-    public void setArea(String area) { this.area = area; }
 
     public String getCity() { return city; }
-    public void setCity(String city) { this.city = city; }
 
     public String getState() { return state; }
-    public void setState(String state) { this.state = state; }
 
     public String getPincode() { return pincode; }
-    public void setPincode(String pincode) { this.pincode = pincode; }
 
     public String getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
     public String getPaymentUtr() { return paymentUtr; }
-    public void setPaymentUtr(String paymentUtr) { this.paymentUtr = paymentUtr; }
 
     public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
 
     public BigDecimal getGstAmount() { return gstAmount; }
-    public void setGstAmount(BigDecimal gstAmount) { this.gstAmount = gstAmount; }
 
     public BigDecimal getDeliveryCharge() { return deliveryCharge; }
-    public void setDeliveryCharge(BigDecimal deliveryCharge) { this.deliveryCharge = deliveryCharge; }
 
     public BigDecimal getDiscount() { return discount; }
-    public void setDiscount(BigDecimal discount) { this.discount = discount; }
 
     public BigDecimal getTotal() { return total; }
-    public void setTotal(BigDecimal total) { this.total = total; }
 
     public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
 
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 
     public String getTrackingLocation() { return trackingLocation; }
-    public void setTrackingLocation(String trackingLocation) { this.trackingLocation = trackingLocation; }
 
     public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
 
     public String getPaymentScreenshotUrl() { return paymentScreenshotUrl; }
-    public void setPaymentScreenshotUrl(String paymentScreenshotUrl) { this.paymentScreenshotUrl = paymentScreenshotUrl; }
 
     public Boolean getPaymentVerified() { return paymentVerified; }
-    public void setPaymentVerified(Boolean paymentVerified) { this.paymentVerified = paymentVerified; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public List<OrderItem> getItems() { return items; }
-    public void setItems(List<OrderItem> items) { this.items = items; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static OrderBuilder builder() {
+        return new OrderBuilder();
+    }
+
+    public static class OrderBuilder {
+        private String orderId;
+        private Long userId;
+        private String customerName;
+        private String phone;
+        private String email;
+        private String address;
+        private String area = "";
+        private String city;
+        private String state = "";
+        private String pincode;
+        private String paymentMethod = "UPI";
+        private String paymentUtr;
+        private String paymentScreenshotUrl;
+        private BigDecimal subtotal;
+        private BigDecimal gstAmount;
+        private BigDecimal deliveryCharge;
+        private BigDecimal discount;
+        private BigDecimal total;
+        private OrderStatus status = OrderStatus.Placed;
+        private PaymentStatus paymentStatus = PaymentStatus.Pending;
+        private String trackingLocation;
+        private String notes;
+        private Boolean paymentVerified = false;
+        private LocalDateTime createdAt = LocalDateTime.now();
+        private List<OrderItem> items = new java.util.ArrayList<>();
+
+        public OrderBuilder orderId(String orderId) {
+            this.orderId = orderId;
+            return this;
+        }
+
+        public OrderBuilder userId(Long userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public OrderBuilder customerName(String customerName) {
+            this.customerName = customerName;
+            return this;
+        }
+
+        public OrderBuilder phone(String phone) {
+            this.phone = phone;
+            return this;
+        }
+
+        public OrderBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public OrderBuilder address(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public OrderBuilder area(String area) {
+            this.area = area;
+            return this;
+        }
+
+        public OrderBuilder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public OrderBuilder state(String state) {
+            this.state = state;
+            return this;
+        }
+
+        public OrderBuilder pincode(String pincode) {
+            this.pincode = pincode;
+            return this;
+        }
+
+        public OrderBuilder paymentMethod(String paymentMethod) {
+            this.paymentMethod = paymentMethod;
+            return this;
+        }
+
+        public OrderBuilder paymentUtr(String paymentUtr) {
+            this.paymentUtr = paymentUtr;
+            return this;
+        }
+
+        public OrderBuilder paymentScreenshotUrl(String paymentScreenshotUrl) {
+            this.paymentScreenshotUrl = paymentScreenshotUrl;
+            return this;
+        }
+
+        public OrderBuilder subtotal(BigDecimal subtotal) {
+            this.subtotal = subtotal;
+            return this;
+        }
+
+        public OrderBuilder gstAmount(BigDecimal gstAmount) {
+            this.gstAmount = gstAmount;
+            return this;
+        }
+
+        public OrderBuilder deliveryCharge(BigDecimal deliveryCharge) {
+            this.deliveryCharge = deliveryCharge;
+            return this;
+        }
+
+        public OrderBuilder discount(BigDecimal discount) {
+            this.discount = discount;
+            return this;
+        }
+
+        public OrderBuilder total(BigDecimal total) {
+            this.total = total;
+            return this;
+        }
+
+        public OrderBuilder status(OrderStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public OrderBuilder paymentStatus(PaymentStatus paymentStatus) {
+            this.paymentStatus = paymentStatus;
+            return this;
+        }
+
+        public OrderBuilder trackingLocation(String trackingLocation) {
+            this.trackingLocation = trackingLocation;
+            return this;
+        }
+
+        public OrderBuilder notes(String notes) {
+            this.notes = notes;
+            return this;
+        }
+
+        public OrderBuilder paymentVerified(Boolean paymentVerified) {
+            this.paymentVerified = paymentVerified;
+            return this;
+        }
+
+        public OrderBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public OrderBuilder items(List<OrderItem> items) {
+            this.items = items;
+            return this;
+        }
+
+        public Order build() {
+            Order order = new Order();
+            order.orderId = this.orderId;
+            order.userId = this.userId;
+            order.customerName = this.customerName;
+            order.phone = this.phone;
+            order.email = this.email;
+            order.address = this.address;
+            order.area = this.area;
+            order.city = this.city;
+            order.state = this.state;
+            order.pincode = this.pincode;
+            order.paymentMethod = this.paymentMethod;
+            order.paymentUtr = this.paymentUtr;
+            order.paymentScreenshotUrl = this.paymentScreenshotUrl;
+            order.subtotal = this.subtotal;
+            order.gstAmount = this.gstAmount;
+            order.deliveryCharge = this.deliveryCharge;
+            order.discount = this.discount;
+            order.total = this.total;
+            order.status = this.status;
+            order.paymentStatus = this.paymentStatus;
+            order.trackingLocation = this.trackingLocation;
+            order.notes = this.notes;
+            order.paymentVerified = this.paymentVerified;
+            order.createdAt = this.createdAt;
+            order.items = this.items;
+            return order;
+        }
+    }
 }

@@ -45,6 +45,11 @@ public class DeliveryZone {
     @Column(precision = 6, scale = 2)
     private BigDecimal charge = BigDecimal.ZERO;
 
+    // Additional setters for manual construction
+    public void setArea(String area) { this.area = area; }
+    public void setCity(String city) { this.city = city; }
+    public void setState(String state) { this.state = state; }
+
     // Static builder method as failsafe for Lombok @Builder
     public static DeliveryZoneBuilder builder() {
         return new DeliveryZoneBuilder();

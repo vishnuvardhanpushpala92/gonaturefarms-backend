@@ -103,4 +103,101 @@ public class Address {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static AddressBuilder builder() {
+        return new AddressBuilder();
+    }
+
+    public static class AddressBuilder {
+        private Long id;
+        private Long userId;
+        private AddressType addressType;
+        private String name;
+        private String addressLine;
+        private String city;
+        private String state;
+        private String pincode;
+        private String phone;
+        private Boolean isDefault = false;
+        private LocalDateTime createdAt = LocalDateTime.now();
+        private LocalDateTime updatedAt;
+
+        public AddressBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public AddressBuilder userId(Long userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public AddressBuilder addressType(AddressType addressType) {
+            this.addressType = addressType;
+            return this;
+        }
+
+        public AddressBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public AddressBuilder addressLine(String addressLine) {
+            this.addressLine = addressLine;
+            return this;
+        }
+
+        public AddressBuilder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public AddressBuilder state(String state) {
+            this.state = state;
+            return this;
+        }
+
+        public AddressBuilder pincode(String pincode) {
+            this.pincode = pincode;
+            return this;
+        }
+
+        public AddressBuilder phone(String phone) {
+            this.phone = phone;
+            return this;
+        }
+
+        public AddressBuilder isDefault(Boolean isDefault) {
+            this.isDefault = isDefault;
+            return this;
+        }
+
+        public AddressBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public AddressBuilder updatedAt(LocalDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public Address build() {
+            Address address = new Address();
+            address.id = this.id;
+            address.userId = this.userId;
+            address.addressType = this.addressType;
+            address.name = this.name;
+            address.addressLine = this.addressLine;
+            address.city = this.city;
+            address.state = this.state;
+            address.pincode = this.pincode;
+            address.phone = this.phone;
+            address.isDefault = this.isDefault;
+            address.createdAt = this.createdAt;
+            address.updatedAt = this.updatedAt;
+            return address;
+        }
+    }
 }

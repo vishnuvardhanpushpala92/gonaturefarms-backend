@@ -39,6 +39,7 @@ public class AddressRequest {
     private Boolean isDefault;
 
     // Manual getters as failsafe for Lombok processing issues
+    public com.gonaturefarms.entity.Address.AddressType getAddressType() { return addressType; }
     public String getState() { return state; }
     public String getPincode() { return pincode; }
     public String getPhone() { return phone; }
