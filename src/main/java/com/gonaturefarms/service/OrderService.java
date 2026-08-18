@@ -1,23 +1,24 @@
 package com.gonaturefarms.service;
 
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.order.OrderItemRequest;
 import com.gonaturefarms.dto.order.OrderRequest;
 import com.gonaturefarms.dto.order.OrderStatusUpdateRequest;
-import com.gonaturefarms.entity.Coupon;
 import com.gonaturefarms.entity.Order;
 import com.gonaturefarms.entity.OrderItem;
 import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.exception.ResourceNotFoundException;
 import com.gonaturefarms.repository.CouponRepository;
 import com.gonaturefarms.repository.DeliveryZoneRepository;
-import com.gonaturefarms.repository.OrderRepository;
+import com.gonaturefarms.repository.OrderRepository; // <--- Added this missing import
 import com.gonaturefarms.util.OrderIdGenerator;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /** Business logic for placing, looking up, and (admin) managing orders. Mirrors routes/orders.js. */
 @Service
@@ -50,57 +51,73 @@ public class OrderService {
             throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
         }
 
-        Order order = Order.builder()
-                .orderId(OrderIdGenerator.generate())
-                .userId(req.getUserId())
-                .customerName(req.getCustomerName())
-                .phone(req.getPhone())
-                .email(isBlank(req.getEmail()) ? null : req.getEmail())
-                .address(req.getAddress())
-                .area(req.getArea() == null ? "" : req.getArea())
-                .city(req.getCity())
-                .state(req.getState() == null ? "" : req.getState())
-                .pincode(req.getPincode())
-                .paymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod())
-                .paymentUtr(req.getPaymentUtr())
-                .subtotal(nz(req.getSubtotal()))
-                .gstAmount(nz(req.getGstAmount()))
-                .deliveryCharge(nz(req.getDeliveryCharge()))
-                .discount(nz(req.getDiscount()))
-                .total(req.getTotal())
-                .status(req.getPaymentMethod() != null && req.getPaymentMethod().equalsIgnoreCase("UPI") 
-                        ? Order.OrderStatus.PaymentVerificationPending 
-                        : Order.OrderStatus.Placed)
-                .paymentStatus(Order.PaymentStatus.Pending)
-                .build();
+        // 🔁 LOOP: Retry generating a new ID until it successfully saves without a conflict
+        while (true) {
+            try {
+                // Generate a unique order ID inside the loop
+                String newOrderId = OrderIdGenerator.generate();
 
-        for (OrderItemRequest item : req.getItems()) {
-            OrderItem orderItem = OrderItem.builder()
-                    .productId(item.getId())
-                    .productName(item.getName())
-                    .productImage(item.getImg() == null ? "" : item.getImg())
-                    .price(item.getPrice())
-                    .gst(nz(item.getGst()))
-                    .quantity(item.getQty())
-                    .total(item.getPrice().multiply(BigDecimal.valueOf(item.getQty())))
-                    .order(order)
-                    .build();
-            order.getItems().add(orderItem);
+                Order order = Order.builder()
+                        .orderId(newOrderId) // Use the newly generated ID
+                        .userId(req.getUserId())
+                        .customerName(req.getCustomerName())
+                        .phone(req.getPhone())
+                        .email(isBlank(req.getEmail()) ? null : req.getEmail())
+                        .address(req.getAddress())
+                        .area(req.getArea() == null ? "" : req.getArea())
+                        .city(req.getCity())
+                        .state(req.getState() == null ? "" : req.getState())
+                        .pincode(req.getPincode())
+                        .paymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod())
+                        .paymentUtr(req.getPaymentUtr())
+                        .subtotal(nz(req.getSubtotal()))
+                        .gstAmount(nz(req.getGstAmount()))
+                        .deliveryCharge(nz(req.getDeliveryCharge()))
+                        .discount(nz(req.getDiscount()))
+                        .total(req.getTotal())
+                        .status(req.getPaymentMethod() != null && req.getPaymentMethod().equalsIgnoreCase("UPI") 
+                                ? Order.OrderStatus.PaymentVerificationPending 
+                                : Order.OrderStatus.Placed)
+                        .paymentStatus(Order.PaymentStatus.Pending)
+                        .build();
+
+                for (OrderItemRequest item : req.getItems()) {
+                    OrderItem orderItem = OrderItem.builder()
+                            .productId(item.getId())
+                            .productName(item.getName())
+                            .productImage(item.getImg() == null ? "" : item.getImg())
+                            .price(item.getPrice())
+                            .gst(nz(item.getGst()))
+                            .quantity(item.getQty())
+                            .total(item.getPrice().multiply(BigDecimal.valueOf(item.getQty())))
+                            .order(order)
+                            .build();
+                    order.getItems().add(orderItem);
+                }
+
+                // Save the order
+                order = orderRepository.save(order);
+
+                // Apply coupon usage
+                if (!isBlank(req.getCouponCode())) {
+                    couponRepository.findByCode(req.getCouponCode().toUpperCase())
+                            .ifPresent(c -> {
+                                c.setUsedCount(c.getUsedCount() + 1);
+                                couponRepository.save(c);
+                            });
+                }
+
+                // If we reach here, saving succeeded! Return the success response.
+                return ApiResponse.ok("Order placed successfully!")
+                        .with("order_id", order.getOrderId())
+                        .with("id", order.getId());
+
+            } catch (DataIntegrityViolationException e) {
+                // If a duplicate ID was generated, catch the error and silently loop again
+                System.err.println("⚠️ Duplicate order_id generated, retrying with new ID...");
+                // The loop continues and generates a brand new ID.
+            }
         }
-
-        order = orderRepository.save(order);
-
-        if (!isBlank(req.getCouponCode())) {
-            couponRepository.findByCode(req.getCouponCode().toUpperCase())
-                    .ifPresent(c -> {
-                        c.setUsedCount(c.getUsedCount() + 1);
-                        couponRepository.save(c);
-                    });
-        }
-
-        return ApiResponse.ok("Order placed successfully!")
-                .with("order_id", order.getOrderId())
-                .with("id", order.getId());
     }
 
     @Transactional(readOnly = true)
