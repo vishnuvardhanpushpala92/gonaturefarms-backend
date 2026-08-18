@@ -18,4 +18,10 @@ public class SecurityQuestionResetRequest {
 
     @NotBlank(message = "Password confirmation is required")
     private String confirmPassword;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getIdentifier() { return identifier; }
+    public String getSecurityAnswer() { return securityAnswer; }
+    public String getNewPassword() { return newPassword; }
+    public String getConfirmPassword() { return confirmPassword; }
 }

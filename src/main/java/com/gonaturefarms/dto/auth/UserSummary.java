@@ -15,4 +15,11 @@ public class UserSummary {
     private String phone;
     private String email;
     private String role;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getPhone() { return phone; }
+    public String getEmail() { return email; }
+    public String getRole() { return role; }
 }

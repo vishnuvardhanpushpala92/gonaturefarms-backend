@@ -15,4 +15,10 @@ public class UpdateProfileRequest {
     private String email;
     
     private String pincode;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getName() { return name; }
+    public String getPhone() { return phone; }
+    public String getEmail() { return email; }
+    public String getPincode() { return pincode; }
 }

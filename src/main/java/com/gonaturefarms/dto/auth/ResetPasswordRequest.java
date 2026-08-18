@@ -15,4 +15,9 @@ public class ResetPasswordRequest {
     @NotBlank(message = "New password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String newPassword;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getIdentifier() { return identifier; }
+    public String getCode() { return code; }
+    public String getNewPassword() { return newPassword; }
 }
