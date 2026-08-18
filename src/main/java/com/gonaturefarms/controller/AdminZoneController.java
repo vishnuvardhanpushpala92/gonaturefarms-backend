@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam; // <--- Added this missing import
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gonaturefarms.dto.admin.ZoneRequest;
