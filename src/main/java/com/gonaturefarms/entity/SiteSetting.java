@@ -35,4 +35,17 @@ public class SiteSetting {
     @Column(name = "updated_at", nullable = false)
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    // Manual getters and setters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getKey() { return key; }
+    public void setKey(String key) { this.key = key; }
+
+    public String getValue() { return value; }
+    public void setValue(String value) { this.value = value; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

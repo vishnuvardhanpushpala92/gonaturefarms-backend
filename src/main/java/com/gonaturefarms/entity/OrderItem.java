@@ -55,4 +55,32 @@ public class OrderItem {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
+
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
+
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
+
+    public String getProductImage() { return productImage; }
+    public void setProductImage(String productImage) { this.productImage = productImage; }
+
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+
+    public BigDecimal getGst() { return gst; }
+    public void setGst(BigDecimal gst) { this.gst = gst; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
 }

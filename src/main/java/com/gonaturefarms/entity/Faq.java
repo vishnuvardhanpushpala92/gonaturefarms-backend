@@ -39,4 +39,68 @@ public class Faq {
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Manual getters and setters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getQuestion() { return question; }
+    public void setQuestion(String question) { this.question = question; }
+
+    public String getAnswer() { return answer; }
+    public void setAnswer(String answer) { this.answer = answer; }
+
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static FaqBuilder builder() {
+        return new FaqBuilder();
+    }
+
+    public static class FaqBuilder {
+        private Long id;
+        private String question;
+        private String answer;
+        private Integer sortOrder = 0;
+        private LocalDateTime createdAt = LocalDateTime.now();
+
+        public FaqBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public FaqBuilder question(String question) {
+            this.question = question;
+            return this;
+        }
+
+        public FaqBuilder answer(String answer) {
+            this.answer = answer;
+            return this;
+        }
+
+        public FaqBuilder sortOrder(Integer sortOrder) {
+            this.sortOrder = sortOrder;
+            return this;
+        }
+
+        public FaqBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Faq build() {
+            Faq faq = new Faq();
+            faq.id = this.id;
+            faq.question = this.question;
+            faq.answer = this.answer;
+            faq.sortOrder = this.sortOrder;
+            faq.createdAt = this.createdAt;
+            return faq;
+        }
+    }
 }

@@ -26,4 +26,38 @@ public class Category {
 
     @Column(nullable = false, unique = true, length = 80)
     private String name;
+
+    // Manual getters and setters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static CategoryBuilder builder() {
+        return new CategoryBuilder();
+    }
+
+    public static class CategoryBuilder {
+        private Long id;
+        private String name;
+
+        public CategoryBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public CategoryBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Category build() {
+            Category category = new Category();
+            category.id = this.id;
+            category.name = this.name;
+            return category;
+        }
+    }
 }

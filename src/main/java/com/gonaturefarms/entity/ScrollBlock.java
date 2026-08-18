@@ -54,4 +54,88 @@ public class ScrollBlock {
     public enum BlockStyle {
         info, promo, notice, earth
     }
+
+    // Manual getters and setters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public String getIcon() { return icon; }
+    public void setIcon(String icon) { this.icon = icon; }
+
+    public BlockStyle getStyle() { return style; }
+    public void setStyle(BlockStyle style) { this.style = style; }
+
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static ScrollBlockBuilder builder() {
+        return new ScrollBlockBuilder();
+    }
+
+    public static class ScrollBlockBuilder {
+        private Long id;
+        private String title;
+        private String content;
+        private String icon = "\uD83D\uDCCB";
+        private BlockStyle style = BlockStyle.info;
+        private Integer sortOrder = 0;
+        private LocalDateTime createdAt = LocalDateTime.now();
+
+        public ScrollBlockBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public ScrollBlockBuilder title(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public ScrollBlockBuilder content(String content) {
+            this.content = content;
+            return this;
+        }
+
+        public ScrollBlockBuilder icon(String icon) {
+            this.icon = icon;
+            return this;
+        }
+
+        public ScrollBlockBuilder style(BlockStyle style) {
+            this.style = style;
+            return this;
+        }
+
+        public ScrollBlockBuilder sortOrder(Integer sortOrder) {
+            this.sortOrder = sortOrder;
+            return this;
+        }
+
+        public ScrollBlockBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public ScrollBlock build() {
+            ScrollBlock scrollBlock = new ScrollBlock();
+            scrollBlock.id = this.id;
+            scrollBlock.title = this.title;
+            scrollBlock.content = this.content;
+            scrollBlock.icon = this.icon;
+            scrollBlock.style = this.style;
+            scrollBlock.sortOrder = this.sortOrder;
+            scrollBlock.createdAt = this.createdAt;
+            return scrollBlock;
+        }
+    }
 }
