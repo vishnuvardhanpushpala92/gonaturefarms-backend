@@ -17,10 +17,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Maps to the "users" table.
- * Equivalent to the MySQL `users` table in database/schema.sql.
- */
 @Entity
 @Table(name = "users")
 @Data

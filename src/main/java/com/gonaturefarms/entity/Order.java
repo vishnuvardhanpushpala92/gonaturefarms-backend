@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Maps to the "orders" table. */
 @Entity
 @Table(name = "orders")
 @Data
@@ -116,10 +115,6 @@ public class Order {
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
-    /**
-     * Mirrors the original SQL's GROUP_CONCAT(product_name × quantity) alias
-     * "items_summary", used directly by the frontend on the order-tracking page.
-     */
     @Transient
     public String getItemsSummary() {
         if (items == null || items.isEmpty()) return "";
@@ -128,10 +123,6 @@ public class Order {
                 .collect(java.util.stream.Collectors.joining(", "));
     }
 
-    /**
-     * Mirrors the original SQL's GROUP_CONCAT('name xQTY|image' SEPARATOR '||') alias
-     * "items_list", used directly by the admin orders panel.
-     */
     @Transient
     public String getItemsList() {
         if (items == null || items.isEmpty()) return "";
@@ -142,7 +133,7 @@ public class Order {
     }
 
     public enum OrderStatus {
-        Pending,Placed, Confirmed, Processing, Packed, Shipped, OutForDelivery, Delivered, Cancelled, PaymentVerificationPending
+        Pending, Placed, Confirmed, Processing, Packed, Shipped, OutForDelivery, Delivered, Cancelled, PaymentVerificationPending
     }
 
     public enum PaymentStatus {
