@@ -140,7 +140,7 @@ WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil');
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
   id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  order_id          VARCHAR(30) NOT NULL UNIQUE,
+  order_id          VARCHAR(50) NOT NULL UNIQUE,
   user_id           BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
   customer_name     VARCHAR(120) NOT NULL,
   phone             VARCHAR(15) NOT NULL,
@@ -168,6 +168,11 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+
+-- Increase order_id column length for existing databases (PostgreSQL specific)
+-- This ALTER TABLE will only run if the column exists and needs to be updated
+-- Note: ALTER COLUMN ... TYPE is not idempotent in PostgreSQL, so we skip this in schema.sql
+-- and rely on manual migration or application-level ddl-auto for existing databases
 
 -- Add payment verification columns for existing databases (ignore if already exists)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
