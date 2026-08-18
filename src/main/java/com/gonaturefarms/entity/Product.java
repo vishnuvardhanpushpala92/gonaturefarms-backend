@@ -77,4 +77,108 @@ public class Product {
     public enum ProductStatus {
         current, future
     }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static ProductBuilder builder() {
+        return new ProductBuilder();
+    }
+
+    public static class ProductBuilder {
+        private Long id;
+        private String name;
+        private String description;
+        private BigDecimal price;
+        private BigDecimal mrp = BigDecimal.ZERO;
+        private BigDecimal gst = BigDecimal.ZERO;
+        private String hsn = "";
+        private String cat = "";
+        private String imgUrl;
+        private ProductStatus status = ProductStatus.current;
+        private Integer stock = 100;
+        private LocalDateTime createdAt = LocalDateTime.now();
+        private java.util.List<com.gonaturefarms.entity.ProductVariant> variants;
+
+        public ProductBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public ProductBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ProductBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public ProductBuilder price(BigDecimal price) {
+            this.price = price;
+            return this;
+        }
+
+        public ProductBuilder mrp(BigDecimal mrp) {
+            this.mrp = mrp;
+            return this;
+        }
+
+        public ProductBuilder gst(BigDecimal gst) {
+            this.gst = gst;
+            return this;
+        }
+
+        public ProductBuilder hsn(String hsn) {
+            this.hsn = hsn;
+            return this;
+        }
+
+        public ProductBuilder cat(String cat) {
+            this.cat = cat;
+            return this;
+        }
+
+        public ProductBuilder imgUrl(String imgUrl) {
+            this.imgUrl = imgUrl;
+            return this;
+        }
+
+        public ProductBuilder status(ProductStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public ProductBuilder stock(Integer stock) {
+            this.stock = stock;
+            return this;
+        }
+
+        public ProductBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public ProductBuilder variants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) {
+            this.variants = variants;
+            return this;
+        }
+
+        public Product build() {
+            Product product = new Product();
+            product.id = this.id;
+            product.name = this.name;
+            product.description = this.description;
+            product.price = this.price;
+            product.mrp = this.mrp;
+            product.gst = this.gst;
+            product.hsn = this.hsn;
+            product.cat = this.cat;
+            product.imgUrl = this.imgUrl;
+            product.status = this.status;
+            product.stock = this.stock;
+            product.createdAt = this.createdAt;
+            product.variants = this.variants;
+            return product;
+        }
+    }
 }

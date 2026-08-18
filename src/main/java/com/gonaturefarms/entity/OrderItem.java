@@ -84,14 +84,9 @@ public class OrderItem {
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
 
-    // No-args constructor and setters for manual construction
-    public OrderItem() {}
-
+    // Additional setters for manual construction
     public void setProductId(Long productId) { this.productId = productId; }
     public void setProductName(String productName) { this.productName = productName; }
     public void setProductImage(String productImage) { this.productImage = productImage; }
-    public void setPrice(BigDecimal price) { this.price = price; }
-    public void setGst(BigDecimal gst) { this.gst = gst; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setOrder(Order order) { this.order = order; }
 }

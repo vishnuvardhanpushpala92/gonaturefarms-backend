@@ -82,6 +82,96 @@ public class Coupon {
     public void setMaxUses(Integer maxUses) { this.maxUses = maxUses; }
     public void setUsedCount(Integer usedCount) { this.usedCount = usedCount; }
 
+    // Static builder method as failsafe for Lombok @Builder
+    public static CouponBuilder builder() {
+        return new CouponBuilder();
+    }
+
+    public static class CouponBuilder {
+        private Long id;
+        private String code;
+        private String description;
+        private BigDecimal discountValue;
+        private DiscountType discountType;
+        private BigDecimal minOrder;
+        private Integer maxUses;
+        private LocalDateTime expiresAt;
+        private Boolean isActive = true;
+        private Integer usedCount = 0;
+        private LocalDateTime createdAt = LocalDateTime.now();
+
+        public CouponBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public CouponBuilder code(String code) {
+            this.code = code;
+            return this;
+        }
+
+        public CouponBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public CouponBuilder discountValue(BigDecimal discountValue) {
+            this.discountValue = discountValue;
+            return this;
+        }
+
+        public CouponBuilder discountType(DiscountType discountType) {
+            this.discountType = discountType;
+            return this;
+        }
+
+        public CouponBuilder minOrder(BigDecimal minOrder) {
+            this.minOrder = minOrder;
+            return this;
+        }
+
+        public CouponBuilder maxUses(Integer maxUses) {
+            this.maxUses = maxUses;
+            return this;
+        }
+
+        public CouponBuilder expiresAt(LocalDateTime expiresAt) {
+            this.expiresAt = expiresAt;
+            return this;
+        }
+
+        public CouponBuilder isActive(Boolean isActive) {
+            this.isActive = isActive;
+            return this;
+        }
+
+        public CouponBuilder usedCount(Integer usedCount) {
+            this.usedCount = usedCount;
+            return this;
+        }
+
+        public CouponBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Coupon build() {
+            Coupon coupon = new Coupon();
+            coupon.id = this.id;
+            coupon.code = this.code;
+            coupon.description = this.description;
+            coupon.discountValue = this.discountValue;
+            coupon.discountType = this.discountType;
+            coupon.minOrder = this.minOrder;
+            coupon.maxUses = this.maxUses;
+            coupon.expiresAt = this.expiresAt;
+            coupon.isActive = this.isActive;
+            coupon.usedCount = this.usedCount;
+            coupon.createdAt = this.createdAt;
+            return coupon;
+        }
+    }
+
     public enum DiscountType {
         percent, flat
     }

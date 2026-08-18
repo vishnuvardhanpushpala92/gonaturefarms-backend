@@ -44,4 +44,63 @@ public class Slide {
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    // Additional setters for manual construction
+    public void setCaption(String caption) { this.caption = caption; }
+    public void setSubText(String subText) { this.subText = subText; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static SlideBuilder builder() {
+        return new SlideBuilder();
+    }
+
+    public static class SlideBuilder {
+        private Long id;
+        private String imageUrl;
+        private String caption = "";
+        private String subText = "";
+        private Integer sortOrder = 0;
+        private LocalDateTime createdAt = LocalDateTime.now();
+
+        public SlideBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public SlideBuilder imageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+            return this;
+        }
+
+        public SlideBuilder caption(String caption) {
+            this.caption = caption;
+            return this;
+        }
+
+        public SlideBuilder subText(String subText) {
+            this.subText = subText;
+            return this;
+        }
+
+        public SlideBuilder sortOrder(Integer sortOrder) {
+            this.sortOrder = sortOrder;
+            return this;
+        }
+
+        public SlideBuilder createdAt(LocalDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Slide build() {
+            Slide slide = new Slide();
+            slide.id = this.id;
+            slide.imageUrl = this.imageUrl;
+            slide.caption = this.caption;
+            slide.subText = this.subText;
+            slide.sortOrder = this.sortOrder;
+            slide.createdAt = this.createdAt;
+            return slide;
+        }
+    }
 }

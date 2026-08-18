@@ -44,4 +44,59 @@ public class DeliveryZone {
     @Builder.Default
     @Column(precision = 6, scale = 2)
     private BigDecimal charge = BigDecimal.ZERO;
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static DeliveryZoneBuilder builder() {
+        return new DeliveryZoneBuilder();
+    }
+
+    public static class DeliveryZoneBuilder {
+        private Long id;
+        private String pincode;
+        private String area = "";
+        private String city = "";
+        private String state = "";
+        private BigDecimal charge = BigDecimal.ZERO;
+
+        public DeliveryZoneBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public DeliveryZoneBuilder pincode(String pincode) {
+            this.pincode = pincode;
+            return this;
+        }
+
+        public DeliveryZoneBuilder area(String area) {
+            this.area = area;
+            return this;
+        }
+
+        public DeliveryZoneBuilder city(String city) {
+            this.city = city;
+            return this;
+        }
+
+        public DeliveryZoneBuilder state(String state) {
+            this.state = state;
+            return this;
+        }
+
+        public DeliveryZoneBuilder charge(BigDecimal charge) {
+            this.charge = charge;
+            return this;
+        }
+
+        public DeliveryZone build() {
+            DeliveryZone zone = new DeliveryZone();
+            zone.id = this.id;
+            zone.pincode = this.pincode;
+            zone.area = this.area;
+            zone.city = this.city;
+            zone.state = this.state;
+            zone.charge = this.charge;
+            return zone;
+        }
+    }
 }

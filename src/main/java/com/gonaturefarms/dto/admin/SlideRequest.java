@@ -8,4 +8,9 @@ public class SlideRequest {
     private String caption;
     private String subText;
     private Integer sortOrder;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getImageUrl() { return imageUrl; }
+    public String getCaption() { return caption; }
+    public String getSubText() { return subText; }
 }

@@ -1,12 +1,12 @@
 package com.gonaturefarms.dto.product;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 public class ProductRequest {
@@ -27,4 +27,16 @@ public class ProductRequest {
 
     @Valid
     private List<ProductVariantRequest> variants;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public BigDecimal getPrice() { return price; }
+    public BigDecimal getMrp() { return mrp; }
+    public BigDecimal getGst() { return gst; }
+    public String getHsn() { return hsn; }
+    public String getCat() { return cat; }
+    public String getImgUrl() { return imgUrl; }
+    public String getStatus() { return status; }
+    public List<ProductVariantRequest> getVariants() { return variants; }
 }
