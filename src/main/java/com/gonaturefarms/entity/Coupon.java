@@ -63,6 +63,7 @@ public class Coupon {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // --- MANUAL GETTERS (in case Lombok fails) ---
+    public String getCode() { return code; }
     public BigDecimal getDiscountValue() { return discountValue; }
     public BigDecimal getMinOrder() { return minOrder; }
     public DiscountType getDiscountType() { return discountType; }
@@ -70,6 +71,16 @@ public class Coupon {
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public Integer getMaxUses() { return maxUses; }
     public Integer getUsedCount() { return usedCount; }
+
+    // Additional setters for manual construction
+    public void setCode(String code) { this.code = code; }
+    public void setDiscountValue(BigDecimal discountValue) { this.discountValue = discountValue; }
+    public void setMinOrder(BigDecimal minOrder) { this.minOrder = minOrder; }
+    public void setDiscountType(DiscountType discountType) { this.discountType = discountType; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public void setMaxUses(Integer maxUses) { this.maxUses = maxUses; }
+    public void setUsedCount(Integer usedCount) { this.usedCount = usedCount; }
 
     public enum DiscountType {
         percent, flat

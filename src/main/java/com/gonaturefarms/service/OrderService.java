@@ -69,41 +69,40 @@ public class OrderService {
     public ApiResponse saveOrderInternal(OrderRequest req) {
         String newOrderId = OrderIdGenerator.generate();
 
-        Order order = Order.builder()
-                .orderId(newOrderId)
-                .userId(req.getUserId())
-                .customerName(req.getCustomerName())
-                .phone(req.getPhone())
-                .email(isBlank(req.getEmail()) ? null : req.getEmail())
-                .address(req.getAddress())
-                .area(req.getArea() == null ? "" : req.getArea())
-                .city(req.getCity())
-                .state(req.getState() == null ? "" : req.getState())
-                .pincode(req.getPincode())
-                .paymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod())
-                .paymentUtr(req.getPaymentUtr())
-                .subtotal(nz(req.getSubtotal()))
-                .gstAmount(nz(req.getGstAmount()))
-                .deliveryCharge(nz(req.getDeliveryCharge()))
-                .discount(nz(req.getDiscount()))
-                .total(req.getTotal())
-                .status(req.getPaymentMethod() != null && req.getPaymentMethod().equalsIgnoreCase("UPI") 
-                        ? Order.OrderStatus.PaymentVerificationPending 
-                        : Order.OrderStatus.Placed)
-                .paymentStatus(Order.PaymentStatus.Pending)
-                .build();
+        Order order = new Order();
+        order.setOrderId(newOrderId);
+        order.setUserId(req.getUserId());
+        order.setCustomerName(req.getCustomerName());
+        order.setPhone(req.getPhone());
+        order.setEmail(isBlank(req.getEmail()) ? null : req.getEmail());
+        order.setAddress(req.getAddress());
+        order.setArea(req.getArea() == null ? "" : req.getArea());
+        order.setCity(req.getCity());
+        order.setState(req.getState() == null ? "" : req.getState());
+        order.setPincode(req.getPincode());
+        order.setPaymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod());
+        order.setPaymentUtr(req.getPaymentUtr());
+        order.setPaymentScreenshotUrl(req.getPaymentScreenshotUrl());
+        order.setSubtotal(nz(req.getSubtotal()));
+        order.setGstAmount(nz(req.getGstAmount()));
+        order.setDeliveryCharge(nz(req.getDeliveryCharge()));
+        order.setDiscount(nz(req.getDiscount()));
+        order.setTotal(req.getTotal());
+        order.setStatus(req.getPaymentMethod() != null && req.getPaymentMethod().equalsIgnoreCase("UPI") 
+                ? Order.OrderStatus.PaymentVerificationPending 
+                : Order.OrderStatus.Placed);
+        order.setPaymentStatus(Order.PaymentStatus.Pending);
 
         for (OrderItemRequest item : req.getItems()) {
-            OrderItem orderItem = OrderItem.builder()
-                    .productId(item.getId())
-                    .productName(item.getName())
-                    .productImage(item.getImg() == null ? "" : item.getImg())
-                    .price(item.getPrice())
-                    .gst(nz(item.getGst()))
-                    .quantity(item.getQty())
-                    .total(item.getPrice().multiply(BigDecimal.valueOf(item.getQty())))
-                    .order(order)
-                    .build();
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(item.getId());
+            orderItem.setProductName(item.getName());
+            orderItem.setProductImage(item.getImg() == null ? "" : item.getImg());
+            orderItem.setPrice(item.getPrice());
+            orderItem.setGst(nz(item.getGst()));
+            orderItem.setQuantity(item.getQty());
+            orderItem.setTotal(item.getPrice().multiply(BigDecimal.valueOf(item.getQty())));
+            orderItem.setOrder(order);
             order.getItems().add(orderItem);
         }
 

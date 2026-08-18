@@ -19,6 +19,7 @@ public class CouponRequest {
     private Boolean isActive;
 
     // --- MANUAL GETTERS ---
+    public String getCode() { return code; }
     public BigDecimal getDiscountValue() { return discountValue; }
     public BigDecimal getMinOrder() { return minOrder; }
     public String getDiscountType() { return discountType; }

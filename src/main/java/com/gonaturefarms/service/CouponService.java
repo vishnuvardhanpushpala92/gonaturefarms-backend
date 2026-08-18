@@ -67,14 +67,15 @@ public class CouponService {
         if (couponRepository.existsByCode(code)) {
             throw new ApiException("Coupon code already exists");
         }
-        Coupon coupon = Coupon.builder()
-                .code(code)
-                .discountType(parseType(req.getDiscountType()))
-                .discountValue(req.getDiscountValue())
-                .minOrder(req.getMinOrder() == null ? BigDecimal.ZERO : req.getMinOrder())
-                .maxUses(req.getMaxUses() == null ? 9999 : req.getMaxUses())
-                .expiresAt(req.getExpiresAt())
-                .build();
+        Coupon coupon = new Coupon();
+        coupon.setCode(code);
+        coupon.setDiscountType(parseType(req.getDiscountType()));
+        coupon.setDiscountValue(req.getDiscountValue());
+        coupon.setMinOrder(req.getMinOrder() == null ? BigDecimal.ZERO : req.getMinOrder());
+        coupon.setMaxUses(req.getMaxUses() == null ? 9999 : req.getMaxUses());
+        coupon.setExpiresAt(req.getExpiresAt());
+        coupon.setIsActive(true);
+        coupon.setUsedCount(0);
         couponRepository.save(coupon);
         return ApiResponse.ok("Coupon created");
     }
