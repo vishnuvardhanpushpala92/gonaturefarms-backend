@@ -54,6 +54,13 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
 
+-- Add security question columns for existing databases (ignore if already exists)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255);
+
+-- Add WhatsApp opt-out column for existing databases (ignore if already exists)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_opt_out BOOLEAN DEFAULT false;
+
 -- Default admin user (password: 918252) — CHANGE THIS PASSWORD AFTER FIRST LOGIN!
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)
 VALUES ('Vishnu', '9182526000', 'admin@gonaturefarms.com',
@@ -93,6 +100,17 @@ CREATE TABLE IF NOT EXISTS products (
 );
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
+
+-- ── PRODUCT VARIANTS ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS product_variants (
+  id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  product_id   BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  variant_name VARCHAR(100) NOT NULL,
+  price        DECIMAL(10,2) NOT NULL,
+  stock        INT DEFAULT 0,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 
 -- Clean up duplicate products (keep the one with the smallest ID for each name)
 DELETE FROM products p1
@@ -138,15 +156,25 @@ CREATE TABLE IF NOT EXISTS orders (
   delivery_charge   DECIMAL(10,2) DEFAULT 0,
   discount          DECIMAL(10,2) DEFAULT 0,
   total             DECIMAL(10,2) NOT NULL,
-  status            VARCHAR(20) DEFAULT 'Pending' CHECK (status IN ('Pending','Confirmed','Shipped','Delivered','Cancelled')),
+  status            VARCHAR(30) DEFAULT 'Pending' CHECK (status IN ('Pending','Confirmed','Processing','Packed','Shipped','OutForDelivery','Delivered','Cancelled','PaymentVerificationPending')),
   payment_status    VARCHAR(20) DEFAULT 'Pending' CHECK (payment_status IN ('Pending','Paid','Failed','Refunded')),
   tracking_location VARCHAR(255) DEFAULT '',
   notes             TEXT,
+  payment_utr       VARCHAR(50) DEFAULT '',
+  payment_screenshot_url TEXT DEFAULT '',
+  payment_verified  BOOLEAN DEFAULT false,
   created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+
+-- Add payment verification columns for existing databases (ignore if already exists)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_screenshot_url TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT false;
+
+-- Update orders status constraint to include new statuses (PostgreSQL doesn't support ALTER CONSTRAINT directly, handled via CHECK update above)
 
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
@@ -334,6 +362,36 @@ CREATE TABLE IF NOT EXISTS scroll_blocks (
   sort_order INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ── ADDRESSES ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS addresses (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    address_type VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    address_line VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    pincode VARCHAR(10) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+
+-- ── WHATSAPP REMINDERS ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS whatsapp_reminders (
+    id BIGSERIAL PRIMARY KEY,
+    admin_id BIGINT NOT NULL,
+    reminder_type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    scheduled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sent_at TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'Pending' CHECK (status IN ('Pending','Sent','Failed')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_whatsapp_reminders_admin_id ON whatsapp_reminders(admin_id);
 
 -- ── DONE ─────────────────────────────────────────────────────────
 -- Admin login -> Username: Vishnu | Password: 918252
