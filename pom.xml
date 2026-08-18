@@ -136,8 +136,10 @@
                             <version>1.18.36</version>
                         </path>
                     </annotationProcessorPaths>
-                    <!-- Force annotation processing -->
                     <proc>full</proc>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>

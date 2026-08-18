@@ -7,4 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CategoryRequest {
     private String name;
+
+    // Manual getter as failsafe for Lombok processing issues
+    public String getName() { return name; }
 }

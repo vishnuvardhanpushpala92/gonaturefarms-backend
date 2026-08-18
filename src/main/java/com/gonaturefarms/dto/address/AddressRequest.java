@@ -37,4 +37,13 @@ public class AddressRequest {
     private String phone;
 
     private Boolean isDefault;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getState() { return state; }
+    public String getPincode() { return pincode; }
+    public String getPhone() { return phone; }
+    public Boolean getIsDefault() { return isDefault; }
+    public String getName() { return name; }
+    public String getAddressLine() { return addressLine; }
+    public String getCity() { return city; }
 }
