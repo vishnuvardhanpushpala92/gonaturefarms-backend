@@ -15,9 +15,16 @@ import com.gonaturefarms.repository.OrderRepository;
 import com.gonaturefarms.util.OrderIdGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 /** Business logic for placing, looking up, and (admin) managing orders. Mirrors routes/orders.js. */
 @Service
@@ -36,7 +43,7 @@ public class OrderService {
     }
 
     @Transactional
-    public ApiResponse placeOrder(OrderRequest req) {
+    public ApiResponse placeOrder(OrderRequest req, MultipartFile screenshot) {
         if (isBlank(req.getCustomerName()) || isBlank(req.getPhone()) || isBlank(req.getAddress())
                 || isBlank(req.getCity()) || isBlank(req.getPincode())
                 || req.getItems() == null || req.getItems().isEmpty()) {
@@ -48,6 +55,12 @@ public class OrderService {
         boolean zoneKnown = deliveryZoneRepository.findByPincode(req.getPincode().trim()).isPresent();
         if (zoneCount > 0 && !zoneKnown) {
             throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
+        }
+
+        // Save screenshot if provided
+        String screenshotUrl = null;
+        if (screenshot != null && !screenshot.isEmpty()) {
+            screenshotUrl = saveScreenshotFile(screenshot);
         }
 
         Order order = Order.builder()
@@ -63,7 +76,7 @@ public class OrderService {
                 .pincode(req.getPincode())
                 .paymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod())
                 .paymentUtr(req.getPaymentUtr())
-                .paymentScreenshotUrl(req.getPaymentScreenshotUrl())
+                .paymentScreenshotUrl(screenshotUrl)  // set the saved URL
                 .subtotal(nz(req.getSubtotal()))
                 .gstAmount(nz(req.getGstAmount()))
                 .deliveryCharge(nz(req.getDeliveryCharge()))
@@ -166,6 +179,27 @@ public class OrderService {
 
         orderRepository.save(order);
         return ApiResponse.ok(approved ? "Payment verified and order confirmed" : "Payment rejected and order cancelled");
+    }
+
+    // Helper: save screenshot to local storage
+    private String saveScreenshotFile(MultipartFile file) {
+        try {
+            String uploadDir = "uploads/screenshots";
+            File directory = new File(uploadDir);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String filename = UUID.randomUUID().toString() + extension;
+            Path filePath = Paths.get(uploadDir, filename);
+            Files.write(filePath, file.getBytes());
+
+            return "/uploads/screenshots/" + filename;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save screenshot", e);
+        }
     }
 
     private BigDecimal nz(BigDecimal v) {

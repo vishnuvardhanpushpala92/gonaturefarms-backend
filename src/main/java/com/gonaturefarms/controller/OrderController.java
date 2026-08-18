@@ -8,6 +8,7 @@ import com.gonaturefarms.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /** REST controller for orders. Mirrors routes/orders.js. */
 @RestController
@@ -21,8 +22,10 @@ public class OrderController {
     }
 
     @PostMapping
-    public ApiResponse place(@Valid @RequestBody OrderRequest request) {
-        return orderService.placeOrder(request);
+    public ApiResponse place(
+            @RequestPart("order") @Valid OrderRequest request,
+            @RequestPart(value = "screenshot", required = false) MultipartFile screenshot) {
+        return orderService.placeOrder(request, screenshot);
     }
 
     @GetMapping("/lookup")
