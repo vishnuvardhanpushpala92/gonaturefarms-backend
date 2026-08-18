@@ -16,7 +16,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Maps to the "coupons" table. */
 @Entity
 @Table(name = "coupons")
 @Data
@@ -29,41 +28,50 @@ public class Coupon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false, unique = true)
     private String code;
 
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    @Column(name = "discount_type", nullable = false, length = 20)
-    private DiscountType discountType = DiscountType.flat;
+    @Column(length = 500)
+    private String description;
 
     @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountValue;
 
-    @Builder.Default
-    @Column(name = "min_order", precision = 10, scale = 2)
-    private BigDecimal minOrder = BigDecimal.ZERO;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false, length = 20)
+    private DiscountType discountType;
 
-    @Builder.Default
+    @Column(name = "min_order", precision = 10, scale = 2)
+    private BigDecimal minOrder;
+
     @Column(name = "max_uses")
-    private Integer maxUses = 9999;
+    private Integer maxUses;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
 
     @Builder.Default
     @Column(name = "used_count")
     private Integer usedCount = 0;
 
-    @Builder.Default
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(name = "expires_at")
-    private LocalDateTime expiresAt;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // --- MANUAL GETTERS (in case Lombok fails) ---
+    public BigDecimal getDiscountValue() { return discountValue; }
+    public BigDecimal getMinOrder() { return minOrder; }
+    public DiscountType getDiscountType() { return discountType; }
+    public Boolean getIsActive() { return isActive; }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public Integer getMaxUses() { return maxUses; }
+    public Integer getUsedCount() { return usedCount; }
+
     public enum DiscountType {
-        flat, percent
+        percent, flat
     }
 }
