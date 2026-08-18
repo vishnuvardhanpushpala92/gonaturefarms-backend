@@ -2,6 +2,7 @@ package com.gonaturefarms.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import com.gonaturefarms.dto.auth.RegisterRequest;
 import com.gonaturefarms.dto.auth.ResetPasswordRequest;
 import com.gonaturefarms.dto.auth.SecurityQuestionResetRequest;
 import com.gonaturefarms.dto.auth.SecurityQuestionVerifyRequest;
+import com.gonaturefarms.dto.auth.UpdateProfileRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.AuthService;
@@ -68,5 +70,10 @@ public class AuthController {
     @PostMapping("/reset-password/security-question")
     public ApiResponse resetPasswordWithSecurityQuestion(@Valid @RequestBody SecurityQuestionResetRequest request) {
         return authService.resetPasswordWithSecurityQuestion(request);
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        return authService.updateProfile(SecurityUtils.requireCurrentUser(), request);
     }
 }

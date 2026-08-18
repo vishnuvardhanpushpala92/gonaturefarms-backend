@@ -18,6 +18,7 @@ import com.gonaturefarms.dto.auth.RegisterRequest;
 import com.gonaturefarms.dto.auth.ResetPasswordRequest;
 import com.gonaturefarms.dto.auth.SecurityQuestionResetRequest;
 import com.gonaturefarms.dto.auth.SecurityQuestionVerifyRequest;
+import com.gonaturefarms.dto.auth.UpdateProfileRequest;
 import com.gonaturefarms.dto.auth.UserSummary;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.User;
@@ -287,6 +288,39 @@ public class AuthService {
         userRepository.save(user);
 
         return ApiResponse.ok("Password reset successfully. Please login with your new password.");
+    }
+
+    @Transactional
+    public ApiResponse updateProfile(CurrentUser currentUser, UpdateProfileRequest req) {
+        User user = userRepository.findById(currentUser.id())
+                .orElseThrow(() -> new ApiException("User not found"));
+
+        if (!isBlank(req.getName())) {
+            user.setName(req.getName());
+        }
+        if (!isBlank(req.getPhone())) {
+            if (!PHONE_PATTERN.matcher(req.getPhone()).matches()) {
+                throw new ApiException("Phone must be 10 digits");
+            }
+            // Check if phone is already taken by another user
+            userRepository.findByPhone(req.getPhone()).ifPresent(existing -> {
+                if (!existing.getId().equals(user.getId())) {
+                    throw new ApiException("Phone number already in use");
+                }
+            });
+            user.setPhone(req.getPhone());
+        }
+        if (!isBlank(req.getEmail())) {
+            user.setEmail(req.getEmail());
+        }
+        if (!isBlank(req.getPincode())) {
+            user.setPincode(req.getPincode());
+        }
+
+        userRepository.save(user);
+
+        return ApiResponse.ok("Profile updated successfully")
+                .with("user", toSummary(user));
     }
 
     private UserSummary toSummary(User user) {
