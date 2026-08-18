@@ -19,4 +19,8 @@ public class RegisterRequest {
     private String pincode;
 
     private String puzzleAnswer;
+
+    private String securityQuestion;
+
+    private String securityAnswer;
 }

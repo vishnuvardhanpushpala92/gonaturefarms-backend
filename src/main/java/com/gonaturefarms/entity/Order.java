@@ -99,6 +99,16 @@ public class Order {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "payment_utr", length = 50)
+    private String paymentUtr;
+
+    @Column(name = "payment_screenshot_url", length = 500)
+    private String paymentScreenshotUrl;
+
+    @Column(name = "payment_verified")
+    @Builder.Default
+    private Boolean paymentVerified = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -134,7 +144,7 @@ public class Order {
     }
 
     public enum OrderStatus {
-        Pending, Confirmed, Shipped, Delivered, Cancelled
+        Placed, Confirmed, Processing, Packed, Shipped, OutForDelivery, Delivered, Cancelled, PaymentVerificationPending
     }
 
     public enum PaymentStatus {

@@ -51,4 +51,10 @@ public class OrderController {
     public ApiResponse delete(@PathVariable String orderId) {
         return orderService.deleteOrder(orderId);
     }
+
+    @PutMapping("/{orderId}/verify-payment")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse verifyPayment(@PathVariable String orderId, @RequestParam boolean approved) {
+        return orderService.verifyPayment(orderId, approved);
+    }
 }

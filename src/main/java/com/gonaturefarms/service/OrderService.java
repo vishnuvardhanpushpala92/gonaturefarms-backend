@@ -62,12 +62,16 @@ public class OrderService {
                 .state(req.getState() == null ? "" : req.getState())
                 .pincode(req.getPincode())
                 .paymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod())
+                .paymentUtr(req.getPaymentUtr())
+                .paymentScreenshotUrl(req.getPaymentScreenshotUrl())
                 .subtotal(nz(req.getSubtotal()))
                 .gstAmount(nz(req.getGstAmount()))
                 .deliveryCharge(nz(req.getDeliveryCharge()))
                 .discount(nz(req.getDiscount()))
                 .total(req.getTotal())
-                .status(Order.OrderStatus.Pending)
+                .status(req.getPaymentMethod() != null && req.getPaymentMethod().equalsIgnoreCase("UPI") 
+                        ? Order.OrderStatus.PaymentVerificationPending 
+                        : Order.OrderStatus.Placed)
                 .paymentStatus(Order.PaymentStatus.Pending)
                 .build();
 
@@ -143,6 +147,25 @@ public class OrderService {
     public ApiResponse deleteOrder(String orderId) {
         orderRepository.findByOrderId(orderId).ifPresent(orderRepository::delete);
         return ApiResponse.ok("Order deleted");
+    }
+
+    @Transactional
+    public ApiResponse verifyPayment(String orderId, boolean approved) {
+        Order order = orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (approved) {
+            order.setPaymentVerified(true);
+            order.setPaymentStatus(Order.PaymentStatus.Paid);
+            order.setStatus(Order.OrderStatus.Confirmed);
+        } else {
+            order.setPaymentVerified(false);
+            order.setPaymentStatus(Order.PaymentStatus.Failed);
+            order.setStatus(Order.OrderStatus.Cancelled);
+        }
+
+        orderRepository.save(order);
+        return ApiResponse.ok(approved ? "Payment verified and order confirmed" : "Payment rejected and order cancelled");
     }
 
     private BigDecimal nz(BigDecimal v) {

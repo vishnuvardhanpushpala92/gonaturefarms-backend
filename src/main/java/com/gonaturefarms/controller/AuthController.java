@@ -11,6 +11,8 @@ import com.gonaturefarms.dto.auth.ForgotPasswordRequest;
 import com.gonaturefarms.dto.auth.LoginRequest;
 import com.gonaturefarms.dto.auth.RegisterRequest;
 import com.gonaturefarms.dto.auth.ResetPasswordRequest;
+import com.gonaturefarms.dto.auth.SecurityQuestionResetRequest;
+import com.gonaturefarms.dto.auth.SecurityQuestionVerifyRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.AuthService;
@@ -56,5 +58,15 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ApiResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return authService.resetPassword(request);
+    }
+
+    @PostMapping("/forgot-password/verify")
+    public ApiResponse verifySecurityQuestion(@Valid @RequestBody SecurityQuestionVerifyRequest request) {
+        return authService.verifySecurityQuestion(request);
+    }
+
+    @PostMapping("/reset-password/security-question")
+    public ApiResponse resetPasswordWithSecurityQuestion(@Valid @RequestBody SecurityQuestionResetRequest request) {
+        return authService.resetPasswordWithSecurityQuestion(request);
     }
 }

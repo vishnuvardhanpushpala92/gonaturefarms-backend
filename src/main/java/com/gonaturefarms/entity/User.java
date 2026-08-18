@@ -62,6 +62,20 @@ public class User {
     @Column(name = "reset_code_expires_at")
     private LocalDateTime resetCodeExpiresAt;
 
+    @Column(name = "security_question", length = 255)
+    private String securityQuestion;
+
+    @JsonIgnore
+    @Column(name = "security_answer", length = 255)
+    private String securityAnswer;
+
+    @Column(name = "whatsapp_number", length = 15)
+    private String whatsappNumber;
+
+    @Column(name = "whatsapp_opt_out")
+    @Builder.Default
+    private Boolean whatsappOptOut = false;
+
     public enum UserRole {
         customer, admin
     }

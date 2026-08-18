@@ -33,6 +33,10 @@ public class OrderRequest {
 
     private String paymentMethod;
 
+    private String paymentUtr;
+
+    private String paymentScreenshotUrl;
+
     @NotEmpty(message = "Order must contain at least one item")
     @Valid
     private List<OrderItemRequest> items;

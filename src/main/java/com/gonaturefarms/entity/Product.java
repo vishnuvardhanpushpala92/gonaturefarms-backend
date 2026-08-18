@@ -65,6 +65,9 @@ public class Product {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Transient
+    private java.util.List<com.gonaturefarms.entity.ProductVariant> variants;
+
     public enum ProductStatus {
         current, future
     }

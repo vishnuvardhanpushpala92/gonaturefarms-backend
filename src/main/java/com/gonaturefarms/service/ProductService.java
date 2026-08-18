@@ -3,10 +3,12 @@ package com.gonaturefarms.service;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.product.ProductRequest;
 import com.gonaturefarms.entity.Product;
+import com.gonaturefarms.entity.ProductVariant;
 import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.exception.ResourceNotFoundException;
 import com.gonaturefarms.repository.CategoryRepository;
 import com.gonaturefarms.repository.ProductRepository;
+import com.gonaturefarms.repository.ProductVariantRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,15 +33,17 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductVariantRepository productVariantRepository;
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductVariantRepository productVariantRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productVariantRepository = productVariantRepository;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +81,11 @@ public class ProductService {
     public ApiResponse getProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        // Load variants
+        java.util.List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        product.setVariants(variants);
+        
         return ApiResponse.ok().with("product", product);
     }
 
@@ -106,6 +115,20 @@ public class ProductService {
                 .status(parseStatus(req.getStatus()))
                 .build();
         product = productRepository.save(product);
+
+        // Save variants if provided
+        if (req.getVariants() != null && !req.getVariants().isEmpty()) {
+            for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
+                ProductVariant variant = ProductVariant.builder()
+                        .productId(product.getId())
+                        .variantName(variantReq.getVariantName())
+                        .price(variantReq.getPrice())
+                        .stock(variantReq.getStock())
+                        .build();
+                productVariantRepository.save(variant);
+            }
+        }
+
         return ApiResponse.ok("Product added").with("id", product.getId());
     }
 
@@ -123,12 +146,28 @@ public class ProductService {
         product.setImgUrl(req.getImgUrl() == null ? "" : req.getImgUrl());
         product.setStatus(parseStatus(req.getStatus()));
         productRepository.save(product);
+
+        // Update variants
+        productVariantRepository.deleteByProductId(id);
+        if (req.getVariants() != null && !req.getVariants().isEmpty()) {
+            for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
+                ProductVariant variant = ProductVariant.builder()
+                        .productId(product.getId())
+                        .variantName(variantReq.getVariantName())
+                        .price(variantReq.getPrice())
+                        .stock(variantReq.getStock())
+                        .build();
+                productVariantRepository.save(variant);
+            }
+        }
+
         return ApiResponse.ok("Product updated");
     }
 
     @Transactional
     public ApiResponse deleteProduct(Long id) {
         if (productRepository.existsById(id)) {
+            productVariantRepository.deleteByProductId(id);
             productRepository.deleteById(id);
         }
         return ApiResponse.ok("Product deleted");

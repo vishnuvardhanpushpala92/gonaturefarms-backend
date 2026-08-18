@@ -16,6 +16,8 @@ import com.gonaturefarms.dto.auth.ForgotPasswordRequest;
 import com.gonaturefarms.dto.auth.LoginRequest;
 import com.gonaturefarms.dto.auth.RegisterRequest;
 import com.gonaturefarms.dto.auth.ResetPasswordRequest;
+import com.gonaturefarms.dto.auth.SecurityQuestionResetRequest;
+import com.gonaturefarms.dto.auth.SecurityQuestionVerifyRequest;
 import com.gonaturefarms.dto.auth.UserSummary;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.User;
@@ -97,6 +99,8 @@ public class AuthService {
                 .email(isBlank(req.getEmail()) ? null : req.getEmail())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
                 .pincode(isBlank(req.getPincode()) ? null : req.getPincode())
+                .securityQuestion(req.getSecurityQuestion())
+                .securityAnswer(req.getSecurityAnswer() != null ? passwordEncoder.encode(req.getSecurityAnswer()) : null)
                 .role(User.UserRole.customer)
                 .isVerified(true)
                 .build();
@@ -232,6 +236,54 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         user.setResetCode(null);
         user.setResetCodeExpiresAt(null);
+        userRepository.save(user);
+
+        return ApiResponse.ok("Password reset successfully. Please login with your new password.");
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse verifySecurityQuestion(SecurityQuestionVerifyRequest req) {
+        if (isBlank(req.getIdentifier())) {
+            throw new ApiException("Phone or email is required");
+        }
+        String identifier = req.getIdentifier().trim();
+        User user = userRepository.findByPhoneOrEmail(identifier, identifier)
+                .orElseThrow(() -> new ApiException("Account not found"));
+
+        if (isBlank(user.getSecurityQuestion())) {
+            throw new ApiException("No security question set for this account. Please contact support.");
+        }
+
+        return ApiResponse.ok("Security question found")
+                .with("securityQuestion", user.getSecurityQuestion());
+    }
+
+    @Transactional
+    public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest req) {
+        if (isBlank(req.getIdentifier()) || isBlank(req.getSecurityAnswer()) || 
+            isBlank(req.getNewPassword()) || isBlank(req.getConfirmPassword())) {
+            throw new ApiException("All fields are required");
+        }
+        if (!req.getNewPassword().equals(req.getConfirmPassword())) {
+            throw new ApiException("Passwords do not match");
+        }
+        if (req.getNewPassword().length() < 6) {
+            throw new ApiException("Password must be at least 6 characters");
+        }
+
+        String identifier = req.getIdentifier().trim();
+        User user = userRepository.findByPhoneOrEmail(identifier, identifier)
+                .orElseThrow(() -> new ApiException("Account not found"));
+
+        if (isBlank(user.getSecurityQuestion()) || isBlank(user.getSecurityAnswer())) {
+            throw new ApiException("No security question set for this account. Please contact support.");
+        }
+
+        if (!passwordEncoder.matches(req.getSecurityAnswer(), user.getSecurityAnswer())) {
+            throw new ApiException("Incorrect security answer");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
         userRepository.save(user);
 
         return ApiResponse.ok("Password reset successfully. Please login with your new password.");
