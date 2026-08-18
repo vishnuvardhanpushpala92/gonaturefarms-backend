@@ -9,7 +9,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,13 +31,13 @@ public class Address {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "address_type", nullable = false, length = 20)
     private AddressType addressType;
 
     @Column(nullable = false, length = 120)
     private String name;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "address_line", nullable = false, length = 255)
     private String addressLine;
 
     @Column(nullable = false, length = 100)
@@ -66,10 +65,5 @@ public class Address {
 
     public enum AddressType {
         Home, Office
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

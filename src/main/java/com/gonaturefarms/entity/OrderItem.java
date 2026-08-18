@@ -1,20 +1,26 @@
 package com.gonaturefarms.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 
-/** Maps to the "order_items" table. */
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Entity
 @Table(name = "order_items")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -29,22 +35,20 @@ public class OrderItem {
     @JsonBackReference
     private Order order;
 
-    @Column(name = "product_id")
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "product_name", nullable = false, length = 200)
+    @Column(name = "product_name", nullable = false, length = 120)
     private String productName;
 
-    @Builder.Default
     @Column(name = "product_image", length = 500)
-    private String productImage = "";
+    private String productImage;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Builder.Default
-    @Column(precision = 5, scale = 2)
-    private BigDecimal gst = BigDecimal.ZERO;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal gst;
 
     @Column(nullable = false)
     private Integer quantity;

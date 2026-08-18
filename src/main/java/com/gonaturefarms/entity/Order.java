@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "orders")
@@ -115,12 +116,13 @@ public class Order {
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
+    // Fixed methods – explicit type hints to avoid inference issues
     @Transient
     public String getItemsSummary() {
         if (items == null || items.isEmpty()) return "";
         return items.stream()
                 .map(i -> i.getProductName() + "\u00D7" + i.getQuantity())
-                .collect(java.util.stream.Collectors.joining(", "));
+                .collect(Collectors.joining(", "));
     }
 
     @Transient
@@ -129,7 +131,7 @@ public class Order {
         return items.stream()
                 .map(i -> i.getProductName() + " x" + i.getQuantity() + "|" +
                         (i.getProductImage() == null ? "" : i.getProductImage()))
-                .collect(java.util.stream.Collectors.joining("||"));
+                .collect(Collectors.joining("||"));
     }
 
     public enum OrderStatus {
