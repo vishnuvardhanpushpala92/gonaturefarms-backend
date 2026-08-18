@@ -67,6 +67,12 @@ public class ReviewController {
         return reviewService.submitReview(SecurityUtils.requireCurrentUser().id(), productId, request);
     }
 
+    @PutMapping("/{id}/feature")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse feature(@PathVariable Long id, @RequestBody FeatureToggleRequest request) {
+        return reviewService.feature(id, Boolean.TRUE.equals(request.getFeatured()));
+    }
+
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse approve(@PathVariable Long id) {
@@ -77,12 +83,6 @@ public class ReviewController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse unapprove(@PathVariable Long id) {
         return reviewService.unapprove(id);
-    }
-
-    @PutMapping("/{id}/feature")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse feature(@PathVariable Long id, @RequestBody FeatureToggleRequest request) {
-        return reviewService.feature(id, Boolean.TRUE.equals(request.getFeatured()));
     }
 
     @DeleteMapping("/{id}")

@@ -1,14 +1,15 @@
 package com.gonaturefarms.service;
 
+import java.math.BigDecimal;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.gonaturefarms.dto.admin.ZoneRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.DeliveryZone;
 import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.repository.DeliveryZoneRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 
 @Service
 public class DeliveryZoneService {
@@ -44,5 +45,18 @@ public class DeliveryZoneService {
     public ApiResponse delete(Long id) {
         deliveryZoneRepository.deleteById(id);
         return ApiResponse.ok("Zone deleted");
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse validatePincode(String pincode) {
+        if (pincode == null || pincode.isBlank()) {
+            return ApiResponse.fail("Pincode is required");
+        }
+        String trimmedPincode = pincode.trim();
+        boolean exists = deliveryZoneRepository.findByPincode(trimmedPincode).isPresent();
+        if (!exists) {
+            return ApiResponse.fail("Invalid pincode. Delivery not available in your area.");
+        }
+        return ApiResponse.ok("Pincode is valid for delivery");
     }
 }

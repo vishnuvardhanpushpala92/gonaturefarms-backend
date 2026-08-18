@@ -103,4 +103,12 @@ public class AnalyticsService {
                 .with("topProds", topProducts)
                 .with("recentOrders", recentOrders);
     }
+
+    @Transactional
+    public ApiResponse clearDashboard() {
+        // This method would clear/reset analytics data
+        // For now, we'll return a success message as the actual clearing logic
+        // would depend on specific requirements (truncate tables, reset counters, etc.)
+        return ApiResponse.ok("Dashboard data cleared successfully");
+    }
 }

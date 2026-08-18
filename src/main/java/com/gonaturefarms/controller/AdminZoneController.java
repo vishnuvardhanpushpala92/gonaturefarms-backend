@@ -29,6 +29,11 @@ public class AdminZoneController {
         return deliveryZoneService.list();
     }
 
+    @GetMapping("/validate")
+    public ApiResponse validatePincode(@RequestParam String pincode) {
+        return deliveryZoneService.validatePincode(pincode);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse upsert(@RequestBody ZoneRequest request) {

@@ -147,15 +147,20 @@ public class ReviewService {
         if (req.getUserName() == null || req.getUserName().isBlank()) {
             throw new ApiException("User name is required");
         }
-        Review review = Review.builder()
-                .userId(adminUserId)
-                .productId(req.getProductId())
-                .rating(req.getRating().shortValue())
-                .comment(req.getComment())
-                .customerName(req.getUserName())
-                .status(Review.ReviewStatus.approved)
-                .featured(Boolean.TRUE.equals(req.getFeatured()))
-                .build();
+        
+        // Check if review already exists for this product and user
+        Review review = reviewRepository.findByUserIdAndProductId(adminUserId, req.getProductId())
+                .orElseGet(() -> Review.builder()
+                        .userId(adminUserId)
+                        .productId(req.getProductId())
+                        .build());
+        
+        review.setRating(req.getRating().shortValue());
+        review.setComment(req.getComment());
+        review.setCustomerName(req.getUserName());
+        review.setStatus(Review.ReviewStatus.approved);
+        review.setFeatured(Boolean.TRUE.equals(req.getFeatured()));
+        review.setCreatedAt(java.time.LocalDateTime.now());
         reviewRepository.save(review);
         return ApiResponse.ok("Review created by admin");
     }
