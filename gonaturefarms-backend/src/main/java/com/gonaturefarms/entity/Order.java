@@ -93,7 +93,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     private OrderStatus status = OrderStatus.Pending;
 
     @Enumerated(EnumType.STRING)
