@@ -166,17 +166,30 @@ export default function CheckoutModal({ open, onClose }) {
         }))
       };
       
+      console.log('Placing order with payload:', payload);
       const { data } = await api.post('/orders', payload);
+      console.log('Order response:', data);
       
       if (data.success) {
-        setPlacedOrder({ orderId: data.orderId });
+        setPlacedOrder({ 
+          orderId: data.orderId,
+          customerName: form.customerName,
+          address: form.address,
+          city: form.city,
+          pincode: form.pincode,
+          phone: form.phone,
+          items: items
+        });
         clearCart();
         setStep(3);
+        showToast('Order placed successfully!');
       } else {
-        showToast(data.message);
+        showToast(data.message || 'Failed to place order');
       }
     } catch (err) {
-      showToast(err?.response?.data?.message || 'Could not place order');
+      console.error('Order placement error:', err);
+      const errorMsg = err?.response?.data?.message || err?.message || 'Could not place order';
+      showToast(errorMsg);
     } finally {
       setPlacing(false);
     }
