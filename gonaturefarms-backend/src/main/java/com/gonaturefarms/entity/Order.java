@@ -98,7 +98,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    @Column(name = "payment_status", nullable = false, length = 20)
+    @Column(name = "payment_status", nullable = false, length = 30)
     private PaymentStatus paymentStatus = PaymentStatus.Pending;
 
     @Builder.Default
