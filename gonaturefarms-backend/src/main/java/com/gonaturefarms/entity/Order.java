@@ -232,7 +232,7 @@ public class Order {
         private BigDecimal deliveryCharge;
         private BigDecimal discount;
         private BigDecimal total;
-        private OrderStatus status = OrderStatus.Placed;
+        private OrderStatus status = OrderStatus.Pending;   // FIXED: changed from Placed to Pending
         private PaymentStatus paymentStatus = PaymentStatus.Pending;
         private String trackingLocation = "";
         private String notes;
