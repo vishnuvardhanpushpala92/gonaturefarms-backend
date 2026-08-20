@@ -105,7 +105,7 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+    </dependencies>  
 
     <build>
         <finalName>gonaturefarms-backend</finalName>

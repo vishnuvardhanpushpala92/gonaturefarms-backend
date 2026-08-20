@@ -112,8 +112,18 @@ public class SecurityConfig {
                     .requestMatchers("/", "/index.html", "/script.js", "/favicon.ico", "/uploads/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
 
-                    // ── Allow all API requests for debugging ───────────────────
-                    .requestMatchers("/api/**").permitAll()
+                    // ── Public authentication endpoints ───────────────────────
+                    .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/admin-login").permitAll()
+                    .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/forgot-password/verify", "/api/auth/reset-password/security-question").permitAll()
+
+                    // ── Public product/category endpoints ─────────────────────
+                    .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/*", "/api/categories", "/api/categories/*").permitAll()
+                    
+                    // ── Public admin endpoints ───────────────────────────────
+                    .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/videos").permitAll()
+
+                    // ── All other API endpoints require authentication ───────────
+                    .requestMatchers("/api/**").authenticated()
 
                     .anyRequest().authenticated())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
