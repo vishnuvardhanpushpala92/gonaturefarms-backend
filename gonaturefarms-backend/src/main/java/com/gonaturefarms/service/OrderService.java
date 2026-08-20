@@ -52,18 +52,24 @@ public class OrderService {
             throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
         }
 
-        while (true) {
+        int maxRetries = 3;
+        int retryCount = 0;
+        
+        while (retryCount < maxRetries) {
             try {
                 return saveOrderInternal(req);
             } catch (DataIntegrityViolationException e) {
-                System.err.println("⚠️ Conflict detected, retrying with a new ID...");
-                // loop continues
+                retryCount++;
+                if (retryCount >= maxRetries) {
+                    throw new ApiException("Unable to place your order. Please try again.");
+                }
+                // loop continues for retry
             } catch (Exception e) {
-                System.err.println("Unexpected error: " + e.getMessage());
-                e.printStackTrace();
-                throw new ApiException("Failed to place order: " + e.getMessage());
+                throw new ApiException("Unable to place your order. Please try again.");
             }
         }
+        
+        throw new ApiException("Unable to place your order. Please try again.");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
         log.error("Data integrity violation:", ex);
-        String message = "Cannot delete: resource is referenced by other records";
+        String message = "Unable to complete your request. Please try again.";
         if (ex.getMessage() != null && ex.getMessage().contains("foreign key")) {
             message = "Cannot delete: resource is referenced by other records";
         }

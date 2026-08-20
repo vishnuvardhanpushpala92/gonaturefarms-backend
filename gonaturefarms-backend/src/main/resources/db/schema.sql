@@ -179,7 +179,10 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_screenshot_url TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT false;
 
--- Update orders status constraint to include new statuses (PostgreSQL doesn't support ALTER CONSTRAINT directly, handled via CHECK update above)
+-- Update orders status constraint to include new statuses (PostgreSQL doesn't support ALTER CONSTRAINT directly)
+-- Drop and recreate the check constraint for existing databases
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('Pending','Confirmed','Processing','Packed','Shipped','OutForDelivery','Delivered','Cancelled','PaymentVerificationPending'));
 
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (

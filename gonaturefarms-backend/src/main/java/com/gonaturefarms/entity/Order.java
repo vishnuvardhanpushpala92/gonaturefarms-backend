@@ -108,11 +108,13 @@ public class Order {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Builder.Default
     @Column(name = "payment_utr", length = 50)
-    private String paymentUtr;
+    private String paymentUtr = "";
 
+    @Builder.Default
     @Column(name = "payment_screenshot_url", length = 500)
-    private String paymentScreenshotUrl;
+    private String paymentScreenshotUrl = "";
 
     @Column(name = "payment_verified")
     @Builder.Default
@@ -223,8 +225,8 @@ public class Order {
         private String state = "";
         private String pincode;
         private String paymentMethod = "UPI";
-        private String paymentUtr;
-        private String paymentScreenshotUrl;
+        private String paymentUtr = "";
+        private String paymentScreenshotUrl = "";
         private BigDecimal subtotal;
         private BigDecimal gstAmount;
         private BigDecimal deliveryCharge;
@@ -232,7 +234,7 @@ public class Order {
         private BigDecimal total;
         private OrderStatus status = OrderStatus.Placed;
         private PaymentStatus paymentStatus = PaymentStatus.Pending;
-        private String trackingLocation;
+        private String trackingLocation = "";
         private String notes;
         private Boolean paymentVerified = false;
         private LocalDateTime createdAt = LocalDateTime.now();
