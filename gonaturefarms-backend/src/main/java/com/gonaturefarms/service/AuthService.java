@@ -292,35 +292,40 @@ public class AuthService {
 
     @Transactional
     public ApiResponse updateProfile(CurrentUser currentUser, UpdateProfileRequest req) {
-        User user = userRepository.findById(currentUser.id())
-                .orElseThrow(() -> new ApiException("User not found"));
+        try {
+            User user = userRepository.findById(currentUser.id())
+                    .orElseThrow(() -> new ApiException("User not found"));
 
-        if (!isBlank(req.getName())) {
-            user.setName(req.getName());
-        }
-        if (!isBlank(req.getPhone())) {
-            if (!PHONE_PATTERN.matcher(req.getPhone()).matches()) {
-                throw new ApiException("Phone must be 10 digits");
+            if (!isBlank(req.getName())) {
+                user.setName(req.getName());
             }
-            // Check if phone is already taken by another user
-            userRepository.findByPhone(req.getPhone()).ifPresent(existing -> {
-                if (!existing.getId().equals(user.getId())) {
-                    throw new ApiException("Phone number already in use");
+            if (!isBlank(req.getPhone())) {
+                if (!PHONE_PATTERN.matcher(req.getPhone()).matches()) {
+                    throw new ApiException("Phone must be 10 digits");
                 }
-            });
-            user.setPhone(req.getPhone());
-        }
-        if (!isBlank(req.getEmail())) {
-            user.setEmail(req.getEmail());
-        }
-        if (!isBlank(req.getPincode())) {
-            user.setPincode(req.getPincode());
-        }
+                // Check if phone is already taken by another user
+                userRepository.findByPhone(req.getPhone()).ifPresent(existing -> {
+                    if (!existing.getId().equals(user.getId())) {
+                        throw new ApiException("Phone number already in use");
+                    }
+                });
+                user.setPhone(req.getPhone());
+            }
+            if (!isBlank(req.getEmail())) {
+                user.setEmail(req.getEmail());
+            }
+            if (!isBlank(req.getPincode())) {
+                user.setPincode(req.getPincode());
+            }
 
-        userRepository.save(user);
+            userRepository.save(user);
 
-        return ApiResponse.ok("Profile updated successfully")
-                .with("user", toSummary(user));
+            return ApiResponse.ok("Profile updated successfully")
+                    .with("user", toSummary(user));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail("Profile could not be updated: " + e.getMessage());
+        }
     }
 
     private UserSummary toSummary(User user) {

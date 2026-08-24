@@ -39,37 +39,44 @@ public class OrderService {
 
     @Transactional
     public ApiResponse placeOrder(OrderRequest req) {
-        // Validation (outside transaction)
-        if (isBlank(req.getCustomerName()) || isBlank(req.getPhone()) || isBlank(req.getAddress())
-                || isBlank(req.getCity()) || isBlank(req.getPincode())
-                || req.getItems() == null || req.getItems().isEmpty()) {
-            throw new ApiException("Missing required order fields");
-        }
-
-        long zoneCount = deliveryZoneRepository.count();
-        boolean zoneKnown = deliveryZoneRepository.findByPincode(req.getPincode().trim()).isPresent();
-        if (zoneCount > 0 && !zoneKnown) {
-            throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
-        }
-
-        int maxRetries = 3;
-        int retryCount = 0;
-        
-        while (retryCount < maxRetries) {
-            try {
-                return saveOrderInternal(req);
-            } catch (DataIntegrityViolationException e) {
-                retryCount++;
-                if (retryCount >= maxRetries) {
-                    throw new ApiException("Unable to place your order. Please try again.");
-                }
-                // loop continues for retry
-            } catch (Exception e) {
-                throw new ApiException("Unable to place your order. Please try again.");
+        try {
+            // Validation (outside transaction)
+            if (isBlank(req.getCustomerName()) || isBlank(req.getPhone()) || isBlank(req.getAddress())
+                    || isBlank(req.getCity()) || isBlank(req.getPincode())
+                    || req.getItems() == null || req.getItems().isEmpty()) {
+                throw new ApiException("Missing required order fields");
             }
+
+            long zoneCount = deliveryZoneRepository.count();
+            boolean zoneKnown = deliveryZoneRepository.findByPincode(req.getPincode().trim()).isPresent();
+            if (zoneCount > 0 && !zoneKnown) {
+                throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
+            }
+
+            int maxRetries = 3;
+            int retryCount = 0;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    return saveOrderInternal(req);
+                } catch (DataIntegrityViolationException e) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        e.printStackTrace();
+                        throw new ApiException("Unable to place your order due to a data conflict. Please try again.");
+                    }
+                    // loop continues for retry
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new ApiException("Unable to place your order: " + e.getMessage());
+                }
+            }
+            
+            throw new ApiException("Unable to place your order. Please try again.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.fail("Order could not be placed: " + e.getMessage());
         }
-        
-        throw new ApiException("Unable to place your order. Please try again.");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

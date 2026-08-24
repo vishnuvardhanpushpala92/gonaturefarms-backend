@@ -61,6 +61,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255);
 -- Add WhatsApp opt-out column for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_opt_out BOOLEAN DEFAULT false;
 
+-- Add WhatsApp number column for existing databases (ignore if already exists)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(15);
+
 -- Default admin user (password: 918252) — CHANGE THIS PASSWORD AFTER FIRST LOGIN!
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)
 VALUES ('Vishnu', '9182526000', 'admin@gonaturefarms.com',
