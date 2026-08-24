@@ -95,8 +95,8 @@ public class OrderService {
         order.setState(req.getState() == null ? "" : req.getState());
         order.setPincode(req.getPincode());
         order.setPaymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod());
-        order.setPaymentUtr(req.getPaymentUtr());
-        order.setPaymentScreenshotUrl(req.getPaymentScreenshotUrl());
+        order.setPaymentUtr(req.getPaymentUtr() == null ? "" : req.getPaymentUtr());
+        order.setPaymentScreenshotUrl(req.getPaymentScreenshotUrl() == null ? "" : req.getPaymentScreenshotUrl());
         order.setSubtotal(nz(req.getSubtotal()));
         order.setGstAmount(nz(req.getGstAmount()));
         order.setDeliveryCharge(nz(req.getDeliveryCharge()));
