@@ -51,7 +51,6 @@ public class ProductService {
         List<Product> products = productRepository.findAll(
                 spec, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
         
-        // Load variants for each product
         for (Product product : products) {
             List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
             product.setVariants(variants);
@@ -122,12 +121,17 @@ public class ProductService {
 
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
+                // ⚠️ FIX: If Price is missing or 0, automatically fall back to MRP
+                BigDecimal variantPrice = variantReq.getPrice() != null && variantReq.getPrice().compareTo(BigDecimal.ZERO) > 0 
+                        ? variantReq.getPrice() 
+                        : variantReq.getMrp() != null ? variantReq.getMrp() : BigDecimal.ZERO;
+
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
                         .productName(product.getName())
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice())
-                        .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
+                        .price(variantPrice)
+                        .mrp(variantReq.getMrp() == null ? variantPrice : variantReq.getMrp())
                         .stock(variantReq.getStock() == null ? 100 : variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
@@ -157,12 +161,17 @@ public class ProductService {
 
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
+                // ⚠️ FIX: Same fallback logic for Update
+                BigDecimal variantPrice = variantReq.getPrice() != null && variantReq.getPrice().compareTo(BigDecimal.ZERO) > 0 
+                        ? variantReq.getPrice() 
+                        : variantReq.getMrp() != null ? variantReq.getMrp() : BigDecimal.ZERO;
+
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
                         .productName(product.getName())
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice())
-                        .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
+                        .price(variantPrice)
+                        .mrp(variantReq.getMrp() == null ? variantPrice : variantReq.getMrp())
                         .stock(variantReq.getStock() == null ? 100 : variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
