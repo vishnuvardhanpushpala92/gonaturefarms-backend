@@ -35,15 +35,9 @@ public class ProductVariant {
     @Column(nullable = false, length = 100)
     private String variantName;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
-
     @Builder.Default
     @Column(precision = 10, scale = 2)
     private BigDecimal mrp = BigDecimal.ZERO;
-
-    @Column(nullable = false)
-    private Integer stock;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default

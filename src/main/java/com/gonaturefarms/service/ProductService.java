@@ -129,9 +129,7 @@ public class ProductService {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice())
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
-                        .stock(variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
             }
@@ -162,9 +160,7 @@ public class ProductService {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice())
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
-                        .stock(variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
             }
