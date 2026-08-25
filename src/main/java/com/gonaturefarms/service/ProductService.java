@@ -51,6 +51,13 @@ public class ProductService {
         Specification<Product> spec = buildSpecification(cat, status, search);
         List<Product> products = productRepository.findAll(
                 spec, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        
+        // Load variants for each product
+        for (Product product : products) {
+            java.util.List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
+            product.setVariants(variants);
+        }
+        
         return ApiResponse.ok().with("products", products);
     }
 
@@ -120,9 +127,10 @@ public class ProductService {
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
-                        .productId(product.getId())
+                        .product(product)
                         .variantName(variantReq.getVariantName())
                         .price(variantReq.getPrice())
+                        .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
                         .stock(variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
@@ -152,9 +160,10 @@ public class ProductService {
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
-                        .productId(product.getId())
+                        .product(product)
                         .variantName(variantReq.getVariantName())
                         .price(variantReq.getPrice())
+                        .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
                         .stock(variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
