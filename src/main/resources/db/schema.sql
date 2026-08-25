@@ -138,7 +138,49 @@ SELECT 'Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and anti
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Natural Forest Honey')
 UNION ALL
 SELECT 'Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil');
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil')
+UNION ALL
+SELECT 'Organic Turmeric Powder', 'High-curcumin turmeric powder from organic farms.', 180, 250, 5, '0910', 'Spices', 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Turmeric Powder')
+UNION ALL
+SELECT 'Red Chilli Powder', 'Premium quality Byadgi chilli powder, naturally dried.', 160, 220, 5, '0906', 'Spices', 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Red Chilli Powder')
+UNION ALL
+SELECT 'Organic Basmati Rice', 'Aged basmati rice, aromatic and long-grain.', 450, 600, 0, '1006', 'Grains', 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Basmati Rice')
+UNION ALL
+SELECT 'Whole Wheat Atta', 'Stone-ground whole wheat flour for rotis.', 85, 120, 0, '1101', 'Grains', 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Whole Wheat Atta')
+UNION ALL
+SELECT 'Fresh Organic Tomatoes', 'Vine-ripened organic tomatoes, chemical-free.', 60, 80, 0, '0702', 'Vegetables', 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Tomatoes')
+UNION ALL
+SELECT 'Organic Spinach', 'Fresh green spinach, pesticide-free.', 40, 55, 0, '0709', 'Vegetables', 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Spinach')
+UNION ALL
+SELECT 'Groundnut Oil', 'Cold-pressed groundnut oil, traditional wood-pressed.', 320, 420, 5, '1508', 'Oils', 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Groundnut Oil')
+UNION ALL
+SELECT 'Mustard Oil', 'Pure mustard oil for cooking, cold-pressed.', 280, 380, 5, '1515', 'Oils', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Mustard Oil')
+UNION ALL
+SELECT 'Cumin Seeds (Jeera)', 'Whole cumin seeds, aromatic and flavorful.', 220, 300, 5, '0909', 'Spices', 'https://images.unsplash.com/photo-1599909533681-74084e8c8d8e?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cumin Seeds (Jeera)')
+UNION ALL
+SELECT 'Coriander Powder', 'Freshly ground coriander powder for authentic taste.', 140, 190, 5, '0904', 'Spices', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Coriander Powder')
+UNION ALL
+SELECT 'Organic Moong Dal', 'Yellow split lentils, protein-rich and easy to digest.', 120, 160, 0, '1002', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Moong Dal')
+UNION ALL
+SELECT 'Toor Dal', 'Pigeon peas, essential for everyday Indian cooking.', 130, 175, 0, '1001', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Toor Dal')
+UNION ALL
+SELECT 'Fresh Organic Carrots', 'Sweet and crunchy organic carrots.', 55, 75, 0, '0706', 'Vegetables', 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Carrots')
+UNION ALL
+SELECT 'Organic Potatoes', 'Farm-fresh potatoes, perfect for everyday cooking.', 45, 65, 0, '0701', 'Vegetables', 'https://images.unsplash.com/photo-1518977676601-b53f82ber33?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Potatoes');
 
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
