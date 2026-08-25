@@ -12,12 +12,9 @@ public class ProductVariantRequest {
     private String variantName;
 
     private BigDecimal price;
-    
     private BigDecimal mrp;
-
     private Integer stock;
 
-    // Manual getters as failsafe for Lombok processing issues
     public String getVariantName() { return variantName; }
     public BigDecimal getPrice() { return price; }
     public BigDecimal getMrp() { return mrp; }

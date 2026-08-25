@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /** Business logic for browsing and (admin) managing products. Mirrors routes/products.js. */
@@ -54,7 +53,7 @@ public class ProductService {
         
         // Load variants for each product
         for (Product product : products) {
-            java.util.List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
+            List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
             product.setVariants(variants);
         }
         
@@ -89,8 +88,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         
-        // Load variants
-        java.util.List<ProductVariant> variants = productVariantRepository.findByProductId(id);
+        List<ProductVariant> variants = productVariantRepository.findByProductId(id);
         product.setVariants(variants);
         
         return ApiResponse.ok().with("product", product);
@@ -102,7 +100,6 @@ public class ProductService {
             throw new ApiException("Name and price are required");
         }
         
-        // Check if product with same name already exists
         boolean productExists = productRepository.findAll().stream()
                 .anyMatch(p -> p.getName().equalsIgnoreCase(req.getName()));
         
@@ -123,16 +120,15 @@ public class ProductService {
                 .build();
         product = productRepository.save(product);
 
-        // Save variants if provided
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
-                        .productName(product.getName()) // ✅ FIX: Store the product name
+                        .productName(product.getName())
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice()) // ✅ FIX: Store the price
+                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice())
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
-                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock()) // ✅ FIX: Store stock with default
+                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
             }
@@ -156,17 +152,18 @@ public class ProductService {
         product.setStatus(parseStatus(req.getStatus()));
         productRepository.save(product);
 
-        // Update variants
+        // ✅ FIX: Delete old variants before adding new ones to prevent duplicates
         productVariantRepository.deleteByProductId(id);
+
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
-                        .productName(product.getName()) // ✅ FIX: Store the product name
+                        .productName(product.getName())
                         .variantName(variantReq.getVariantName())
-                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice()) // ✅ FIX: Store the price
+                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice())
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
-                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock()) // ✅ FIX: Store stock with default
+                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock())
                         .build();
                 productVariantRepository.save(variant);
             }
@@ -195,25 +192,18 @@ public class ProductService {
 
     @Transactional
     public ApiResponse uploadProductImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return ApiResponse.fail("No file uploaded");
-        }
+        if (file == null || file.isEmpty()) return ApiResponse.fail("No file uploaded");
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ApiException("Only image files allowed");
-        }
+        if (contentType == null || !contentType.startsWith("image/")) throw new ApiException("Only image files allowed");
 
         try {
             Path dir = Path.of(uploadDir + "/products");
             Files.createDirectories(dir);
-
             String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
             String ext = original.contains(".") ? original.substring(original.lastIndexOf('.')) : "";
             String filename = System.currentTimeMillis() + "_" + randomSuffix(6) + ext;
-
             Path target = dir.resolve(filename);
             file.transferTo(target);
-
             return ApiResponse.ok("Image uploaded successfully").with("url", "/uploads/products/" + filename);
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file", e);
@@ -222,9 +212,7 @@ public class ProductService {
 
     private String randomSuffix(int length) {
         StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
-        }
+        for (int i = 0; i < length; i++) sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
         return sb.toString();
     }
 }

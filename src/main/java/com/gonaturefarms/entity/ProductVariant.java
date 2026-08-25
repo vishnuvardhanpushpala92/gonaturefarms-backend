@@ -23,7 +23,7 @@ public class ProductVariant {
     @JsonBackReference
     private Product product;
 
-    @Column(name = "product_name", length = 200, nullable = false) // NEW FIELD
+    @Column(name = "product_name", length = 200, nullable = false)
     private String productName;
 
     @Column(nullable = false, length = 100)
