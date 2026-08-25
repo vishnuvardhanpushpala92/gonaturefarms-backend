@@ -23,7 +23,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Business logic for browsing and (admin) managing products. Mirrors routes/products.js. */
@@ -120,8 +122,13 @@ public class ProductService {
         product = productRepository.save(product);
 
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
+            // ✅ FIX: Prevent duplicates by tracking seen names
+            Map<String, Boolean> seenVariantNames = new HashMap<>();
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
-                // ⚠️ FIX: If Price is missing or 0, automatically fall back to MRP
+                if (variantReq.getVariantName() == null || variantReq.getVariantName().isBlank()) continue;
+                if (seenVariantNames.containsKey(variantReq.getVariantName())) continue;
+                seenVariantNames.put(variantReq.getVariantName(), true);
+
                 BigDecimal variantPrice = variantReq.getPrice() != null && variantReq.getPrice().compareTo(BigDecimal.ZERO) > 0 
                         ? variantReq.getPrice() 
                         : variantReq.getMrp() != null ? variantReq.getMrp() : BigDecimal.ZERO;
@@ -160,8 +167,13 @@ public class ProductService {
         productVariantRepository.deleteByProductId(id);
 
         if (req.getVariants() != null && !req.getVariants().isEmpty()) {
+            // ✅ FIX: Prevent duplicates by tracking seen names
+            Map<String, Boolean> seenVariantNames = new HashMap<>();
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
-                // ⚠️ FIX: Same fallback logic for Update
+                if (variantReq.getVariantName() == null || variantReq.getVariantName().isBlank()) continue;
+                if (seenVariantNames.containsKey(variantReq.getVariantName())) continue;
+                seenVariantNames.put(variantReq.getVariantName(), true);
+
                 BigDecimal variantPrice = variantReq.getPrice() != null && variantReq.getPrice().compareTo(BigDecimal.ZERO) > 0 
                         ? variantReq.getPrice() 
                         : variantReq.getMrp() != null ? variantReq.getMrp() : BigDecimal.ZERO;
