@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
@@ -60,11 +59,11 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 
--- ── PRODUCT VARIANTS (FIXED) ─────────────────────────────────────
+-- ── PRODUCT VARIANTS ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS product_variants (
   id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id   BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  product_name VARCHAR(200) NOT NULL DEFAULT '', -- NEW
+  product_name VARCHAR(200) NOT NULL DEFAULT '',
   variant_name VARCHAR(100) NOT NULL,
   price        DECIMAL(10,2) DEFAULT 0,
   mrp          DECIMAL(10,2) DEFAULT 0,
@@ -73,6 +72,17 @@ CREATE TABLE IF NOT EXISTS product_variants (
   updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
+
+-- 🔥 AUTOMATIC CLEANUP (Runs on every app start, removes old duplicates)
+DELETE FROM product_variants pv
+USING product_variants pv2
+WHERE pv.id > pv2.id
+  AND pv.product_id = pv2.product_id
+  AND pv.variant_name = pv2.variant_name;
+
+-- 🔥 AUTOMATIC BARRIER (Prevents duplicates from ever being added again)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_product_variant 
+ON product_variants (product_id, variant_name);
 
 -- Clean up duplicate products
 DELETE FROM products p1
@@ -165,7 +175,6 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_screenshot_url TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT false;
@@ -219,7 +228,6 @@ CREATE TABLE IF NOT EXISTS coupons (
   expires_at     TIMESTAMP NULL,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 INSERT INTO coupons (code, discount_type, discount_value, min_order, max_uses, used_count, is_active, expires_at, created_at) VALUES
 ('WELCOME50', 'flat',    50,   300, 1000, 0, true, NULL, CURRENT_TIMESTAMP),
 ('ORGANIC10', 'percent', 10,   500, 500, 0, true, NULL, CURRENT_TIMESTAMP),
