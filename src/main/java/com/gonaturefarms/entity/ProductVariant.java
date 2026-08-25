@@ -1,5 +1,6 @@
 package com.gonaturefarms.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +31,7 @@ public class ProductVariant {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference
     private Product product;
 
     @Column(nullable = false, length = 100)
@@ -37,7 +39,15 @@ public class ProductVariant {
 
     @Builder.Default
     @Column(precision = 10, scale = 2)
+    private BigDecimal price = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(precision = 10, scale = 2)
     private BigDecimal mrp = BigDecimal.ZERO;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer stock = 100;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default

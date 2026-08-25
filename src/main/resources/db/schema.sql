@@ -7,31 +7,6 @@
 -- ║  NOTHING), so re-running it is safe. You can still run it by hand  ║
 -- ║  with `psql -U postgres -d gonaturefarms -f schema.sql` if needed. ║
 -- ╚══════════════════════════════════════════════════════════════════╝
---
--- Notes on the MySQL → PostgreSQL translation:
---  • AUTO_INCREMENT           -> GENERATED ALWAYS AS IDENTITY
---  • TINYINT(1)               -> BOOLEAN
---  • DATETIME                 -> TIMESTAMP
---  • TEXT / MEDIUMTEXT        -> TEXT (Postgres TEXT has no meaningful size cap)
---  • `key` (backtick-quoted)  -> renamed to setting_key (a plain identifier;
---                                 "key" is a reserved word in some SQL dialects
---                                 and the entity maps it explicitly)
---  • INSERT IGNORE            -> INSERT ... ON CONFLICT DO NOTHING
---  • ON UPDATE CURRENT_TIMESTAMP -> handled at the application layer (JPA sets
---                                    updated_at explicitly before save)
---  • JSON column (support_tickets.data) -> TEXT (portable across PostgreSQL
---                                            versions; see SupportTicket entity)
---  • ENUM('a','b')            -> VARCHAR(20) + CHECK (col IN (...)) rather than a
---                                 native `CREATE TYPE ... AS ENUM`. All entities map
---                                 their Java enums with plain @Enumerated(EnumType.STRING),
---                                 which binds parameters as VARCHAR/OTHER over JDBC.
---                                 PostgreSQL does not implicitly cast VARCHAR to a
---                                 custom enum type, so a native enum column here would
---                                 make every write and WHERE-clause comparison on that
---                                 column (e.g. admin login's lookup by role) fail with
---                                 "column is of type X but expression is of type
---                                 character varying". VARCHAR + CHECK gives the same
---                                 data integrity guarantee without that mismatch.
 
 -- ── USERS ────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
@@ -53,37 +28,26 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 -- Add password reset columns for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
-
--- Add security question columns for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255);
-
--- Add WhatsApp opt-out column for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_opt_out BOOLEAN DEFAULT false;
-
--- Add WhatsApp number column for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(15);
 
--- Default admin user (password: 918252) — CHANGE THIS PASSWORD AFTER FIRST LOGIN!
+-- Default admin user (password: 918252)
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)
 VALUES ('Vishnu', '9182526000', 'admin@gonaturefarms.com',
   '$2b$12$VkGTz.1f4T3jqnPiFEdXseCNINTvCP7EOJTGNjcgTxV..2ktMDrK.', 'admin', true, CURRENT_TIMESTAMP)
 ON CONFLICT (phone) DO UPDATE SET
-  name = EXCLUDED.name,
-  email = EXCLUDED.email,
-  password_hash = EXCLUDED.password_hash,
-  role = EXCLUDED.role,
-  is_verified = EXCLUDED.is_verified,
-  created_at = EXCLUDED.created_at;
+  name = EXCLUDED.name, email = EXCLUDED.email,
+  password_hash = EXCLUDED.password_hash, role = EXCLUDED.role,
+  is_verified = EXCLUDED.is_verified, created_at = EXCLUDED.created_at;
 
 -- ── CATEGORIES ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS categories (
   id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   name VARCHAR(80) NOT NULL UNIQUE
 );
-
-INSERT INTO categories (name) VALUES
-  ('Dairy'), ('Vegetables'), ('Grains'), ('Natural'), ('Oils'), ('Spices')
+INSERT INTO categories (name) VALUES ('Dairy'), ('Vegetables'), ('Grains'), ('Natural'), ('Oils'), ('Spices')
 ON CONFLICT (name) DO NOTHING;
 
 -- ── PRODUCTS ─────────────────────────────────────────────────────
@@ -104,29 +68,24 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 
--- ── PRODUCT VARIANTS ─────────────────────────────────────────────
+-- ── PRODUCT VARIANTS (UPDATED TO MATCH ProductVariant.java) ─────
 CREATE TABLE IF NOT EXISTS product_variants (
   id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id   BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   variant_name VARCHAR(100) NOT NULL,
-  price        DECIMAL(10,2) NOT NULL,
-  stock        INT DEFAULT 0,
-  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  price        DECIMAL(10,2) DEFAULT 0,
+  mrp          DECIMAL(10,2) DEFAULT 0,
+  stock        INT DEFAULT 100,
+  created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 
--- Clean up duplicate products (keep the one with the smallest ID for each name)
+-- Clean up duplicate products
 DELETE FROM products p1
-WHERE EXISTS (
-    SELECT 1 FROM products p2
-    WHERE p2.name = p1.name
-    AND p2.id < p1.id
-);
+WHERE EXISTS (SELECT 1 FROM products p2 WHERE p2.name = p1.name AND p2.id < p1.id);
 
--- Note: UNIQUE constraint is enforced at application level in ProductService.createProduct()
--- to avoid schema migration issues on repeated runs
-
--- Insert base products only if they don't already exist (idempotent)
+-- Insert base products (Kept as is from your file)
 INSERT INTO products (name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at)
 SELECT 'Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Desi Ghee')
@@ -138,49 +97,7 @@ SELECT 'Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and anti
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Natural Forest Honey')
 UNION ALL
 SELECT 'Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil')
-UNION ALL
-SELECT 'Organic Turmeric Powder', 'High-curcumin turmeric powder from organic farms.', 180, 250, 5, '0910', 'Spices', 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Turmeric Powder')
-UNION ALL
-SELECT 'Red Chilli Powder', 'Premium quality Byadgi chilli powder, naturally dried.', 160, 220, 5, '0906', 'Spices', 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Red Chilli Powder')
-UNION ALL
-SELECT 'Organic Basmati Rice', 'Aged basmati rice, aromatic and long-grain.', 450, 600, 0, '1006', 'Grains', 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Basmati Rice')
-UNION ALL
-SELECT 'Whole Wheat Atta', 'Stone-ground whole wheat flour for rotis.', 85, 120, 0, '1101', 'Grains', 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Whole Wheat Atta')
-UNION ALL
-SELECT 'Fresh Organic Tomatoes', 'Vine-ripened organic tomatoes, chemical-free.', 60, 80, 0, '0702', 'Vegetables', 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Tomatoes')
-UNION ALL
-SELECT 'Organic Spinach', 'Fresh green spinach, pesticide-free.', 40, 55, 0, '0709', 'Vegetables', 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Spinach')
-UNION ALL
-SELECT 'Groundnut Oil', 'Cold-pressed groundnut oil, traditional wood-pressed.', 320, 420, 5, '1508', 'Oils', 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Groundnut Oil')
-UNION ALL
-SELECT 'Mustard Oil', 'Pure mustard oil for cooking, cold-pressed.', 280, 380, 5, '1515', 'Oils', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Mustard Oil')
-UNION ALL
-SELECT 'Cumin Seeds (Jeera)', 'Whole cumin seeds, aromatic and flavorful.', 220, 300, 5, '0909', 'Spices', 'https://images.unsplash.com/photo-1599909533681-74084e8c8d8e?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cumin Seeds (Jeera)')
-UNION ALL
-SELECT 'Coriander Powder', 'Freshly ground coriander powder for authentic taste.', 140, 190, 5, '0904', 'Spices', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Coriander Powder')
-UNION ALL
-SELECT 'Organic Moong Dal', 'Yellow split lentils, protein-rich and easy to digest.', 120, 160, 0, '1002', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Moong Dal')
-UNION ALL
-SELECT 'Toor Dal', 'Pigeon peas, essential for everyday Indian cooking.', 130, 175, 0, '1001', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Toor Dal')
-UNION ALL
-SELECT 'Fresh Organic Carrots', 'Sweet and crunchy organic carrots.', 55, 75, 0, '0706', 'Vegetables', 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Carrots')
-UNION ALL
-SELECT 'Organic Potatoes', 'Farm-fresh potatoes, perfect for everyday cooking.', 45, 65, 0, '0701', 'Vegetables', 'https://images.unsplash.com/photo-1518977676601-b53f82ber33?w=400', 'current', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Potatoes');
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil');
 
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
@@ -201,9 +118,7 @@ CREATE TABLE IF NOT EXISTS orders (
   delivery_charge   DECIMAL(10,2) DEFAULT 0,
   discount          DECIMAL(10,2) DEFAULT 0,
   total             DECIMAL(10,2) NOT NULL,
-  -- 🔥 FIXED: Removed CHECK constraint to allow 'Placed' status
   status            VARCHAR(30) NOT NULL,
-  -- 🔥 FIXED: Removed CHECK constraint for payment statuses
   payment_status    VARCHAR(30) NOT NULL,
   tracking_location VARCHAR(255) DEFAULT '',
   notes             TEXT,
@@ -216,7 +131,6 @@ CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 
--- Add payment verification columns for existing databases (ignore if already exists)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_screenshot_url TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT false;
@@ -285,19 +199,14 @@ CREATE TABLE IF NOT EXISTS site_settings (
   value       TEXT,
   updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 INSERT INTO site_settings (setting_key, value, updated_at) VALUES
 ('site_name',     'Go Nature Farms', CURRENT_TIMESTAMP),
 ('tagline',       'Nature is Our Future', CURRENT_TIMESTAMP),
-('footer_text',   '© 2026 Go Nature Farms. 100% Organic Certified.', CURRENT_TIMESTAMP),
 ('upi_id',        'gonaturefarms@upi', CURRENT_TIMESTAMP),
-('store_location','Hyderabad, Telangana, India', CURRENT_TIMESTAMP),
 ('qr_code',       '', CURRENT_TIMESTAMP),
 ('logo_url',      '', CURRENT_TIMESTAMP),
 ('hdr_bg',        '#ffffff', CURRENT_TIMESTAMP),
-('hdr_text',      '#2d5a27', CURRENT_TIMESTAMP),
 ('ftr_bg',        '#111111', CURRENT_TIMESTAMP),
-('ftr_text',      '#e5e7eb', CURRENT_TIMESTAMP),
 ('banner_msgs',   '100% Organic Certified|Free Delivery above ₹500|Farm Fresh Produce|A2 Cow Products|Trusted by 5000+ Families|No Preservatives|Direct from Farm', CURRENT_TIMESTAMP),
 ('free_delivery_above', '500', CURRENT_TIMESTAMP),
 ('delivery_charge_below', '50', CURRENT_TIMESTAMP),
@@ -310,9 +219,7 @@ INSERT INTO site_settings (setting_key, value, updated_at) VALUES
 ('support_fields', '[{"key":"name","label":"Your Name","type":"text","required":true},{"key":"phone","label":"Phone Number","type":"tel","required":true},{"key":"order_id","label":"Order ID (if applicable)","type":"text","required":false},{"key":"issue_type","label":"Issue Type","type":"select","options":["Order Issue","Payment Issue","Product Quality","Delivery Delay","General Query"],"required":true},{"key":"message","label":"Message","type":"textarea","required":true}]', CURRENT_TIMESTAMP),
 ('hdr_font_size', '16', CURRENT_TIMESTAMP),
 ('ftr_font_size', '14', CURRENT_TIMESTAMP)
-ON CONFLICT (setting_key) DO UPDATE SET
-  value = EXCLUDED.value,
-  updated_at = EXCLUDED.updated_at;
+ON CONFLICT (setting_key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at;
 
 -- ── CUSTOMER SUPPORT TICKETS ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -335,14 +242,10 @@ CREATE TABLE IF NOT EXISTS slides (
   sort_order INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Ensure at least one slide exists with ID 1 (idempotent)
 INSERT INTO slides (id, image_url, caption, sub_text, sort_order, created_at)
 OVERRIDING SYSTEM VALUE
 SELECT 1, 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?w=1920&h=700&fit=crop', 'Authentic Organic Harvest', 'From our fields to your table', 1, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM slides WHERE id = 1);
-
--- Insert additional slides (idempotent)
 INSERT INTO slides (image_url, caption, sub_text, sort_order, created_at)
 SELECT 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1920&h=700&fit=crop', 'Farm Fresh Every Day', 'Pure · Natural · Chemical-Free', 2, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM slides WHERE caption = 'Farm Fresh Every Day')
@@ -358,7 +261,6 @@ CREATE TABLE IF NOT EXISTS faqs (
   sort_order INT DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 INSERT INTO faqs (question, answer, created_at)
 SELECT * FROM (VALUES
   ('What are your delivery charges?',  'Free delivery for orders above ₹500. ₹50 charge below ₹500 (subject to delivery zone).', CURRENT_TIMESTAMP),
@@ -377,7 +279,6 @@ CREATE TABLE IF NOT EXISTS delivery_zones (
   state   VARCHAR(80) DEFAULT '',
   charge  DECIMAL(6,2) DEFAULT 0
 );
-
 INSERT INTO delivery_zones (pincode, area, city, state, charge) VALUES
 ('500001', 'Abids',      'Hyderabad', 'Telangana', 0),
 ('500072', 'Kukatpally', 'Hyderabad', 'Telangana', 0),
@@ -441,4 +342,3 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_reminders_admin_id ON whatsapp_reminders
 
 -- ── DONE ─────────────────────────────────────────────────────────
 -- Admin login -> Username: Vishnu | Password: 918252
--- IMPORTANT: Change the admin password after first login (Admin Panel -> Credentials).

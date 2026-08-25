@@ -3,17 +3,19 @@ package com.gonaturefarms.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -73,7 +75,8 @@ public class Product {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private java.util.List<com.gonaturefarms.entity.ProductVariant> variants = new java.util.ArrayList<>();
 
     public enum ProductStatus {
@@ -100,70 +103,19 @@ public class Product {
         private LocalDateTime createdAt = LocalDateTime.now();
         private java.util.List<com.gonaturefarms.entity.ProductVariant> variants;
 
-        public ProductBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public ProductBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public ProductBuilder description(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public ProductBuilder price(BigDecimal price) {
-            this.price = price;
-            return this;
-        }
-
-        public ProductBuilder mrp(BigDecimal mrp) {
-            this.mrp = mrp;
-            return this;
-        }
-
-        public ProductBuilder gst(BigDecimal gst) {
-            this.gst = gst;
-            return this;
-        }
-
-        public ProductBuilder hsn(String hsn) {
-            this.hsn = hsn;
-            return this;
-        }
-
-        public ProductBuilder cat(String cat) {
-            this.cat = cat;
-            return this;
-        }
-
-        public ProductBuilder imgUrl(String imgUrl) {
-            this.imgUrl = imgUrl;
-            return this;
-        }
-
-        public ProductBuilder status(ProductStatus status) {
-            this.status = status;
-            return this;
-        }
-
-        public ProductBuilder stock(Integer stock) {
-            this.stock = stock;
-            return this;
-        }
-
-        public ProductBuilder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public ProductBuilder variants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) {
-            this.variants = variants;
-            return this;
-        }
+        public ProductBuilder id(Long id) { this.id = id; return this; }
+        public ProductBuilder name(String name) { this.name = name; return this; }
+        public ProductBuilder description(String description) { this.description = description; return this; }
+        public ProductBuilder price(BigDecimal price) { this.price = price; return this; }
+        public ProductBuilder mrp(BigDecimal mrp) { this.mrp = mrp; return this; }
+        public ProductBuilder gst(BigDecimal gst) { this.gst = gst; return this; }
+        public ProductBuilder hsn(String hsn) { this.hsn = hsn; return this; }
+        public ProductBuilder cat(String cat) { this.cat = cat; return this; }
+        public ProductBuilder imgUrl(String imgUrl) { this.imgUrl = imgUrl; return this; }
+        public ProductBuilder status(ProductStatus status) { this.status = status; return this; }
+        public ProductBuilder stock(Integer stock) { this.stock = stock; return this; }
+        public ProductBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public ProductBuilder variants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; return this; }
 
         public Product build() {
             Product product = new Product();
