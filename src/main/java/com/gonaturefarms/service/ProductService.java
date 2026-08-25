@@ -128,8 +128,11 @@ public class ProductService {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
+                        .productName(product.getName()) // ✅ FIX: Store the product name
                         .variantName(variantReq.getVariantName())
+                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice()) // ✅ FIX: Store the price
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
+                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock()) // ✅ FIX: Store stock with default
                         .build();
                 productVariantRepository.save(variant);
             }
@@ -159,8 +162,11 @@ public class ProductService {
             for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : req.getVariants()) {
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
+                        .productName(product.getName()) // ✅ FIX: Store the product name
                         .variantName(variantReq.getVariantName())
+                        .price(variantReq.getPrice() == null ? BigDecimal.ZERO : variantReq.getPrice()) // ✅ FIX: Store the price
                         .mrp(variantReq.getMrp() == null ? BigDecimal.ZERO : variantReq.getMrp())
+                        .stock(variantReq.getStock() == null ? 100 : variantReq.getStock()) // ✅ FIX: Store stock with default
                         .build();
                 productVariantRepository.save(variant);
             }

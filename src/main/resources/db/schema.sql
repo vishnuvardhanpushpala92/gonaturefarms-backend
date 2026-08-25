@@ -1,11 +1,5 @@
 -- ╔══════════════════════════════════════════════════════════════════╗
 -- ║  Go Nature Farms — PostgreSQL Database Schema                     ║
--- ║  Translated from the original MySQL schema.sql                    ║
--- ║  Runs automatically on every Spring Boot startup via               ║
--- ║  spring.sql.init.mode=always (see application.properties).         ║
--- ║  All statements are idempotent (IF NOT EXISTS / ON CONFLICT DO     ║
--- ║  NOTHING), so re-running it is safe. You can still run it by hand  ║
--- ║  with `psql -U postgres -d gonaturefarms -f schema.sql` if needed. ║
 -- ╚══════════════════════════════════════════════════════════════════╝
 
 -- ── USERS ────────────────────────────────────────────────────────
@@ -25,7 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
--- Add password reset columns for existing databases (ignore if already exists)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
@@ -33,7 +26,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_opt_out BOOLEAN DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(15);
 
--- Default admin user (password: 918252)
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)
 VALUES ('Vishnu', '9182526000', 'admin@gonaturefarms.com',
   '$2b$12$VkGTz.1f4T3jqnPiFEdXseCNINTvCP7EOJTGNjcgTxV..2ktMDrK.', 'admin', true, CURRENT_TIMESTAMP)
@@ -68,10 +60,11 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE INDEX IF NOT EXISTS idx_products_cat ON products(cat);
 CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 
--- ── PRODUCT VARIANTS (UPDATED TO MATCH ProductVariant.java) ─────
+-- ── PRODUCT VARIANTS (FIXED) ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS product_variants (
   id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   product_id   BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  product_name VARCHAR(200) NOT NULL DEFAULT '', -- NEW
   variant_name VARCHAR(100) NOT NULL,
   price        DECIMAL(10,2) DEFAULT 0,
   mrp          DECIMAL(10,2) DEFAULT 0,
@@ -85,7 +78,7 @@ CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(p
 DELETE FROM products p1
 WHERE EXISTS (SELECT 1 FROM products p2 WHERE p2.name = p1.name AND p2.id < p1.id);
 
--- Insert base products (Kept as is from your file)
+-- Insert base products (Kept as is)
 INSERT INTO products (name, description, price, mrp, gst, hsn, cat, img_url, status, stock, created_at)
 SELECT 'Organic Desi Ghee', '100% pure A2 cow ghee, slow-cooked in traditional bilona method.', 904, 1200, 5, '0405', 'Dairy', 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?w=400', 'current', 100, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Desi Ghee')
@@ -97,7 +90,49 @@ SELECT 'Natural Forest Honey', 'Raw, unfiltered honey with full enzymes and anti
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Natural Forest Honey')
 UNION ALL
 SELECT 'Cold Press Coconut Oil', 'Cold-pressed from fresh coconuts, retaining all nutrients.', 362, 480, 5, '1513', 'Oils', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400', 'future', 100, CURRENT_TIMESTAMP
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil');
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cold Press Coconut Oil')
+UNION ALL
+SELECT 'Organic Turmeric Powder', 'High-curcumin turmeric powder from organic farms.', 180, 250, 5, '0910', 'Spices', 'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Turmeric Powder')
+UNION ALL
+SELECT 'Red Chilli Powder', 'Premium quality Byadgi chilli powder, naturally dried.', 160, 220, 5, '0906', 'Spices', 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Red Chilli Powder')
+UNION ALL
+SELECT 'Organic Basmati Rice', 'Aged basmati rice, aromatic and long-grain.', 450, 600, 0, '1006', 'Grains', 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Basmati Rice')
+UNION ALL
+SELECT 'Whole Wheat Atta', 'Stone-ground whole wheat flour for rotis.', 85, 120, 0, '1101', 'Grains', 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Whole Wheat Atta')
+UNION ALL
+SELECT 'Fresh Organic Tomatoes', 'Vine-ripened organic tomatoes, chemical-free.', 60, 80, 0, '0702', 'Vegetables', 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Tomatoes')
+UNION ALL
+SELECT 'Organic Spinach', 'Fresh green spinach, pesticide-free.', 40, 55, 0, '0709', 'Vegetables', 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Spinach')
+UNION ALL
+SELECT 'Groundnut Oil', 'Cold-pressed groundnut oil, traditional wood-pressed.', 320, 420, 5, '1508', 'Oils', 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Groundnut Oil')
+UNION ALL
+SELECT 'Mustard Oil', 'Pure mustard oil for cooking, cold-pressed.', 280, 380, 5, '1515', 'Oils', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Mustard Oil')
+UNION ALL
+SELECT 'Cumin Seeds (Jeera)', 'Whole cumin seeds, aromatic and flavorful.', 220, 300, 5, '0909', 'Spices', 'https://images.unsplash.com/photo-1599909533681-74084e8c8d8e?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Cumin Seeds (Jeera)')
+UNION ALL
+SELECT 'Coriander Powder', 'Freshly ground coriander powder for authentic taste.', 140, 190, 5, '0904', 'Spices', 'https://images.unsplash.com/photo-1599940824399-b87987ced72a?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Coriander Powder')
+UNION ALL
+SELECT 'Organic Moong Dal', 'Yellow split lentils, protein-rich and easy to digest.', 120, 160, 0, '1002', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Moong Dal')
+UNION ALL
+SELECT 'Toor Dal', 'Pigeon peas, essential for everyday Indian cooking.', 130, 175, 0, '1001', 'Grains', 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Toor Dal')
+UNION ALL
+SELECT 'Fresh Organic Carrots', 'Sweet and crunchy organic carrots.', 55, 75, 0, '0706', 'Vegetables', 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Fresh Organic Carrots')
+UNION ALL
+SELECT 'Organic Potatoes', 'Farm-fresh potatoes, perfect for everyday cooking.', 45, 65, 0, '0701', 'Vegetables', 'https://images.unsplash.com/photo-1518977676601-b53f82ber33?w=400', 'current', 100, CURRENT_TIMESTAMP
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Organic Potatoes');
 
 -- ── ORDERS ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS orders (
