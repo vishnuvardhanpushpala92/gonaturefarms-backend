@@ -100,8 +100,7 @@ public class AuthService {
                 .email(isBlank(req.getEmail()) ? null : req.getEmail())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
                 .pincode(isBlank(req.getPincode()) ? null : req.getPincode())
-                .securityQuestion(req.getSecurityQuestion())
-                .securityAnswer(req.getSecurityAnswer() != null ? passwordEncoder.encode(req.getSecurityAnswer()) : null)
+                .dateOfBirth(req.getDateOfBirth())
                 .role(User.UserRole.customer)
                 .isVerified(true)
                 .build();
@@ -251,17 +250,17 @@ public class AuthService {
         User user = userRepository.findByPhoneOrEmail(identifier, identifier)
                 .orElseThrow(() -> new ApiException("Account not found"));
 
-        if (isBlank(user.getSecurityQuestion())) {
-            throw new ApiException("No security question set for this account. Please contact support.");
+        if (isBlank(user.getDateOfBirth())) {
+            throw new ApiException("No date of birth set for this account. Please contact support.");
         }
 
-        return ApiResponse.ok("Security question found")
-                .with("securityQuestion", user.getSecurityQuestion());
+        return ApiResponse.ok("Account found. Please verify your date of birth to proceed.")
+                .with("hasDateOfBirth", true);
     }
 
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest req) {
-        if (isBlank(req.getIdentifier()) || isBlank(req.getSecurityAnswer()) || 
+        if (isBlank(req.getIdentifier()) || isBlank(req.getSecurityAnswer()) ||
             isBlank(req.getNewPassword()) || isBlank(req.getConfirmPassword())) {
             throw new ApiException("All fields are required");
         }
@@ -276,12 +275,13 @@ public class AuthService {
         User user = userRepository.findByPhoneOrEmail(identifier, identifier)
                 .orElseThrow(() -> new ApiException("Account not found"));
 
-        if (isBlank(user.getSecurityQuestion()) || isBlank(user.getSecurityAnswer())) {
-            throw new ApiException("No security question set for this account. Please contact support.");
+        if (isBlank(user.getDateOfBirth())) {
+            throw new ApiException("No date of birth set for this account. Please contact support.");
         }
 
-        if (!passwordEncoder.matches(req.getSecurityAnswer(), user.getSecurityAnswer())) {
-            throw new ApiException("Incorrect security answer");
+        // Verify date of birth (using securityAnswer field to pass DOB from frontend)
+        if (!req.getSecurityAnswer().equals(user.getDateOfBirth())) {
+            throw new ApiException("Incorrect date of birth");
         }
 
         user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));

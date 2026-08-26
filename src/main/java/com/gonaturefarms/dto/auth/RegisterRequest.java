@@ -20,9 +20,7 @@ public class RegisterRequest {
 
     private String puzzleAnswer;
 
-    private String securityQuestion;
-
-    private String securityAnswer;
+    private String dateOfBirth;
 
     // Manual getters as failsafe for Lombok processing issues
     public String getPhone() { return phone; }
@@ -31,6 +29,5 @@ public class RegisterRequest {
     public String getPassword() { return password; }
     public String getPincode() { return pincode; }
     public String getPuzzleAnswer() { return puzzleAnswer; }
-    public String getSecurityQuestion() { return securityQuestion; }
-    public String getSecurityAnswer() { return securityAnswer; }
+    public String getDateOfBirth() { return dateOfBirth; }
 }

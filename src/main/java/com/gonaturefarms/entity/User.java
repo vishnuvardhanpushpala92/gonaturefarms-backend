@@ -78,6 +78,9 @@ public class User {
     @Builder.Default
     private Boolean whatsappOptOut = false;
 
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
+
     public enum UserRole {
         customer, admin
     }
@@ -128,6 +131,9 @@ public class User {
     public Boolean getWhatsappOptOut() { return whatsappOptOut; }
     public void setWhatsappOptOut(Boolean whatsappOptOut) { this.whatsappOptOut = whatsappOptOut; }
 
+    public String getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
     // Static builder method as failsafe for Lombok @Builder
     public static UserBuilder builder() {
         return new UserBuilder();
@@ -149,6 +155,7 @@ public class User {
         private String securityAnswer;
         private String whatsappNumber;
         private Boolean whatsappOptOut = false;
+        private String dateOfBirth;
 
         public UserBuilder id(Long id) {
             this.id = id;
@@ -225,6 +232,11 @@ public class User {
             return this;
         }
 
+        public UserBuilder dateOfBirth(String dateOfBirth) {
+            this.dateOfBirth = dateOfBirth;
+            return this;
+        }
+
         public User build() {
             User user = new User();
             user.id = this.id;
@@ -242,6 +254,7 @@ public class User {
             user.securityAnswer = this.securityAnswer;
             user.whatsappNumber = this.whatsappNumber;
             user.whatsappOptOut = this.whatsappOptOut;
+            user.dateOfBirth = this.dateOfBirth;
             return user;
         }
     }

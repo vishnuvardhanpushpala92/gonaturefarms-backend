@@ -24,6 +24,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer VARCHAR(255);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_opt_out BOOLEAN DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR(15);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_birth VARCHAR(20);
 
 INSERT INTO users (name, phone, email, password_hash, role, is_verified, created_at)
 VALUES ('Vishnu', '9182526000', 'admin@gonaturefarms.com',
