@@ -19,4 +19,17 @@ public class AdminReviewRequest {
 
     private String comment;
     private Boolean featured;
+
+    // ✅ FIX: Added "userName" field to match old ReviewService.java
+    private String userName;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public Long getProductId() { return productId; }
+    public String getCustomerName() { return customerName; }
+    public Integer getRating() { return rating; }
+    public String getComment() { return comment; }
+    public Boolean getFeatured() { return featured; }
+
+    // ✅ FIX: Added getter for userName so ReviewService compiles
+    public String getUserName() { return userName; }
 }
