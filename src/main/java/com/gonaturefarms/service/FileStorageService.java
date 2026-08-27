@@ -1,63 +1,40 @@
 package com.gonaturefarms.service;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.SecureRandom;
-
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.gonaturefarms.dto.common.ApiResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.gonaturefarms.dto.common.ApiResponse;
-import com.gonaturefarms.exception.ApiException;
+import java.util.Map;
 
-/**
- * Stores uploaded images on disk, equivalent to the multer diskStorage configuration
- * in routes/admin.js. Files are written under app.upload.dir (default ./uploads) and
- * served back via the "/uploads/**" resource handler configured in WebConfig.
- */
 @Service
 public class FileStorageService {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private final Cloudinary cloudinary;
 
-    @Value("${app.upload.dir:./uploads}")
-    private String uploadDir;
-
-    public ApiResponse store(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            return ApiResponse.fail("No file uploaded");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ApiException("Only image files allowed");
-        }
-
-        try {
-            Path dir = Path.of(uploadDir);
-            Files.createDirectories(dir);
-
-            String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "" : file.getOriginalFilename());
-            String ext = original.contains(".") ? original.substring(original.lastIndexOf('.')) : "";
-            String filename = System.currentTimeMillis() + "_" + randomSuffix(6) + ext;
-
-            Path target = dir.resolve(filename);
-            file.transferTo(target);
-
-            return ApiResponse.ok("File uploaded").with("url", "/uploads/" + filename);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
-        }
+    public FileStorageService(
+            @Value("${cloudinary.cloud-name}") String cloudName,
+            @Value("${cloudinary.api-key}") String apiKey,
+            @Value("${cloudinary.api-secret}") String apiSecret) {
+        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", cloudName,
+                "api_key", apiKey,
+                "api_secret", apiSecret
+        ));
     }
 
-    private String randomSuffix(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+    public ApiResponse store(MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return ApiResponse.fail("No file uploaded");
+            }
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            String secureUrl = (String) uploadResult.get("secure_url");
+            return ApiResponse.ok("Image uploaded successfully").with("url", secureUrl);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload file to Cloudinary", e);
         }
-        return sb.toString();
     }
 }
