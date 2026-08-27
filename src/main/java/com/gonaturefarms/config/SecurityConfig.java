@@ -26,14 +26,15 @@ import com.gonaturefarms.util.JsonUtil;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Central security configuration. Replaces:
- *  - helmet() + cors() in server.js (headers / CORS)
- *  - middleware/auth.js's requireAuth / requireAdmin (authentication + authorization)
- *  - express-rate-limit (see {@link RateLimitFilter})
- * <p>
- * BCrypt is configured at strength 12 to exactly match the cost factor bcryptjs used
- * when hashing passwords in the original Node app (bcrypt.hash(password, 12)), so the
- * pre-existing admin password hash seeded by schema.sql keeps working unchanged.
+ * Central security configuration.
+ * 
+ * Replaces:
+ *  - helmet() + cors() in server.js
+ *  - middleware/auth.js's requireAuth / requireAdmin
+ *  - express-rate-limit
+ * 
+ * BCrypt is configured at strength 12 to exactly match the cost factor bcryptjs
+ * used when hashing passwords in the original Node app.
  */
 @Configuration
 @EnableWebSecurity
@@ -68,14 +69,6 @@ public class SecurityConfig {
         return registration;
     }
 
-    // RateLimitFilter is a @Component, so Spring Boot auto-registers it as a raw
-    // servlet filter on every request by default. The bean below was previously
-    // commented out while addFilterBefore(rateLimitFilter, ...) below was ALSO
-    // commented out — leaving RateLimitFilter running uncontrolled outside the
-    // Spring Security chain (same double-registration class of bug that
-    // disableJwtFilterAutoRegistration exists to prevent for the JWT filter).
-    // Re-enabled here so its state matches the "temporarily disabled" intent:
-    // fully inert until someone deliberately re-wires it with addFilterBefore.
     @Bean
     public org.springframework.boot.web.servlet.FilterRegistrationBean<RateLimitFilter> disableRateLimitFilterAutoRegistration(
             RateLimitFilter filter) {
@@ -121,6 +114,10 @@ public class SecurityConfig {
                     
                     // ── Public admin endpoints ───────────────────────────────
                     .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/videos").permitAll()
+                    
+                    // ✅ FIX: Add these to permit public access for Pincode validation and Featured Reviews
+                    .requestMatchers(HttpMethod.GET, "/api/admin/zones", "/api/admin/zones/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
 
                     // ── All other API endpoints require authentication ───────────
                     .requestMatchers("/api/**").authenticated()
@@ -136,17 +133,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         if (frontendUrl == null || frontendUrl.isBlank() || "*".equals(frontendUrl)) {
-            // Reflect request origin when not explicitly configured
             configuration.setAllowedOriginPatterns(List.of("*"));
             configuration.setAllowCredentials(false);
         } else {
-            // FRONTEND_URL supports a comma-separated list (e.g. Netlify prod domain +
-            // local dev, or prod + a preview deploy) so one missing/extra origin
-            // doesn't take every client down. Each entry is trimmed and any trailing
-            // slash stripped, since Spring's origin match is an exact string comparison
-            // and a copy-pasted "https://app.example.com/" (trailing slash) will never
-            // match the browser's actual Origin header ("https://app.example.com"),
-            // silently producing a 403 on every cross-origin request.
             List<String> origins = java.util.Arrays.stream(frontendUrl.split(","))
                     .map(String::trim)
                     .filter(o -> !o.isEmpty())

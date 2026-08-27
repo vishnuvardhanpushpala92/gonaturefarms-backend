@@ -36,8 +36,15 @@ public class WhatsAppReminderController {
         return reminderService.sendReminder(reminderId);
     }
 
-    @PostMapping("/send-customers")
+    // ✅ FIX: Added missing endpoint for frontend. Alias for /send-customers
+    @PostMapping("/send")
     public ApiResponse sendToCustomers(@Valid @RequestBody WhatsAppReminderRequest request) {
+        Long adminId = SecurityUtils.requireCurrentUser().id();
+        return reminderService.sendToCustomers(adminId, request);
+    }
+
+    @PostMapping("/send-customers")
+    public ApiResponse sendToCustomersViaAlias(@Valid @RequestBody WhatsAppReminderRequest request) {
         Long adminId = SecurityUtils.requireCurrentUser().id();
         return reminderService.sendToCustomers(adminId, request);
     }
