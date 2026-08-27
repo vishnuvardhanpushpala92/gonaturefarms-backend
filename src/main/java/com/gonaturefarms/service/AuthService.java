@@ -109,9 +109,10 @@ public class AuthService {
 
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
-        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
+        // Using identifier (not email) as per your DTO
+        User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
+        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getSecurityAnswer())) {
             throw new ApiException("Incorrect security answer");
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -121,21 +122,20 @@ public class AuthService {
 
     @Transactional
     public ApiResponse forgotPassword(com.gonaturefarms.dto.auth.ForgotPasswordRequest request) {
-        // Legacy method - just return success message, actual logic is in verifySecurityQuestion
         userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ApiResponse.ok("If the account exists, a reset process will begin");
     }
 
     @Transactional
-    public ApiResponse updateProfile(User currentUser, UpdateProfileRequest request) {
-        if (request.getName() != null) currentUser.setName(request.getName());
-        if (request.getPhone() != null) currentUser.setPhone(request.getPhone());
-        if (request.getEmail() != null) currentUser.setEmail(request.getEmail());
-        if (request.getPincode() != null) currentUser.setPincode(request.getPincode());
-        if (request.getSecurityQuestion() != null) currentUser.setSecurityQuestion(request.getSecurityQuestion());
-        if (request.getSecurityAnswer() != null) currentUser.setSecurityAnswer(request.getSecurityAnswer());
-        userRepository.save(currentUser);
-        return ApiResponse.ok("Profile updated").with("user", UserSummary.from(currentUser));
+    public ApiResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (request.getName() != null) user.setName(request.getName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        if (request.getPincode() != null) user.setPincode(request.getPincode());
+        userRepository.save(user);
+        return ApiResponse.ok("Profile updated").with("user", UserSummary.from(user));
     }
 }

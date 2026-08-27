@@ -29,6 +29,8 @@ public class UserController {
 
     @PutMapping("/profile")
     public ApiResponse updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
-        return authService.updateProfile(SecurityUtils.requireCurrentUser(), request);
+        // Get the ID from the current token, then pass it to the service
+        Long userId = SecurityUtils.requireCurrentUser().id();
+        return authService.updateProfile(userId, request);
     }
 }

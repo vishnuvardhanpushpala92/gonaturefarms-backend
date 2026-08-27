@@ -1,20 +1,28 @@
 package com.gonaturefarms.dto.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.gonaturefarms.entity.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserSummary {
     private Long id;
     private String name;
     private String phone;
     private String email;
     private String role;
+
+    // Static factory method to convert User entity to UserSummary
+    public static UserSummary from(User user) {
+        UserSummary summary = new UserSummary();
+        summary.setId(user.getId());
+        summary.setName(user.getName());
+        summary.setPhone(user.getPhone());
+        summary.setEmail(user.getEmail());
+        summary.setRole(user.getRole() != null ? user.getRole().name() : null);
+        return summary;
+    }
 
     // Manual getters as failsafe for Lombok processing issues
     public Long getId() { return id; }
@@ -23,51 +31,9 @@ public class UserSummary {
     public String getEmail() { return email; }
     public String getRole() { return role; }
 
-    // Static builder method as failsafe for Lombok @Builder
-    public static UserSummaryBuilder builder() {
-        return new UserSummaryBuilder();
-    }
-
-    public static class UserSummaryBuilder {
-        private Long id;
-        private String name;
-        private String phone;
-        private String email;
-        private String role;
-
-        public UserSummaryBuilder id(Long id) {
-            this.id = id;
-            return this;
-        }
-
-        public UserSummaryBuilder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public UserSummaryBuilder phone(String phone) {
-            this.phone = phone;
-            return this;
-        }
-
-        public UserSummaryBuilder email(String email) {
-            this.email = email;
-            return this;
-        }
-
-        public UserSummaryBuilder role(String role) {
-            this.role = role;
-            return this;
-        }
-
-        public UserSummary build() {
-            UserSummary summary = new UserSummary();
-            summary.id = this.id;
-            summary.name = this.name;
-            summary.phone = this.phone;
-            summary.email = this.email;
-            summary.role = this.role;
-            return summary;
-        }
-    }
+    public void setId(Long id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setEmail(String email) { this.email = email; }
+    public void setRole(String role) { this.role = role; }
 }
