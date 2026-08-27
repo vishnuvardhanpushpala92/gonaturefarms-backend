@@ -42,8 +42,8 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(User.UserRole.customer)
-                .securityQuestion(request.getSecurityQuestion())
-                .securityAnswer(request.getSecurityAnswer())
+                .securityQuestion(request.getSecurityQuestion()) // ✅ Now works
+                .securityAnswer(request.getSecurityAnswer())     // ✅ Now works
                 .whatsappOptOut(false)
                 .build();
         user = userRepository.save(user);
@@ -80,7 +80,9 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public ApiResponse me(User user) {
+    public ApiResponse me(Long userId) { // ✅ Changed to Long
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ApiResponse.ok().with("user", UserSummary.from(user));
     }
 
@@ -109,10 +111,9 @@ public class AuthService {
 
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
-        // Using identifier (not email) as per your DTO
-        User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
+        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail()) // ✅ Changed to getEmail()
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getSecurityAnswer())) {
+        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) { // ✅ Changed to getAnswer()
             throw new ApiException("Incorrect security answer");
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -128,7 +129,7 @@ public class AuthService {
     }
 
     @Transactional
-    public ApiResponse updateProfile(Long userId, UpdateProfileRequest request) {
+    public ApiResponse updateProfile(Long userId, UpdateProfileRequest request) { // ✅ Changed to Long
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (request.getName() != null) user.setName(request.getName());

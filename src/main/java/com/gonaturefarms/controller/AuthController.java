@@ -21,7 +21,6 @@ import com.gonaturefarms.service.AuthService;
 
 import jakarta.validation.Valid;
 
-/** REST controller for authentication. Mirrors routes/auth.js. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -49,7 +48,8 @@ public class AuthController {
 
     @GetMapping("/me")
     public ApiResponse me() {
-        return authService.me(SecurityUtils.requireCurrentUser());
+        // ✅ FIX: Pass Long ID instead of CurrentUser
+        return authService.me(SecurityUtils.requireCurrentUser().id());
     }
 
     @PostMapping("/forgot-password")
@@ -74,6 +74,7 @@ public class AuthController {
 
     @PutMapping("/profile")
     public ApiResponse updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
-        return authService.updateProfile(SecurityUtils.requireCurrentUser(), request);
+        // ✅ FIX: Pass Long ID instead of CurrentUser
+        return authService.updateProfile(SecurityUtils.requireCurrentUser().id(), request);
     }
 }

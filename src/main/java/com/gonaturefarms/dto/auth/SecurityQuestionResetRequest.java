@@ -15,4 +15,9 @@ public class SecurityQuestionResetRequest {
 
     @NotBlank(message = "New password is required")
     private String newPassword;
+
+    // Manual getters
+    public String getEmail() { return email; }
+    public String getAnswer() { return answer; }
+    public String getNewPassword() { return newPassword; }
 }

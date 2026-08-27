@@ -22,7 +22,11 @@ public class RegisterRequest {
 
     private String dateOfBirth;
 
-    // Manual getters as failsafe for Lombok processing issues
+    // ✅ Added fields to match User entity
+    private String securityQuestion;
+    private String securityAnswer;
+
+    // Manual getters as failsafe
     public String getPhone() { return phone; }
     public String getName() { return name; }
     public String getEmail() { return email; }
@@ -30,4 +34,6 @@ public class RegisterRequest {
     public String getPincode() { return pincode; }
     public String getPuzzleAnswer() { return puzzleAnswer; }
     public String getDateOfBirth() { return dateOfBirth; }
+    public String getSecurityQuestion() { return securityQuestion; }
+    public String getSecurityAnswer() { return securityAnswer; }
 }
