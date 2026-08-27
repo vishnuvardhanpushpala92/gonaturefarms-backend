@@ -1,19 +1,22 @@
 package com.gonaturefarms.dto.review;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class AdminReviewRequest {
+    @NotNull(message = "Product ID is required")
     private Long productId;
-    private String userName;
+
+    @NotBlank(message = "Customer name is required")
+    private String customerName;
+
+    @NotNull(message = "Rating is required")
     private Integer rating;
+
     private String comment;
     private Boolean featured;
-
-    // Manual getters as failsafe for Lombok processing issues
-    public Long getProductId() { return productId; }
-    public String getUserName() { return userName; }
-    public Integer getRating() { return rating; }
-    public String getComment() { return comment; }
-    public Boolean getFeatured() { return featured; }
 }

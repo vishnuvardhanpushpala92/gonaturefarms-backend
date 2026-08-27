@@ -17,7 +17,6 @@ import com.gonaturefarms.dto.review.ReviewRequest;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.ReviewService;
 
-/** REST controller for product reviews. Mirrors routes/reviews.js. */
 @RestController
 @RequestMapping("/api/reviews")
 public class ReviewController {
@@ -36,6 +35,13 @@ public class ReviewController {
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse adminAll() {
+        return reviewService.adminAll();
+    }
+
+    // ✅ FALLBACK: To prevent 404 errors from old frontend builds
+    @GetMapping("/reviews")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse fallbackAdminReviews() {
         return reviewService.adminAll();
     }
 
