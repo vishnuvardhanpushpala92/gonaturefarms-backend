@@ -112,8 +112,8 @@ public class SecurityConfig {
                     // ── Public product/category endpoints ─────────────────────
                     .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/*", "/api/categories", "/api/categories/*").permitAll()
                     
-                    // ── Public admin endpoints ───────────────────────────────
-                    .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/videos").permitAll()
+                    // ── Public admin endpoints (Scrolling Blocks, FAQ, Slides, etc.) ───────────────
+                    .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/videos", "/api/admin/scroll-content").permitAll()
                     
                     // ✅ FIX: Add these to permit public access for Pincode validation and Featured Reviews
                     .requestMatchers(HttpMethod.GET, "/api/admin/zones", "/api/admin/zones/**").permitAll()
