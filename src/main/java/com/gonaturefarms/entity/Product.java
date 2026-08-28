@@ -86,6 +86,10 @@ public class Product {
         current, future
     }
 
+    // Manual getters/setters as failsafe for Lombok processing issues
+    public String getAdditionalImages() { return additionalImages; }
+    public void setAdditionalImages(String additionalImages) { this.additionalImages = additionalImages; }
+
     // Static builder method as failsafe for Lombok @Builder
     public static ProductBuilder builder() {
         return new ProductBuilder();
@@ -101,6 +105,7 @@ public class Product {
         private String hsn = "";
         private String cat = "";
         private String imgUrl;
+        private String additionalImages;
         private ProductStatus status = ProductStatus.current;
         private Integer stock = 100;
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -115,6 +120,7 @@ public class Product {
         public ProductBuilder hsn(String hsn) { this.hsn = hsn; return this; }
         public ProductBuilder cat(String cat) { this.cat = cat; return this; }
         public ProductBuilder imgUrl(String imgUrl) { this.imgUrl = imgUrl; return this; }
+        public ProductBuilder additionalImages(String additionalImages) { this.additionalImages = additionalImages; return this; }
         public ProductBuilder status(ProductStatus status) { this.status = status; return this; }
         public ProductBuilder stock(Integer stock) { this.stock = stock; return this; }
         public ProductBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
@@ -131,6 +137,7 @@ public class Product {
             product.hsn = this.hsn;
             product.cat = this.cat;
             product.imgUrl = this.imgUrl;
+            product.additionalImages = this.additionalImages;
             product.status = this.status;
             product.stock = this.stock;
             product.createdAt = this.createdAt;

@@ -115,6 +115,7 @@ public class ProductService {
                 .hsn(req.getHsn() == null ? "" : req.getHsn())
                 .cat(req.getCat() == null ? "" : req.getCat())
                 .imgUrl(req.getImgUrl() == null ? "" : req.getImgUrl())
+                .additionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages())
                 .status(parseStatus(req.getStatus()))
                 .build();
         product = productRepository.save(product);
@@ -138,6 +139,7 @@ public class ProductService {
         product.setHsn(req.getHsn() == null ? "" : req.getHsn());
         product.setCat(req.getCat() == null ? "" : req.getCat());
         product.setImgUrl(req.getImgUrl() == null ? "" : req.getImgUrl());
+        product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
         product.setStatus(parseStatus(req.getStatus()));
         productRepository.save(product);
 

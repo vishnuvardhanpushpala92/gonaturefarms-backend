@@ -24,6 +24,7 @@ public class ProductRequest {
     private String cat;
     private String imgUrl;
     private String status;
+    private String additionalImages;
 
     @Valid
     private List<ProductVariantRequest> variants;
@@ -38,5 +39,6 @@ public class ProductRequest {
     public String getCat() { return cat; }
     public String getImgUrl() { return imgUrl; }
     public String getStatus() { return status; }
+    public String getAdditionalImages() { return additionalImages; }
     public List<ProductVariantRequest> getVariants() { return variants; }
 }
