@@ -24,7 +24,10 @@ public class UserController {
 
     @GetMapping("/profile")
     public ApiResponse getProfile() {
-        return ApiResponse.ok().with("user", SecurityUtils.requireCurrentUser());
+        long start = System.currentTimeMillis();
+        ApiResponse response = ApiResponse.ok().with("user", SecurityUtils.requireCurrentUser());
+        System.out.println("Account request took: " + (System.currentTimeMillis() - start) + "ms");
+        return response;
     }
 
     @PutMapping("/profile")
