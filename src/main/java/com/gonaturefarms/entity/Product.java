@@ -62,6 +62,9 @@ public class Product {
     @Column(name = "img_url", columnDefinition = "TEXT")
     private String imgUrl;
 
+    @Column(name = "additional_images", columnDefinition = "TEXT")
+    private String additionalImages; // JSON array of image URLs
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false, length = 20)

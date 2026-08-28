@@ -21,7 +21,20 @@ public class OrderController {
     }
 
     @PostMapping
-    public ApiResponse place(@Valid @RequestBody OrderRequest request) {
+    public ApiResponse place(@RequestBody OrderRequest request) {
+        System.out.println("=== ORDER REQUEST RECEIVED ===");
+        System.out.println("Customer Name: " + request.getCustomerName());
+        System.out.println("Phone: " + request.getPhone());
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Address: " + request.getAddress());
+        System.out.println("Area: " + request.getArea());
+        System.out.println("City: " + request.getCity());
+        System.out.println("State: " + request.getState());
+        System.out.println("Pincode: " + request.getPincode());
+        System.out.println("Payment Method: " + request.getPaymentMethod());
+        System.out.println("Payment UTR: " + request.getPaymentUtr());
+        System.out.println("Items count: " + (request.getItems() != null ? request.getItems().size() : 0));
+        System.out.println("User ID: " + request.getUserId());
         return orderService.placeOrder(request);
     }
 

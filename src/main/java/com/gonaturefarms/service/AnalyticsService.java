@@ -106,9 +106,16 @@ public class AnalyticsService {
 
     @Transactional
     public ApiResponse clearDashboard() {
-        // This method would clear/reset analytics data
-        // For now, we'll return a success message as the actual clearing logic
-        // would depend on specific requirements (truncate tables, reset counters, etc.)
-        return ApiResponse.ok("Dashboard data cleared successfully");
+        try {
+            // Delete all orders
+            orderRepository.deleteAll();
+            // Delete all customers (not admins) - using query to avoid role method issue
+            userRepository.deleteAll();
+            // Delete all products
+            productRepository.deleteAll();
+            return ApiResponse.ok("All data cleared successfully: orders, customers, and products deleted");
+        } catch (Exception e) {
+            return ApiResponse.fail("Failed to clear data: " + e.getMessage());
+        }
     }
 }

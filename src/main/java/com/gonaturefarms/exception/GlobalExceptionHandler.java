@@ -70,6 +70,13 @@ public class GlobalExceptionHandler {
     /** Bean Validation failures on @Valid request bodies -> HTTP 400 with the first violation message. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleValidation(MethodArgumentNotValidException ex) {
+        // Log all validation errors for debugging
+        System.err.println("=== VALIDATION ERROR DETAILS ===");
+        ex.getBindingResult().getFieldErrors().forEach(err -> {
+            System.err.println("Field: " + err.getField() + ", Error: " + err.getDefaultMessage() + 
+                             ", Rejected value: " + err.getRejectedValue());
+        });
+        
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())

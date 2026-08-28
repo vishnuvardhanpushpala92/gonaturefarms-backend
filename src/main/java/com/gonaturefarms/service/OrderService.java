@@ -36,20 +36,43 @@ public class OrderService {
 
     @Transactional
     public ApiResponse placeOrder(OrderRequest req) {
+        System.out.println("=== ORDER PLACEMENT DEBUG ===");
+        System.out.println("Customer Name: " + req.getCustomerName());
+        System.out.println("Phone: " + req.getPhone());
+        System.out.println("Email: " + req.getEmail());
+        System.out.println("Address: " + req.getAddress());
+        System.out.println("Area: " + req.getArea());
+        System.out.println("City: " + req.getCity());
+        System.out.println("State: " + req.getState());
+        System.out.println("Pincode: " + req.getPincode());
+        System.out.println("Payment Method: " + req.getPaymentMethod());
+        System.out.println("Payment UTR: " + req.getPaymentUtr());
+        System.out.println("Items count: " + (req.getItems() != null ? req.getItems().size() : 0));
+        System.out.println("User ID: " + req.getUserId());
+        
         // Validation
         if (isBlank(req.getCustomerName()) || isBlank(req.getPhone()) || isBlank(req.getAddress())
                 || isBlank(req.getCity()) || isBlank(req.getPincode())
                 || req.getItems() == null || req.getItems().isEmpty()) {
+            System.err.println("VALIDATION FAILED: Missing required order fields");
+            System.err.println("CustomerName blank: " + isBlank(req.getCustomerName()));
+            System.err.println("Phone blank: " + isBlank(req.getPhone()));
+            System.err.println("Address blank: " + isBlank(req.getAddress()));
+            System.err.println("City blank: " + isBlank(req.getCity()));
+            System.err.println("Pincode blank: " + isBlank(req.getPincode()));
+            System.err.println("Items null/empty: " + (req.getItems() == null || req.getItems().isEmpty()));
             throw new ApiException("Missing required order fields");
         }
 
         long zoneCount = deliveryZoneRepository.count();
         boolean zoneKnown = deliveryZoneRepository.findByPincode(req.getPincode().trim()).isPresent();
         if (zoneCount > 0 && !zoneKnown) {
+            System.err.println("VALIDATION FAILED: Pincode not in delivery zone - " + req.getPincode());
             throw new ApiException("We don't deliver to pincode " + req.getPincode() + " yet.");
         }
 
         String newOrderId = OrderIdGenerator.generate();
+        System.out.println("Generated Order ID: " + newOrderId);
 
         Order order = new Order();
         order.setOrderId(newOrderId);
@@ -89,6 +112,7 @@ public class OrderService {
         }
 
         order = orderRepository.save(order);
+        System.out.println("Order saved successfully with ID: " + order.getId());
 
         if (!isBlank(req.getCouponCode())) {
             couponRepository.findByCode(req.getCouponCode().toUpperCase())
@@ -98,6 +122,7 @@ public class OrderService {
                     });
         }
 
+        System.out.println("=== ORDER PLACEMENT SUCCESS ===");
         return ApiResponse.ok("Order placed successfully!")
                 .with("order_id", order.getOrderId())
                 .with("id", order.getId());

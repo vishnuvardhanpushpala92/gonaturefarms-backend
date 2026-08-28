@@ -33,21 +33,29 @@ public class AuthService {
 
     @Transactional
     public ApiResponse register(RegisterRequest request) {
+        System.out.println("Registration attempt for phone: " + request.getPhone());
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("Name: " + request.getName());
+        
         if (userRepository.existsByPhone(request.getPhone())) {
+            System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
             throw new ApiException("Phone number already registered");
         }
+        
         User user = User.builder()
                 .name(request.getName())
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(User.UserRole.customer)
-                .securityQuestion(request.getSecurityQuestion()) // ✅ Now works
-                .securityAnswer(request.getSecurityAnswer())     // ✅ Now works
+                .securityQuestion(request.getSecurityQuestion())
+                .securityAnswer(request.getSecurityAnswer())
                 .whatsappOptOut(false)
                 .build();
         user = userRepository.save(user);
         String token = jwtService.generateToken(user);
+        
+        System.out.println("Registration successful for user ID: " + user.getId());
         return ApiResponse.ok("Registration successful")
                 .with("token", token)
                 .with("user", UserSummary.from(user));
@@ -88,8 +96,12 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse verifySecurityQuestion(SecurityQuestionVerifyRequest request) {
+        // ✅ FIX: Use ApiException (-> HTTP 200, success:false) instead of
+        // ResourceNotFoundException (-> HTTP 404) so a "no such account" result is
+        // handled the same friendly way as every other forgot-password outcome,
+        // instead of surfacing as a raw 404 in the browser console.
         User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
         if (user.getSecurityQuestion() == null) {
             throw new ApiException("No security question set for this account");
         }
@@ -100,7 +112,7 @@ public class AuthService {
     @Transactional
     public ApiResponse resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
             throw new ApiException("Incorrect security answer");
         }
@@ -112,7 +124,7 @@ public class AuthService {
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
         User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail()) // ✅ Changed to getEmail()
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) { // ✅ Changed to getAnswer()
             throw new ApiException("Incorrect security answer");
         }
@@ -124,7 +136,7 @@ public class AuthService {
     @Transactional
     public ApiResponse forgotPassword(com.gonaturefarms.dto.auth.ForgotPasswordRequest request) {
         userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
         return ApiResponse.ok("If the account exists, a reset process will begin");
     }
 

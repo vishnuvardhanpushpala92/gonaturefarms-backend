@@ -21,12 +21,12 @@ public class OrderRequest {
     @NotBlank(message = "Address is required")
     private String address;
 
-    private String area;
+    private String area; // Optional field - can be null or empty
 
     @NotBlank(message = "City is required")
     private String city;
 
-    private String state;
+    private String state; // Optional field - can be null or empty
 
     @NotBlank(message = "Pincode is required")
     private String pincode;
