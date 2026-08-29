@@ -62,4 +62,10 @@ public class ProductController {
     public ApiResponse delete(@PathVariable Long id) {
         return productService.deleteProduct(id);
     }
+
+    @PostMapping("/add-demo-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse addDemoVariants() {
+        return productService.addDemoVariantsToAllProducts();
+    }
 }

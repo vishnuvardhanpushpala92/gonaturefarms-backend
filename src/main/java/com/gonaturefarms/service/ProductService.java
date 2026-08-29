@@ -161,6 +161,60 @@ public class ProductService {
         return ApiResponse.ok("Product deleted");
     }
 
+    @Transactional
+    public ApiResponse addDemoVariantsToAllProducts() {
+        List<Product> allProducts = productRepository.findAll();
+        int updatedCount = 0;
+        
+        for (Product product : allProducts) {
+            List<ProductVariant> existingVariants = productVariantRepository.findByProductId(product.getId());
+            
+            // Only add demo variants if product has no variants
+            if (existingVariants == null || existingVariants.isEmpty()) {
+                System.out.println("Adding demo variants to product: " + product.getName());
+                
+                // Create demo variants: Small, Medium, Large
+                BigDecimal basePrice = product.getPrice() != null ? product.getPrice() : BigDecimal.valueOf(100);
+                BigDecimal baseMrp = product.getMrp() != null ? product.getMrp() : basePrice;
+                
+                ProductVariant smallVariant = ProductVariant.builder()
+                        .product(product)
+                        .productName(product.getName())
+                        .variantName("Small")
+                        .price(basePrice.multiply(BigDecimal.valueOf(0.8))) // 20% discount
+                        .mrp(baseMrp.multiply(BigDecimal.valueOf(0.8)))
+                        .stock(50)
+                        .build();
+                
+                ProductVariant mediumVariant = ProductVariant.builder()
+                        .product(product)
+                        .productName(product.getName())
+                        .variantName("Medium")
+                        .price(basePrice)
+                        .mrp(baseMrp)
+                        .stock(100)
+                        .build();
+                
+                ProductVariant largeVariant = ProductVariant.builder()
+                        .product(product)
+                        .productName(product.getName())
+                        .variantName("Large")
+                        .price(basePrice.multiply(BigDecimal.valueOf(1.2))) // 20% premium
+                        .mrp(baseMrp.multiply(BigDecimal.valueOf(1.2)))
+                        .stock(75)
+                        .build();
+                
+                productVariantRepository.save(smallVariant);
+                productVariantRepository.save(mediumVariant);
+                productVariantRepository.save(largeVariant);
+                
+                updatedCount++;
+            }
+        }
+        
+        return ApiResponse.ok("Demo variants added to " + updatedCount + " products");
+    }
+
     // ──────────────────────────────────────────────
     //  HELPER METHODS
     // ──────────────────────────────────────────────
