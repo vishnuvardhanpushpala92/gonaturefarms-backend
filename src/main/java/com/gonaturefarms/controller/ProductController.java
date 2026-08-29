@@ -68,4 +68,10 @@ public class ProductController {
     public ApiResponse addDemoVariants() {
         return productService.addDemoVariantsToAllProducts();
     }
+
+    @PostMapping("/remove-demo-variants")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse removeDemoVariants() {
+        return productService.removeDemoVariantsFromAllProducts();
+    }
 }

@@ -215,6 +215,41 @@ public class ProductService {
         return ApiResponse.ok("Demo variants added to " + updatedCount + " products");
     }
 
+    @Transactional
+    public ApiResponse removeDemoVariantsFromAllProducts() {
+        List<Product> allProducts = productRepository.findAll();
+        int removedCount = 0;
+        
+        // Demo variant names that should be removed
+        java.util.Set<String> demoVariantNames = new java.util.HashSet<>();
+        demoVariantNames.add("Small");
+        demoVariantNames.add("Medium");
+        demoVariantNames.add("Large");
+        
+        try {
+            for (Product product : allProducts) {
+                List<ProductVariant> existingVariants = productVariantRepository.findByProductId(product.getId());
+                
+                if (existingVariants != null && !existingVariants.isEmpty()) {
+                    for (ProductVariant variant : existingVariants) {
+                        // Only remove if it's a demo variant (Small, Medium, Large)
+                        if (demoVariantNames.contains(variant.getVariantName())) {
+                            System.out.println("Removing demo variant: " + variant.getVariantName() + " from product: " + product.getName());
+                            productVariantRepository.deleteById(variant.getId());
+                            removedCount++;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error removing demo variants: " + e.getMessage());
+            e.printStackTrace();
+            throw new ApiException("Failed to remove demo variants: " + e.getMessage());
+        }
+        
+        return ApiResponse.ok("Demo variants removed from " + removedCount + " products");
+    }
+
     // ──────────────────────────────────────────────
     //  HELPER METHODS
     // ──────────────────────────────────────────────
