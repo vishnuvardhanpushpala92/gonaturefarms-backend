@@ -120,6 +120,29 @@ public class Order {
     @Builder.Default
     private Boolean paymentVerified = false;
 
+    @Builder.Default
+    @Column(name = "return_requested", nullable = false)
+    private Boolean returnRequested = false;
+
+    @Column(name = "return_reason", length = 500)
+    private String returnReason;
+
+    @Column(name = "return_requested_at")
+    private LocalDateTime returnRequestedAt;
+
+    @Builder.Default
+    @Column(name = "return_status", length = 30)
+    private String returnStatus = "None";
+
+    @Column(name = "return_processed_at")
+    private LocalDateTime returnProcessedAt;
+
+    @Column(name = "refund_amount", precision = 10, scale = 2)
+    private BigDecimal refundAmount;
+
+    @Column(name = "refund_notes", length = 500)
+    private String refundNotes;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -204,6 +227,20 @@ public class Order {
 
     public Boolean getPaymentVerified() { return paymentVerified; }
 
+    public Boolean getReturnRequested() { return returnRequested; }
+
+    public String getReturnReason() { return returnReason; }
+
+    public LocalDateTime getReturnRequestedAt() { return returnRequestedAt; }
+
+    public String getReturnStatus() { return returnStatus; }
+
+    public LocalDateTime getReturnProcessedAt() { return returnProcessedAt; }
+
+    public BigDecimal getRefundAmount() { return refundAmount; }
+
+    public String getRefundNotes() { return refundNotes; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public List<OrderItem> getItems() { return items; }
@@ -237,6 +274,13 @@ public class Order {
         private String trackingLocation = "";
         private String notes;
         private Boolean paymentVerified = false;
+        private Boolean returnRequested = false;
+        private String returnReason;
+        private LocalDateTime returnRequestedAt;
+        private String returnStatus = "None";
+        private LocalDateTime returnProcessedAt;
+        private BigDecimal refundAmount;
+        private String refundNotes;
         private LocalDateTime createdAt = LocalDateTime.now();
         private List<OrderItem> items = new java.util.ArrayList<>();
 
@@ -355,6 +399,41 @@ public class Order {
             return this;
         }
 
+        public OrderBuilder returnRequested(Boolean returnRequested) {
+            this.returnRequested = returnRequested;
+            return this;
+        }
+
+        public OrderBuilder returnReason(String returnReason) {
+            this.returnReason = returnReason;
+            return this;
+        }
+
+        public OrderBuilder returnRequestedAt(LocalDateTime returnRequestedAt) {
+            this.returnRequestedAt = returnRequestedAt;
+            return this;
+        }
+
+        public OrderBuilder returnStatus(String returnStatus) {
+            this.returnStatus = returnStatus;
+            return this;
+        }
+
+        public OrderBuilder returnProcessedAt(LocalDateTime returnProcessedAt) {
+            this.returnProcessedAt = returnProcessedAt;
+            return this;
+        }
+
+        public OrderBuilder refundAmount(BigDecimal refundAmount) {
+            this.refundAmount = refundAmount;
+            return this;
+        }
+
+        public OrderBuilder refundNotes(String refundNotes) {
+            this.refundNotes = refundNotes;
+            return this;
+        }
+
         public OrderBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -390,6 +469,13 @@ public class Order {
             order.trackingLocation = this.trackingLocation;
             order.notes = this.notes;
             order.paymentVerified = this.paymentVerified;
+            order.returnRequested = this.returnRequested;
+            order.returnReason = this.returnReason;
+            order.returnRequestedAt = this.returnRequestedAt;
+            order.returnStatus = this.returnStatus;
+            order.returnProcessedAt = this.returnProcessedAt;
+            order.refundAmount = this.refundAmount;
+            order.refundNotes = this.refundNotes;
             order.createdAt = this.createdAt;
             order.items = this.items;
             return order;

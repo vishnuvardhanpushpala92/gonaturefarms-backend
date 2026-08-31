@@ -3,6 +3,8 @@ package com.gonaturefarms.controller;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.order.OrderRequest;
 import com.gonaturefarms.dto.order.OrderStatusUpdateRequest;
+import com.gonaturefarms.dto.order.RefundRequest;
+import com.gonaturefarms.dto.order.ReturnRequest;
 import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.OrderService;
 import jakarta.validation.Valid;
@@ -69,5 +71,23 @@ public class OrderController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse verifyPayment(@PathVariable String orderId, @RequestParam boolean approved) {
         return orderService.verifyPayment(orderId, approved);
+    }
+
+    @PostMapping("/{orderId}/return")
+    public ApiResponse requestReturn(@PathVariable String orderId, @RequestBody ReturnRequest request) {
+        try {
+            // Try to get current user if authenticated
+            Long userId = SecurityUtils.getCurrentUser() != null ? SecurityUtils.getCurrentUser().id() : null;
+            return orderService.requestReturn(orderId, request, userId);
+        } catch (Exception e) {
+            // If authentication fails, proceed without user ID for phone-based returns
+            return orderService.requestReturn(orderId, request, null);
+        }
+    }
+
+    @PutMapping("/{orderId}/refund")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse processRefund(@PathVariable String orderId, @RequestBody RefundRequest request) {
+        return orderService.processRefund(orderId, request);
     }
 }

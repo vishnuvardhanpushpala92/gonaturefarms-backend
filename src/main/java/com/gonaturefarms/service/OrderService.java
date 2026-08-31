@@ -10,6 +10,8 @@ import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.order.OrderItemRequest;
 import com.gonaturefarms.dto.order.OrderRequest;
 import com.gonaturefarms.dto.order.OrderStatusUpdateRequest;
+import com.gonaturefarms.dto.order.RefundRequest;
+import com.gonaturefarms.dto.order.ReturnRequest;
 import com.gonaturefarms.entity.Order;
 import com.gonaturefarms.entity.OrderItem;
 import com.gonaturefarms.exception.ApiException;
@@ -18,6 +20,8 @@ import com.gonaturefarms.repository.CouponRepository;
 import com.gonaturefarms.repository.DeliveryZoneRepository;
 import com.gonaturefarms.repository.OrderRepository;
 import com.gonaturefarms.util.OrderIdGenerator;
+
+import java.time.LocalDateTime;
 
 @Service
 public class OrderService {
@@ -190,6 +194,61 @@ public class OrderService {
 
         orderRepository.save(order);
         return ApiResponse.ok(approved ? "Payment verified and order confirmed" : "Payment rejected and order cancelled");
+    }
+
+    @Transactional
+    public ApiResponse requestReturn(String orderId, ReturnRequest request, Long userId) {
+        Order order = orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Check if return is already requested
+        if (order.getReturnRequested()) {
+            throw new ApiException("Return request already exists for this order");
+        }
+
+        // Only allow returns for delivered orders
+        if (order.getStatus() != Order.OrderStatus.Delivered) {
+            throw new ApiException("Returns are only allowed for delivered orders");
+        }
+
+        // If userId is provided, verify ownership
+        if (userId != null && !userId.equals(order.getUserId())) {
+            throw new ApiException("You can only request returns for your own orders");
+        }
+
+        order.setReturnRequested(true);
+        order.setReturnReason(request.getReason());
+        order.setReturnRequestedAt(LocalDateTime.now());
+        order.setReturnStatus("Pending");
+
+        orderRepository.save(order);
+        return ApiResponse.ok("Return request submitted successfully");
+    }
+
+    @Transactional
+    public ApiResponse processRefund(String orderId, RefundRequest request) {
+        Order order = orderRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (!order.getReturnRequested()) {
+            throw new ApiException("No return request found for this order");
+        }
+
+        order.setReturnStatus(request.getReturnStatus());
+        order.setReturnProcessedAt(LocalDateTime.now());
+        order.setRefundNotes(request.getRefundNotes());
+
+        if (request.getReturnStatus().equals("Approved") || request.getReturnStatus().equals("PartialRefund")) {
+            order.setRefundAmount(request.getRefundAmount());
+            order.setPaymentStatus(Order.PaymentStatus.Refunded);
+            order.setStatus(Order.OrderStatus.Cancelled);
+        } else if (request.getReturnStatus().equals("Rejected")) {
+            order.setRefundAmount(BigDecimal.ZERO);
+            order.setStatus(Order.OrderStatus.Delivered);
+        }
+
+        orderRepository.save(order);
+        return ApiResponse.ok("Refund processed successfully");
     }
 
     private BigDecimal nz(BigDecimal v) {

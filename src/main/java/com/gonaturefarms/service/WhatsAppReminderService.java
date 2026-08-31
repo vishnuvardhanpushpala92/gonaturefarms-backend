@@ -35,9 +35,17 @@ public class WhatsAppReminderService {
 
     @Transactional
     public ApiResponse createReminder(Long adminId, WhatsAppReminderRequest request) {
+        // Convert String reminderType to enum
+        WhatsAppReminder.ReminderType reminderType;
+        try {
+            reminderType = WhatsAppReminder.ReminderType.valueOf(request.getReminderType());
+        } catch (Exception e) {
+            reminderType = WhatsAppReminder.ReminderType.Custom; // Default to Custom if invalid
+        }
+
         WhatsAppReminder reminder = WhatsAppReminder.builder()
                 .adminId(adminId)
-                .reminderType(request.getReminderType())
+                .reminderType(reminderType)
                 .message(request.getMessage())
                 .scheduledAt(request.getScheduledAt())
                 .status(WhatsAppReminder.ReminderStatus.Pending)
@@ -69,8 +77,16 @@ public class WhatsAppReminderService {
             throw new com.gonaturefarms.exception.ApiException("Customer IDs are required");
         }
 
+        // Convert String reminderType to enum
+        WhatsAppReminder.ReminderType reminderType;
+        try {
+            reminderType = WhatsAppReminder.ReminderType.valueOf(request.getReminderType());
+        } catch (Exception e) {
+            reminderType = WhatsAppReminder.ReminderType.Custom; // Default to Custom if invalid
+        }
+
         java.util.List<String> whatsappLinks = new java.util.ArrayList<>();
-        
+
         for (Long customerId : request.getCustomerIds()) {
             User customer = userRepository.findById(customerId)
                     .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Customer not found"));
@@ -98,7 +114,7 @@ public class WhatsAppReminderService {
         // Create a reminder record
         WhatsAppReminder reminder = WhatsAppReminder.builder()
                 .adminId(adminId)
-                .reminderType(request.getReminderType())
+                .reminderType(reminderType)
                 .message(request.getMessage())
                 .scheduledAt(request.getScheduledAt() != null ? request.getScheduledAt() : LocalDateTime.now())
                 .status(WhatsAppReminder.ReminderStatus.Sent)
