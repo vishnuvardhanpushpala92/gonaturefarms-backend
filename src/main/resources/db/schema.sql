@@ -250,7 +250,8 @@ INSERT INTO site_settings (setting_key, value, updated_at) VALUES
 ('qr_code',       '', CURRENT_TIMESTAMP),
 ('logo_url',      '', CURRENT_TIMESTAMP),
 ('hdr_bg',        '#ffffff', CURRENT_TIMESTAMP),
-('ftr_bg',        '#111111', CURRENT_TIMESTAMP),
+('ftr_bg',        '#FF8C00', CURRENT_TIMESTAMP),
+('ftr_text',      '#FFFFFF', CURRENT_TIMESTAMP),
 ('banner_msgs',   '100% Organic Certified|Free Delivery above ₹500|Farm Fresh Produce|A2 Cow Products|Trusted by 5000+ Families|No Preservatives|Direct from Farm', CURRENT_TIMESTAMP),
 ('free_delivery_above', '500', CURRENT_TIMESTAMP),
 ('delivery_charge_below', '50', CURRENT_TIMESTAMP),
@@ -262,8 +263,15 @@ INSERT INTO site_settings (setting_key, value, updated_at) VALUES
 ('footer_phone', '+91 9182526xxx', CURRENT_TIMESTAMP),
 ('support_fields', '[{"key":"name","label":"Your Name","type":"text","required":true},{"key":"phone","label":"Phone Number","type":"tel","required":true},{"key":"order_id","label":"Order ID (if applicable)","type":"text","required":false},{"key":"issue_type","label":"Issue Type","type":"select","options":["Order Issue","Payment Issue","Product Quality","Delivery Delay","General Query"],"required":true},{"key":"message","label":"Message","type":"textarea","required":true}]', CURRENT_TIMESTAMP),
 ('hdr_font_size', '16', CURRENT_TIMESTAMP),
-('ftr_font_size', '14', CURRENT_TIMESTAMP)
+('ftr_font_size', '14', CURRENT_TIMESTAMP),
+('store_location', 'Hyderabad, Telangana', CURRENT_TIMESTAMP),
+('footer_text', '', CURRENT_TIMESTAMP)
 ON CONFLICT (setting_key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at;
+
+-- Add missing footer text color if not exists
+INSERT INTO site_settings (setting_key, value, updated_at)
+VALUES ('ftr_text', '#FFFFFF', CURRENT_TIMESTAMP)
+ON CONFLICT (setting_key) DO NOTHING;
 
 -- ── CUSTOMER SUPPORT TICKETS ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (
@@ -387,6 +395,33 @@ CREATE TABLE IF NOT EXISTS whatsapp_reminders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_reminders_admin_id ON whatsapp_reminders(admin_id);
+
+-- ── FOOTER LINKS ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS footer_links (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name       VARCHAR(200) NOT NULL,
+  url        VARCHAR(500) NOT NULL,
+  category   VARCHAR(50) NOT NULL DEFAULT 'QUICK_LINKS' CHECK (category IN ('QUICK_LINKS','CUSTOMER_CARE')),
+  sort_order INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_footer_links_category ON footer_links(category);
+
+-- ── SITE CONTENT ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS site_content (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  slug             VARCHAR(100) NOT NULL UNIQUE,
+  title            VARCHAR(200) NOT NULL,
+  description      TEXT,
+  image_url        TEXT,
+  person_name      VARCHAR(200),
+  person_role      VARCHAR(200),
+  person_image_url TEXT,
+  created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at       TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_site_content_slug ON site_content(slug);
 
 -- ── DONE ─────────────────────────────────────────────────────────
 -- Admin login -> Username: Vishnu | Password: 918252
