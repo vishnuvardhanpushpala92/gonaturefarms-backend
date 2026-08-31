@@ -214,7 +214,7 @@ public class AnalyticsService {
         CellStyle totalStyle = sheet.getWorkbook().createCellStyle();
         Font totalFont = sheet.getWorkbook().createFont();
         totalFont.setBold(true);
-        totalStyle.setFont(totalStyle);
+        totalStyle.setFont(totalFont);
         
         BigDecimal totalRevenue = allOrders.stream()
                 .map(Order::getTotal)
