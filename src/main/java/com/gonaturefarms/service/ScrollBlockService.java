@@ -24,14 +24,22 @@ public class ScrollBlockService {
 
     @Transactional
     public ApiResponse create(ScrollBlockRequest req) {
-        if (req.getTitle() == null || req.getTitle().isBlank()
-                || req.getContent() == null || req.getContent().isBlank()) {
-            throw new ApiException("Title and content required");
+        if (req.getTitle() == null || req.getTitle().isBlank()) {
+            throw new ApiException("Title is required");
         }
+        
+        // Use custom icon if provided, otherwise use regular icon or default
+        String iconValue = req.getIcon();
+        if ("custom".equals(iconValue) && req.getCustomIcon() != null && !req.getCustomIcon().isBlank()) {
+            iconValue = req.getCustomIcon();
+        } else if (iconValue == null || iconValue.isBlank()) {
+            iconValue = "\uD83D\uDCCB"; // Default icon
+        }
+        
         ScrollBlock block = ScrollBlock.builder()
                 .title(req.getTitle())
-                .content(req.getContent())
-                .icon(req.getIcon() == null || req.getIcon().isBlank() ? "\uD83D\uDCCB" : req.getIcon())
+                .content(req.getContent() != null ? req.getContent() : req.getTitle()) // Default to title if content is empty
+                .icon(iconValue)
                 .style(parseStyle(req.getStyle()))
                 .build();
         block = scrollBlockRepository.save(block);

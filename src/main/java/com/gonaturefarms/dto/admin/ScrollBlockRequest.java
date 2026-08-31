@@ -10,10 +10,12 @@ public class ScrollBlockRequest {
     private String content;
     private String icon;
     private String style;
+    private String customIcon;
 
     // Manual getters as failsafe for Lombok processing issues
     public String getTitle() { return title; }
     public String getContent() { return content; }
     public String getIcon() { return icon; }
     public String getStyle() { return style; }
+    public String getCustomIcon() { return customIcon; }
 }
