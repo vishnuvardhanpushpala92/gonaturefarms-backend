@@ -351,8 +351,12 @@ CREATE TABLE IF NOT EXISTS scroll_blocks (
   icon       VARCHAR(10) DEFAULT '📋',
   style      VARCHAR(20) DEFAULT 'info' CHECK (style IN ('info','promo','notice','earth')),
   sort_order INT DEFAULT 0,
+  background_color VARCHAR(20) DEFAULT '#f8fafb',
+  text_color VARCHAR(20) DEFAULT '#2d5a27',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE scroll_blocks ADD COLUMN IF NOT EXISTS background_color VARCHAR(20) DEFAULT '#f8fafb';
+ALTER TABLE scroll_blocks ADD COLUMN IF NOT EXISTS text_color VARCHAR(20) DEFAULT '#2d5a27';
 
 -- ── ADDRESSES ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS addresses (

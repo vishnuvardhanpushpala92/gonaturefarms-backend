@@ -47,6 +47,12 @@ public class ScrollBlock {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
+    @Column(name = "background_color", length = 20)
+    private String backgroundColor;
+
+    @Column(name = "text_color", length = 20)
+    private String textColor;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -74,6 +80,12 @@ public class ScrollBlock {
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 
+    public String getBackgroundColor() { return backgroundColor; }
+    public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
+
+    public String getTextColor() { return textColor; }
+    public void setTextColor(String textColor) { this.textColor = textColor; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -89,6 +101,8 @@ public class ScrollBlock {
         private String icon = "\uD83D\uDCCB";
         private BlockStyle style = BlockStyle.info;
         private Integer sortOrder = 0;
+        private String backgroundColor;
+        private String textColor;
         private LocalDateTime createdAt = LocalDateTime.now();
 
         public ScrollBlockBuilder id(Long id) {
@@ -121,6 +135,16 @@ public class ScrollBlock {
             return this;
         }
 
+        public ScrollBlockBuilder backgroundColor(String backgroundColor) {
+            this.backgroundColor = backgroundColor;
+            return this;
+        }
+
+        public ScrollBlockBuilder textColor(String textColor) {
+            this.textColor = textColor;
+            return this;
+        }
+
         public ScrollBlockBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -134,6 +158,8 @@ public class ScrollBlock {
             scrollBlock.icon = this.icon;
             scrollBlock.style = this.style;
             scrollBlock.sortOrder = this.sortOrder;
+            scrollBlock.backgroundColor = this.backgroundColor;
+            scrollBlock.textColor = this.textColor;
             scrollBlock.createdAt = this.createdAt;
             return scrollBlock;
         }

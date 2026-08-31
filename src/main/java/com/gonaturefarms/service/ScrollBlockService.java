@@ -41,6 +41,8 @@ public class ScrollBlockService {
                 .content(req.getContent() != null ? req.getContent() : req.getTitle()) // Default to title if content is empty
                 .icon(iconValue)
                 .style(parseStyle(req.getStyle()))
+                .backgroundColor(req.getBackgroundColor())
+                .textColor(req.getTextColor())
                 .build();
         block = scrollBlockRepository.save(block);
         return ApiResponse.ok("Block added").with("id", block.getId());
@@ -53,6 +55,46 @@ public class ScrollBlockService {
         }
         scrollBlockRepository.deleteById(id);
         return ApiResponse.ok("Block deleted");
+    }
+
+    @Transactional
+    public ApiResponse update(Long id, ScrollBlockRequest req) {
+        ScrollBlock block = scrollBlockRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Scroll block not found"));
+        
+        if (req.getTitle() != null && !req.getTitle().isBlank()) {
+            block.setTitle(req.getTitle());
+        }
+        
+        if (req.getContent() != null) {
+            block.setContent(req.getContent());
+        }
+        
+        // Update icon if provided
+        if (req.getIcon() != null) {
+            String iconValue = req.getIcon();
+            if ("custom".equals(iconValue) && req.getCustomIcon() != null && !req.getCustomIcon().isBlank()) {
+                iconValue = req.getCustomIcon();
+            } else if (iconValue.isBlank()) {
+                iconValue = "\uD83D\uDCCB";
+            }
+            block.setIcon(iconValue);
+        }
+        
+        if (req.getStyle() != null) {
+            block.setStyle(parseStyle(req.getStyle()));
+        }
+        
+        if (req.getBackgroundColor() != null) {
+            block.setBackgroundColor(req.getBackgroundColor());
+        }
+        
+        if (req.getTextColor() != null) {
+            block.setTextColor(req.getTextColor());
+        }
+        
+        block = scrollBlockRepository.save(block);
+        return ApiResponse.ok("Block updated successfully");
     }
 
     private ScrollBlock.BlockStyle parseStyle(String style) {

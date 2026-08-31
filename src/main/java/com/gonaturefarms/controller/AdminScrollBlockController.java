@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,6 +34,12 @@ public class AdminScrollBlockController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody ScrollBlockRequest request) {
         return scrollBlockService.create(request);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse update(@PathVariable Long id, @RequestBody ScrollBlockRequest request) {
+        return scrollBlockService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
