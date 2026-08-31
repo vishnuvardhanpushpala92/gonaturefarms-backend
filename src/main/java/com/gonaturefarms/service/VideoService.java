@@ -50,9 +50,9 @@ public class VideoService {
 
     public ApiResponse getAllEnabled() {
         List<Video> videos = videoRepository.findByEnabledTrueOrderBySortOrderAsc();
-        // Filter out pending videos for public view
+        // Filter out pending videos for public view (treat NULL as false)
         List<Video> publicVideos = videos.stream()
-                .filter(v -> !v.getPending())
+                .filter(v -> v.getPending() == null || !v.getPending())
                 .collect(Collectors.toList());
         return ApiResponse.ok().with("videos", publicVideos);
     }

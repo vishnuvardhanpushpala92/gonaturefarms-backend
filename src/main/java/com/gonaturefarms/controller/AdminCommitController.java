@@ -39,7 +39,7 @@ public class AdminCommitController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Commit pending products
+            // Commit pending products (including NULL as pending)
             List<Product> pendingProducts = productRepository.findByPendingTrue();
             int productCount = 0;
             for (Product product : pendingProducts) {
@@ -48,7 +48,7 @@ public class AdminCommitController {
                 productCount++;
             }
 
-            // Commit pending site content
+            // Commit pending site content (including NULL as pending)
             List<SiteContent> pendingSiteContent = siteContentRepository.findByPendingTrue();
             int siteContentCount = 0;
             for (SiteContent content : pendingSiteContent) {
@@ -57,7 +57,7 @@ public class AdminCommitController {
                 siteContentCount++;
             }
 
-            // Commit pending FAQs
+            // Commit pending FAQs (including NULL as pending)
             List<Faq> pendingFaqs = faqRepository.findByPendingTrue();
             int faqCount = 0;
             for (Faq faq : pendingFaqs) {
@@ -66,7 +66,7 @@ public class AdminCommitController {
                 faqCount++;
             }
 
-            // Commit pending videos
+            // Commit pending videos (including NULL as pending)
             List<Video> pendingVideos = videoRepository.findByPendingTrue();
             int videoCount = 0;
             for (Video video : pendingVideos) {

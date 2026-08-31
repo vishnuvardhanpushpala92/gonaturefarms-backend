@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.gonaturefarms.entity.SiteContent;
@@ -25,5 +26,6 @@ public interface SiteContentRepository extends JpaRepository<SiteContent, Long> 
      */
     boolean existsBySlug(String slug);
 
+    @Query("SELECT s FROM SiteContent s WHERE s.pending = true OR s.pending IS NULL")
     List<SiteContent> findByPendingTrue();
 }

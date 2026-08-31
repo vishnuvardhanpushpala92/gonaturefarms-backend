@@ -61,9 +61,9 @@ public class ProductService {
                 spec, org.springframework.data.domain.Sort.by(
                         org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Filter out pending products for public view
+        // Filter out pending products for public view (treat NULL as false)
         products = products.stream()
-                .filter(p -> !p.getPending())
+                .filter(p -> p.getPending() == null || !p.getPending())
                 .collect(Collectors.toList());
 
         for (Product product : products) {

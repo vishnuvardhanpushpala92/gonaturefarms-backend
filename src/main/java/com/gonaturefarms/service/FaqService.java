@@ -23,9 +23,9 @@ public class FaqService {
     @Transactional(readOnly = true)
     public ApiResponse list() {
         List<Faq> allFaqs = faqRepository.findAllByOrderBySortOrderAscIdAsc();
-        // Filter out pending FAQs for public view
+        // Filter out pending FAQs for public view (treat NULL as false)
         List<Faq> publicFaqs = allFaqs.stream()
-                .filter(f -> !f.getPending())
+                .filter(f -> f.getPending() == null || !f.getPending())
                 .collect(Collectors.toList());
         return ApiResponse.ok().with("faqs", publicFaqs);
     }

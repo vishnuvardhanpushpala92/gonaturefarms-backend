@@ -75,7 +75,7 @@ public class Product {
     private Integer stock = 100;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column
     private Boolean pending = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)

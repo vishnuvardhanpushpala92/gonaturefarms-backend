@@ -25,7 +25,7 @@ public class Video {
     @Column(nullable = false)
     private String orientation = "landscape";
 
-    @Column(nullable = false)
+    @Column
     private Boolean pending = false;
 
     @Column(name = "created_at", updatable = false)

@@ -27,8 +27,8 @@ public class SiteContentService {
             // Return default structure to prevent frontend null errors
             return ApiResponse.ok().with("content", getDefaultContent(slug));
         }
-        // Don't return pending content to public
-        if (content.get().getPending()) {
+        // Don't return pending content to public (treat NULL as false)
+        if (content.get().getPending() != null && content.get().getPending()) {
             return ApiResponse.ok().with("content", getDefaultContent(slug));
         }
         return ApiResponse.ok().with("content", content.get());
