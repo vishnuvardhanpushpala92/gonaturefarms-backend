@@ -40,6 +40,9 @@ public class ScrollBlockService {
 
     @Transactional
     public ApiResponse delete(Long id) {
+        if (!scrollBlockRepository.existsById(id)) {
+            throw new ApiException("Scroll block not found");
+        }
         scrollBlockRepository.deleteById(id);
         return ApiResponse.ok("Block deleted");
     }
