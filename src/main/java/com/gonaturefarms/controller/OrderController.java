@@ -77,7 +77,7 @@ public class OrderController {
     public ApiResponse requestReturn(@PathVariable String orderId, @RequestBody ReturnRequest request) {
         try {
             // Try to get current user if authenticated
-            Long userId = SecurityUtils.getCurrentUser() != null ? SecurityUtils.getCurrentUser().id() : null;
+            Long userId = SecurityUtils.getCurrentUser() != null ? SecurityUtils.getCurrentUser().get().getId() : null;
             return orderService.requestReturn(orderId, request, userId);
         } catch (Exception e) {
             // If authentication fails, proceed without user ID for phone-based returns
