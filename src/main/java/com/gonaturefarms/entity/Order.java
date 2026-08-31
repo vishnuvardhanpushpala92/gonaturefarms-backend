@@ -121,7 +121,7 @@ public class Order {
     private Boolean paymentVerified = false;
 
     @Builder.Default
-    @Column(name = "return_requested", nullable = false)
+    @Column(name = "return_requested", columnDefinition = "boolean default false")
     private Boolean returnRequested = false;
 
     @Column(name = "return_reason", length = 500)
