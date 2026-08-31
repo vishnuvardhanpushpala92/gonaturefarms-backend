@@ -35,6 +35,14 @@ public class ProductController {
         return productService.listProducts(cat, status, search);
     }
 
+    @GetMapping("/admin-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse adminList(@RequestParam(required = false) String cat,
+                                 @RequestParam(required = false) String status,
+                                 @RequestParam(required = false) String search) {
+        return productService.listProductsAdmin(cat, status, search);
+    }
+
     @GetMapping("/categories")
     public ApiResponse categories() {
         return productService.listCategories();

@@ -36,6 +36,10 @@ public class Faq {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean pending = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -53,6 +57,9 @@ public class Faq {
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -66,6 +73,7 @@ public class Faq {
         private String question;
         private String answer;
         private Integer sortOrder = 0;
+        private Boolean pending = false;
         private LocalDateTime createdAt = LocalDateTime.now();
 
         public FaqBuilder id(Long id) {
@@ -88,6 +96,11 @@ public class Faq {
             return this;
         }
 
+        public FaqBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public FaqBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -99,6 +112,7 @@ public class Faq {
             faq.question = this.question;
             faq.answer = this.answer;
             faq.sortOrder = this.sortOrder;
+            faq.pending = this.pending;
             faq.createdAt = this.createdAt;
             return faq;
         }

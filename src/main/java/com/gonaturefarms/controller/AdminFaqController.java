@@ -22,6 +22,12 @@ public class AdminFaqController {
         return faqService.list();
     }
 
+    @GetMapping("/admin-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse adminList() {
+        return faqService.listAll();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody FaqRequest request) {

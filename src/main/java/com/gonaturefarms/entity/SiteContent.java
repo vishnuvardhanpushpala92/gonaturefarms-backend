@@ -50,6 +50,10 @@ public class SiteContent {
     @Column(name = "optional_link", columnDefinition = "TEXT")
     private String optionalLink;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean pending = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -85,6 +89,9 @@ public class SiteContent {
     public String getOptionalLink() { return optionalLink; }
     public void setOptionalLink(String optionalLink) { this.optionalLink = optionalLink; }
 
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -106,6 +113,7 @@ public class SiteContent {
         private String personRole;
         private String personImageUrl;
         private String optionalLink;
+        private Boolean pending = false;
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime updatedAt;
 
@@ -154,6 +162,11 @@ public class SiteContent {
             return this;
         }
 
+        public SiteContentBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public SiteContentBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -175,6 +188,7 @@ public class SiteContent {
             siteContent.personRole = this.personRole;
             siteContent.personImageUrl = this.personImageUrl;
             siteContent.optionalLink = this.optionalLink;
+            siteContent.pending = this.pending;
             siteContent.createdAt = this.createdAt;
             siteContent.updatedAt = this.updatedAt;
             return siteContent;

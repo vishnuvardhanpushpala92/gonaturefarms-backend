@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface FaqRepository extends JpaRepository<Faq, Long> {
     List<Faq> findAllByOrderBySortOrderAscIdAsc();
+    List<Faq> findByPendingTrue();
 }

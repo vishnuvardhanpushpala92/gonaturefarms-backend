@@ -3,6 +3,7 @@ package com.gonaturefarms.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,11 @@ public class VideoService {
 
     public ApiResponse getAllEnabled() {
         List<Video> videos = videoRepository.findByEnabledTrueOrderBySortOrderAsc();
-        return ApiResponse.ok().with("videos", videos);
+        // Filter out pending videos for public view
+        List<Video> publicVideos = videos.stream()
+                .filter(v -> !v.getPending())
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("videos", publicVideos);
     }
 
     @Transactional(readOnly = true)
@@ -69,10 +74,11 @@ public class VideoService {
         if (file == null || file.isEmpty()) {
             return ApiResponse.fail("Video file is required");
         }
-        
+
         String filePath = saveFile(file);
         video.setFilePath(filePath);
-        
+        video.setPending(true);
+
         Video saved = videoRepository.save(video);
         return ApiResponse.ok("Video created successfully").with("video", saved);
     }
@@ -84,7 +90,8 @@ public class VideoService {
                 existing.setTitle(video.getTitle());
                 existing.setEnabled(video.getEnabled());
                 existing.setSortOrder(video.getSortOrder());
-                
+                existing.setPending(true);
+
                 if (file != null && !file.isEmpty()) {
                     // Note: We no longer delete the old local file because it's stored on Cloudinary.
                     // If you want to delete the old Cloudinary file, we would need to extract the public_id
@@ -92,7 +99,7 @@ public class VideoService {
                     String filePath = saveFile(file);
                     existing.setFilePath(filePath);
                 }
-                
+
                 Video updated = videoRepository.save(existing);
                 return ApiResponse.ok("Video updated successfully").with("video", updated);
             })

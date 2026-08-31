@@ -8,6 +8,9 @@ import com.gonaturefarms.repository.FaqRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class FaqService {
 
@@ -19,7 +22,19 @@ public class FaqService {
 
     @Transactional(readOnly = true)
     public ApiResponse list() {
-        return ApiResponse.ok().with("faqs", faqRepository.findAllByOrderBySortOrderAscIdAsc());
+        List<Faq> allFaqs = faqRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Filter out pending FAQs for public view
+        List<Faq> publicFaqs = allFaqs.stream()
+                .filter(f -> !f.getPending())
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("faqs", publicFaqs);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listAll() {
+        List<Faq> allFaqs = faqRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Include pending FAQs for admin view
+        return ApiResponse.ok().with("faqs", allFaqs);
     }
 
     @Transactional
@@ -28,7 +43,11 @@ public class FaqService {
                 || req.getAnswer() == null || req.getAnswer().isBlank()) {
             throw new ApiException("Question and answer required");
         }
-        Faq faq = Faq.builder().question(req.getQuestion()).answer(req.getAnswer()).build();
+        Faq faq = Faq.builder()
+                .question(req.getQuestion())
+                .answer(req.getAnswer())
+                .pending(true)
+                .build();
         faq = faqRepository.save(faq);
         return ApiResponse.ok("FAQ added").with("id", faq.getId());
     }

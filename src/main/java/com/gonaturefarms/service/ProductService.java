@@ -61,6 +61,27 @@ public class ProductService {
                 spec, org.springframework.data.domain.Sort.by(
                         org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
+        // Filter out pending products for public view
+        products = products.stream()
+                .filter(p -> !p.getPending())
+                .collect(Collectors.toList());
+
+        for (Product product : products) {
+            List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
+            product.setVariants(variants);
+        }
+
+        return ApiResponse.ok().with("products", products);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listProductsAdmin(String cat, String status, String search) {
+        Specification<Product> spec = buildSpecification(cat, status, search);
+        List<Product> products = productRepository.findAll(
+                spec, org.springframework.data.domain.Sort.by(
+                        org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+
+        // Include pending products for admin view
         for (Product product : products) {
             List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
             product.setVariants(variants);
@@ -117,6 +138,7 @@ public class ProductService {
                 .imgUrl(req.getImgUrl() == null ? "" : req.getImgUrl())
                 .additionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages())
                 .status(parseStatus(req.getStatus()))
+                .pending(true)
                 .build();
         product = productRepository.save(product);
 
@@ -141,6 +163,7 @@ public class ProductService {
         product.setImgUrl(req.getImgUrl() == null ? "" : req.getImgUrl());
         product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
         product.setStatus(parseStatus(req.getStatus()));
+        product.setPending(true);
         productRepository.save(product);
 
         // ✅ CRITICAL: Delete ALL old variants first so we don't create duplicates

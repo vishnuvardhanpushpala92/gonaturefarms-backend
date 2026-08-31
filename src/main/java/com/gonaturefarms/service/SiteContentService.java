@@ -27,6 +27,21 @@ public class SiteContentService {
             // Return default structure to prevent frontend null errors
             return ApiResponse.ok().with("content", getDefaultContent(slug));
         }
+        // Don't return pending content to public
+        if (content.get().getPending()) {
+            return ApiResponse.ok().with("content", getDefaultContent(slug));
+        }
+        return ApiResponse.ok().with("content", content.get());
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getBySlugAdmin(String slug) {
+        Optional<SiteContent> content = siteContentRepository.findBySlug(slug);
+        if (content.isEmpty()) {
+            // Return default structure to prevent frontend null errors
+            return ApiResponse.ok().with("content", getDefaultContent(slug));
+        }
+        // Include pending content for admin view
         return ApiResponse.ok().with("content", content.get());
     }
 
@@ -52,6 +67,7 @@ public class SiteContentService {
                 .personRole(req.getPersonRole())
                 .personImageUrl(req.getPersonImageUrl())
                 .optionalLink(req.getOptionalLink())
+                .pending(true)
                 .build();
         content = siteContentRepository.save(content);
         return ApiResponse.ok("Site content created successfully").with("id", content.getId());
@@ -83,7 +99,8 @@ public class SiteContentService {
         if (req.getOptionalLink() != null) {
             content.setOptionalLink(req.getOptionalLink());
         }
-        
+
+        content.setPending(true);
         content.setUpdatedAt(java.time.LocalDateTime.now());
         content = siteContentRepository.save(content);
         return ApiResponse.ok("Site content updated successfully");

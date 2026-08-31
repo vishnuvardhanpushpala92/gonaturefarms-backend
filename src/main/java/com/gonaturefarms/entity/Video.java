@@ -25,6 +25,9 @@ public class Video {
     @Column(nullable = false)
     private String orientation = "landscape";
 
+    @Column(nullable = false)
+    private Boolean pending = false;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -60,6 +63,9 @@ public class Video {
 
     public String getOrientation() { return orientation; }
     public void setOrientation(String orientation) { this.orientation = orientation; }
+
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

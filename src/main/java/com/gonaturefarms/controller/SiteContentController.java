@@ -31,6 +31,12 @@ public class SiteContentController {
         return siteContentService.getBySlug(slug);
     }
 
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse getBySlugAdmin(@RequestParam String slug) {
+        return siteContentService.getBySlugAdmin(slug);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody SiteContentRequest request) {

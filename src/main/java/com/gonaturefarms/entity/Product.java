@@ -74,6 +74,10 @@ public class Product {
     @Column(nullable = false)
     private Integer stock = 100;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean pending = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -108,6 +112,7 @@ public class Product {
         private String additionalImages;
         private ProductStatus status = ProductStatus.current;
         private Integer stock = 100;
+        private Boolean pending = false;
         private LocalDateTime createdAt = LocalDateTime.now();
         private java.util.List<com.gonaturefarms.entity.ProductVariant> variants;
 
@@ -123,6 +128,7 @@ public class Product {
         public ProductBuilder additionalImages(String additionalImages) { this.additionalImages = additionalImages; return this; }
         public ProductBuilder status(ProductStatus status) { this.status = status; return this; }
         public ProductBuilder stock(Integer stock) { this.stock = stock; return this; }
+        public ProductBuilder pending(Boolean pending) { this.pending = pending; return this; }
         public ProductBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
         public ProductBuilder variants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; return this; }
 
@@ -140,6 +146,7 @@ public class Product {
             product.additionalImages = this.additionalImages;
             product.status = this.status;
             product.stock = this.stock;
+            product.pending = this.pending;
             product.createdAt = this.createdAt;
             product.variants = this.variants;
             return product;
