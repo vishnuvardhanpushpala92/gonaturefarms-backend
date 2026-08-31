@@ -47,6 +47,9 @@ public class SiteContent {
     @Column(name = "person_image_url", columnDefinition = "TEXT")
     private String personImageUrl;
 
+    @Column(name = "optional_link", columnDefinition = "TEXT")
+    private String optionalLink;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -79,6 +82,9 @@ public class SiteContent {
     public String getPersonImageUrl() { return personImageUrl; }
     public void setPersonImageUrl(String personImageUrl) { this.personImageUrl = personImageUrl; }
 
+    public String getOptionalLink() { return optionalLink; }
+    public void setOptionalLink(String optionalLink) { this.optionalLink = optionalLink; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -99,6 +105,7 @@ public class SiteContent {
         private String personName;
         private String personRole;
         private String personImageUrl;
+        private String optionalLink;
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime updatedAt;
 
@@ -142,6 +149,11 @@ public class SiteContent {
             return this;
         }
 
+        public SiteContentBuilder optionalLink(String optionalLink) {
+            this.optionalLink = optionalLink;
+            return this;
+        }
+
         public SiteContentBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -162,6 +174,7 @@ public class SiteContent {
             siteContent.personName = this.personName;
             siteContent.personRole = this.personRole;
             siteContent.personImageUrl = this.personImageUrl;
+            siteContent.optionalLink = this.optionalLink;
             siteContent.createdAt = this.createdAt;
             siteContent.updatedAt = this.updatedAt;
             return siteContent;

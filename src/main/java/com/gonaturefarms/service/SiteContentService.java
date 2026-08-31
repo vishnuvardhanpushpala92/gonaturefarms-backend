@@ -51,6 +51,7 @@ public class SiteContentService {
                 .personName(req.getPersonName())
                 .personRole(req.getPersonRole())
                 .personImageUrl(req.getPersonImageUrl())
+                .optionalLink(req.getOptionalLink())
                 .build();
         content = siteContentRepository.save(content);
         return ApiResponse.ok("Site content created successfully").with("id", content.getId());
@@ -78,6 +79,9 @@ public class SiteContentService {
         }
         if (req.getPersonImageUrl() != null) {
             content.setPersonImageUrl(req.getPersonImageUrl());
+        }
+        if (req.getOptionalLink() != null) {
+            content.setOptionalLink(req.getOptionalLink());
         }
         
         content.setUpdatedAt(java.time.LocalDateTime.now());

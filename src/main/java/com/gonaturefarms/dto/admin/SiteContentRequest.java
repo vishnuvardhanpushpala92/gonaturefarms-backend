@@ -13,6 +13,7 @@ public class SiteContentRequest {
     private String personName;
     private String personRole;
     private String personImageUrl;
+    private String optionalLink;
 
     // Manual getters as failsafe for Lombok processing issues
     public String getSlug() { return slug; }
@@ -22,4 +23,5 @@ public class SiteContentRequest {
     public String getPersonName() { return personName; }
     public String getPersonRole() { return personRole; }
     public String getPersonImageUrl() { return personImageUrl; }
+    public String getOptionalLink() { return optionalLink; }
 }
