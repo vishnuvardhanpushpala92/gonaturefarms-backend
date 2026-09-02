@@ -245,6 +245,73 @@ public class Order {
 
     public List<OrderItem> getItems() { return items; }
 
+    // Manual setters as failsafe for Lombok processing issues
+    public void setId(Long id) { this.id = id; }
+
+    public void setOrderId(String orderId) { this.orderId = orderId; }
+
+    public void setUserId(Long userId) { this.userId = userId; }
+
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public void setEmail(String email) { this.email = email; }
+
+    public void setAddress(String address) { this.address = address; }
+
+    public void setArea(String area) { this.area = area; }
+
+    public void setCity(String city) { this.city = city; }
+
+    public void setState(String state) { this.state = state; }
+
+    public void setPincode(String pincode) { this.pincode = pincode; }
+
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public void setPaymentUtr(String paymentUtr) { this.paymentUtr = paymentUtr; }
+
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+
+    public void setGstAmount(BigDecimal gstAmount) { this.gstAmount = gstAmount; }
+
+    public void setDeliveryCharge(BigDecimal deliveryCharge) { this.deliveryCharge = deliveryCharge; }
+
+    public void setDiscount(BigDecimal discount) { this.discount = discount; }
+
+    public void setTotal(BigDecimal total) { this.total = total; }
+
+    public void setStatus(OrderStatus status) { this.status = status; }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
+
+    public void setTrackingLocation(String trackingLocation) { this.trackingLocation = trackingLocation; }
+
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public void setPaymentScreenshotUrl(String paymentScreenshotUrl) { this.paymentScreenshotUrl = paymentScreenshotUrl; }
+
+    public void setPaymentVerified(Boolean paymentVerified) { this.paymentVerified = paymentVerified; }
+
+    public void setReturnRequested(Boolean returnRequested) { this.returnRequested = returnRequested; }
+
+    public void setReturnReason(String returnReason) { this.returnReason = returnReason; }
+
+    public void setReturnRequestedAt(LocalDateTime returnRequestedAt) { this.returnRequestedAt = returnRequestedAt; }
+
+    public void setReturnStatus(String returnStatus) { this.returnStatus = returnStatus; }
+
+    public void setReturnProcessedAt(LocalDateTime returnProcessedAt) { this.returnProcessedAt = returnProcessedAt; }
+
+    public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }
+
+    public void setRefundNotes(String refundNotes) { this.refundNotes = refundNotes; }
+
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public void setItems(List<OrderItem> items) { this.items = items; }
+
     // Static builder method as failsafe for Lombok @Builder
     public static OrderBuilder builder() {
         return new OrderBuilder();

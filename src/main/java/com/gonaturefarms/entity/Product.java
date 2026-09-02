@@ -93,6 +93,15 @@ public class Product {
     // Manual getters/setters as failsafe for Lombok processing issues
     public String getAdditionalImages() { return additionalImages; }
     public void setAdditionalImages(String additionalImages) { this.additionalImages = additionalImages; }
+    
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+    
+    public java.util.List<com.gonaturefarms.entity.ProductVariant> getVariants() { return variants; }
+    public void setVariants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static ProductBuilder builder() {
