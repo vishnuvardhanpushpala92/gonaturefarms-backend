@@ -57,9 +57,24 @@ public class AuthService {
             throw new ApiException("Password must be at least 6 characters");
         }
 
+        // Check for existing phone number
         if (userRepository.existsByPhone(request.getPhone())) {
             System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
             throw new ApiException("Phone number already registered");
+        }
+
+        // Check for existing email (only if email is provided)
+        if (request.getEmail() != null && !request.getEmail().trim().isEmpty()) {
+            // Basic email validation
+            String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+            if (!request.getEmail().matches(emailRegex)) {
+                throw new ApiException("Email must be valid");
+            }
+            
+            if (userRepository.existsByEmail(request.getEmail())) {
+                System.err.println("Registration failed: Email already registered - " + request.getEmail());
+                throw new ApiException("Email already registered");
+            }
         }
 
         User user = User.builder()

@@ -16,6 +16,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByPhone(String phone);
 
+    boolean existsByEmail(String email);
+
+    List<User> findByRole(User.UserRole role);
+
     /** Allow login by username, phone, or email for customers */
     @Query("SELECT u FROM User u WHERE u.role = 'customer' " +
            "AND (u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
@@ -28,6 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
                                                  @Param("identifier") String identifier);
 
     long countByRole(User.UserRole role);
+
+    List<User> findByRole(User.UserRole role);
 
     @Query("SELECT u FROM User u WHERE u.role = 'customer' AND (u.whatsappOptOut IS NULL OR u.whatsappOptOut = false)")
     List<User> findCustomersWhoHaveNotOptedOut();
