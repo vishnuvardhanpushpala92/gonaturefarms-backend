@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 public class UserSummary {
     private Long id;
     private String name;
+    private String username;
     private String phone;
     private String email;
     private String role;
@@ -18,6 +19,7 @@ public class UserSummary {
         UserSummary summary = new UserSummary();
         summary.setId(user.getId());
         summary.setName(user.getName());
+        summary.setUsername(user.getUsername());
         summary.setPhone(user.getPhone());
         summary.setEmail(user.getEmail());
         summary.setRole(user.getRole() != null ? user.getRole().name() : null);
@@ -27,12 +29,14 @@ public class UserSummary {
     // Manual getters as failsafe for Lombok processing issues
     public Long getId() { return id; }
     public String getName() { return name; }
+    public String getUsername() { return username; }
     public String getPhone() { return phone; }
     public String getEmail() { return email; }
     public String getRole() { return role; }
 
     public void setId(Long id) { this.id = id; }
     public void setName(String name) { this.name = name; }
+    public void setUsername(String username) { this.username = username; }
     public void setPhone(String phone) { this.phone = phone; }
     public void setEmail(String email) { this.email = email; }
     public void setRole(String role) { this.role = role; }

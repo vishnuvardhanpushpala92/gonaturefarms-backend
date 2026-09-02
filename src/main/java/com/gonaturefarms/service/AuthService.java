@@ -33,17 +33,38 @@ public class AuthService {
 
     @Transactional
     public ApiResponse register(RegisterRequest request) {
-        System.out.println("Registration attempt for phone: " + request.getPhone());
+        System.out.println("=== REGISTRATION DEBUG ===");
+        System.out.println("Request object: " + request);
+        System.out.println("Phone: " + request.getPhone());
+        System.out.println("Username: " + request.getUsername());
         System.out.println("Email: " + request.getEmail());
         System.out.println("Name: " + request.getName());
+        System.out.println("Password: " + (request.getPassword() != null ? "present" : "null"));
+        System.out.println("Security Question: " + request.getSecurityQuestion());
+        System.out.println("Security Answer: " + request.getSecurityAnswer());
+        System.out.println("==========================");
+
+        // Additional validation
+        if (request.getPhone() == null || request.getPhone().length() != 10) {
+            throw new ApiException("Phone must be exactly 10 digits");
+        }
         
+        if (request.getName() == null || request.getName().trim().isEmpty()) {
+            throw new ApiException("Name is required");
+        }
+        
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new ApiException("Password must be at least 6 characters");
+        }
+
         if (userRepository.existsByPhone(request.getPhone())) {
             System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
             throw new ApiException("Phone number already registered");
         }
-        
+
         User user = User.builder()
                 .name(request.getName())
+                .username(request.getUsername())
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -54,7 +75,7 @@ public class AuthService {
                 .build();
         user = userRepository.save(user);
         String token = jwtService.generateToken(user);
-        
+
         System.out.println("Registration successful for user ID: " + user.getId());
         return ApiResponse.ok("Registration successful")
                 .with("token", token)
@@ -63,7 +84,7 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse login(LoginRequest request) {
-        User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
+        User user = userRepository.findCustomerByIdentifier(request.getIdentifier())
                 .orElseThrow(() -> new ApiException("Invalid credentials"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new ApiException("Invalid credentials");

@@ -77,11 +77,22 @@ public class GlobalExceptionHandler {
                              ", Rejected value: " + err.getRejectedValue());
         });
         
+        // Collect all validation errors
+        java.util.Map<String, String> errors = ex.getBindingResult().getFieldErrors().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                    err -> err.getField(),
+                    err -> err.getDefaultMessage(),
+                    (existing, replacement) -> existing
+                ));
+        
+        // Return a detailed error message
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .map(err -> err.getDefaultMessage())
                 .orElse("Validation failed");
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(message));
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(message).with("errors", errors));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

@@ -211,10 +211,13 @@ public class AnalyticsService {
         
         // Add total row
         Row totalRow = sheet.createRow(rowNum);
-        CellStyle totalStyle = sheet.getWorkbook().createCellStyle();
         Font totalFont = sheet.getWorkbook().createFont();
         totalFont.setBold(true);
+        
+        CellStyle totalStyle = sheet.getWorkbook().createCellStyle();
         totalStyle.setFont(totalFont);
+        totalStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         
         BigDecimal totalRevenue = allOrders.stream()
                 .map(Order::getTotal)

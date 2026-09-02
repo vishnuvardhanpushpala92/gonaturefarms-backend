@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false, length = 120)
     private String name;
 
+    @Column(unique = true, length = 50)
+    private String username;
+
     @Column(nullable = false, unique = true, length = 15)
     private String phone;
 
@@ -92,6 +95,9 @@ public class User {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
@@ -142,6 +148,7 @@ public class User {
     public static class UserBuilder {
         private Long id;
         private String name;
+        private String username;
         private String phone;
         private String email;
         private String passwordHash;
@@ -164,6 +171,11 @@ public class User {
 
         public UserBuilder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public UserBuilder username(String username) {
+            this.username = username;
             return this;
         }
 
@@ -241,6 +253,7 @@ public class User {
             User user = new User();
             user.id = this.id;
             user.name = this.name;
+            user.username = this.username;
             user.phone = this.phone;
             user.email = this.email;
             user.passwordHash = this.passwordHash;
