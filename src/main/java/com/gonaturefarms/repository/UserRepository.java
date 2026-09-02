@@ -31,10 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findFirstByRoleAndIdentifier(@Param("role") User.UserRole role,
                                                  @Param("identifier") String identifier);
 
-    long countByRole(User.UserRole role);
-
-    List<User> findByRole(User.UserRole role);
-
     @Query("SELECT u FROM User u WHERE u.role = 'customer' AND (u.whatsappOptOut IS NULL OR u.whatsappOptOut = false)")
     List<User> findCustomersWhoHaveNotOptedOut();
+
+    long countByRole(User.UserRole role);
 }

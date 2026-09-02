@@ -75,8 +75,15 @@ public class Review {
     public Boolean getFeatured() { return featured; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
-    // Additional setters for manual construction
+    // Manual setters as failsafe for Lombok processing issues
+    public void setId(Long id) { this.id = id; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setProductId(Long productId) { this.productId = productId; }
+    public void setRating(Short rating) { this.rating = rating; }
+    public void setComment(String comment) { this.comment = comment; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
     public void setStatus(ReviewStatus status) { this.status = status; }
+    public void setFeatured(Boolean featured) { this.featured = featured; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     // Static builder method as failsafe for Lombok @Builder

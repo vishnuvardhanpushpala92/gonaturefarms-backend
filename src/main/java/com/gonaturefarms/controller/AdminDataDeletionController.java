@@ -26,9 +26,6 @@ public class AdminDataDeletionController {
     
     @Autowired
     private CouponRepository couponRepository;
-    
-    @Autowired
-    private SupportRepository supportRepository;
 
     @Transactional
     @DeleteMapping("/users")
@@ -70,7 +67,6 @@ public class AdminDataDeletionController {
             addressRepository.deleteAll();
             orderRepository.deleteAll();
             couponRepository.deleteAll();
-            supportRepository.deleteAll();
             
             // Delete all users except admin
             List<com.gonaturefarms.entity.User> users = userRepository.findAll();

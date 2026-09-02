@@ -60,4 +60,57 @@ public class SupportTicket {
     public enum TicketStatus {
         open, in_progress, resolved
     }
+
+    // Manual getters as failsafe for Lombok processing issues
+    public Long getId() { return id; }
+    public Long getUserId() { return userId; }
+    public String getData() { return data; }
+    public TicketStatus getStatus() { return status; }
+    public String getAdminNote() { return adminNote; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // Manual setters as failsafe for Lombok processing issues
+    public void setId(Long id) { this.id = id; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setData(String data) { this.data = data; }
+    public void setStatus(TicketStatus status) { this.status = status; }
+    public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    // Static builder method as failsafe for Lombok @Builder
+    public static SupportTicketBuilder builder() {
+        return new SupportTicketBuilder();
+    }
+
+    public static class SupportTicketBuilder {
+        private Long id;
+        private Long userId;
+        private String data;
+        private TicketStatus status = TicketStatus.open;
+        private String adminNote;
+        private LocalDateTime createdAt = LocalDateTime.now();
+        private LocalDateTime updatedAt = LocalDateTime.now();
+
+        public SupportTicketBuilder id(Long id) { this.id = id; return this; }
+        public SupportTicketBuilder userId(Long userId) { this.userId = userId; return this; }
+        public SupportTicketBuilder data(String data) { this.data = data; return this; }
+        public SupportTicketBuilder status(TicketStatus status) { this.status = status; return this; }
+        public SupportTicketBuilder adminNote(String adminNote) { this.adminNote = adminNote; return this; }
+        public SupportTicketBuilder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
+        public SupportTicketBuilder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
+
+        public SupportTicket build() {
+            SupportTicket ticket = new SupportTicket();
+            ticket.id = this.id;
+            ticket.userId = this.userId;
+            ticket.data = this.data;
+            ticket.status = this.status;
+            ticket.adminNote = this.adminNote;
+            ticket.createdAt = this.createdAt;
+            ticket.updatedAt = this.updatedAt;
+            return ticket;
+        }
+    }
 }

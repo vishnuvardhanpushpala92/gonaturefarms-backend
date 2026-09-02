@@ -102,6 +102,36 @@ public class Product {
     
     public java.util.List<com.gonaturefarms.entity.ProductVariant> getVariants() { return variants; }
     public void setVariants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+    
+    public BigDecimal getMrp() { return mrp; }
+    public void setMrp(BigDecimal mrp) { this.mrp = mrp; }
+    
+    public BigDecimal getGst() { return gst; }
+    public void setGst(BigDecimal gst) { this.gst = gst; }
+    
+    public String getHsn() { return hsn; }
+    public void setHsn(String hsn) { this.hsn = hsn; }
+    
+    public String getCat() { return cat; }
+    public void setCat(String cat) { this.cat = cat; }
+    
+    public String getImgUrl() { return imgUrl; }
+    public void setImgUrl(String imgUrl) { this.imgUrl = imgUrl; }
+    
+    public ProductStatus getStatus() { return status; }
+    public void setStatus(ProductStatus status) { this.status = status; }
+    
+    public Integer getStock() { return stock; }
+    public void setStock(Integer stock) { this.stock = stock; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static ProductBuilder builder() {

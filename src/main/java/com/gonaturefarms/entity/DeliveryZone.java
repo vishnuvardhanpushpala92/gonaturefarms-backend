@@ -49,6 +49,7 @@ public class DeliveryZone {
     public void setArea(String area) { this.area = area; }
     public void setCity(String city) { this.city = city; }
     public void setState(String state) { this.state = state; }
+    public void setCharge(BigDecimal charge) { this.charge = charge; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static DeliveryZoneBuilder builder() {

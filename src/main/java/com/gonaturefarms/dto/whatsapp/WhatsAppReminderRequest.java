@@ -16,4 +16,16 @@ public class WhatsAppReminderRequest {
     private LocalDateTime scheduledAt;
 
     private List<Long> customerIds;
+
+    // Manual getters as failsafe for Lombok processing issues
+    public String getReminderType() { return reminderType; }
+    public String getMessage() { return message; }
+    public LocalDateTime getScheduledAt() { return scheduledAt; }
+    public List<Long> getCustomerIds() { return customerIds; }
+
+    // Manual setters as failsafe for Lombok processing issues
+    public void setReminderType(String reminderType) { this.reminderType = reminderType; }
+    public void setMessage(String message) { this.message = message; }
+    public void setScheduledAt(LocalDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
+    public void setCustomerIds(List<Long> customerIds) { this.customerIds = customerIds; }
 }
