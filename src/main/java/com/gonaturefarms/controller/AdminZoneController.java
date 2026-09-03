@@ -35,6 +35,11 @@ public class AdminZoneController {
         return deliveryZoneService.validatePincode(pincode);
     }
 
+    @GetMapping("/charge")
+    public ApiResponse getDeliveryCharge(@RequestParam String pincode) {
+        return deliveryZoneService.getDeliveryCharge(pincode);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse upsert(@RequestBody ZoneRequest request) {

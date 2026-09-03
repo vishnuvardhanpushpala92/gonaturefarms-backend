@@ -42,12 +42,23 @@ public class OrderController {
 
     @GetMapping("/lookup")
     public ApiResponse lookup(@RequestParam String phone) {
+        // If user is logged in, verify they're looking up their own orders
+        var currentUserOpt = SecurityUtils.getCurrentUser();
+        if (currentUserOpt != null && currentUserOpt.isPresent()) {
+            Long currentUserId = currentUserOpt.get().id();
+            return orderService.myOrders(currentUserId);
+        }
         return orderService.lookupByPhone(phone);
     }
 
     @GetMapping("/my")
     public ApiResponse my() {
-        return orderService.myOrders(SecurityUtils.requireCurrentUser().id());
+        var currentUserOpt = SecurityUtils.getCurrentUser();
+        if (currentUserOpt != null && currentUserOpt.isPresent()) {
+            Long userId = currentUserOpt.get().id();
+            return orderService.myOrders(userId);
+        }
+        return ApiResponse.fail("User not authenticated");
     }
 
     @GetMapping("/{orderId}")

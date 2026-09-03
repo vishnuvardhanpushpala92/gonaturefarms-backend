@@ -100,9 +100,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public ApiResponse login(LoginRequest request) {
         User user = userRepository.findCustomerByIdentifier(request.getIdentifier())
-                .orElseThrow(() -> new ApiException("Invalid credentials"));
+                .orElseThrow(() -> new ApiException("User not found. Please check your phone number or register a new account."));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new ApiException("Invalid credentials");
+            throw new ApiException("Incorrect password. Please try again.");
         }
         String token = jwtService.generateToken(user);
         return ApiResponse.ok("Login successful")
@@ -113,9 +113,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public ApiResponse adminLogin(AdminLoginRequest request) {
         User user = userRepository.findFirstByRoleAndIdentifier(User.UserRole.admin, request.getUsername())
-                .orElseThrow(() -> new ApiException("Invalid admin credentials"));
+                .orElseThrow(() -> new ApiException("Admin account not found. Please check your username."));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new ApiException("Invalid admin credentials");
+            throw new ApiException("Incorrect admin password. Please try again.");
         }
         String token = jwtService.generateToken(user);
         return ApiResponse.ok("Admin login successful")

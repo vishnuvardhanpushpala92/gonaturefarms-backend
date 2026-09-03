@@ -59,4 +59,15 @@ public class DeliveryZoneService {
         }
         return ApiResponse.ok("Pincode is valid for delivery");
     }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getDeliveryCharge(String pincode) {
+        if (pincode == null || pincode.isBlank()) {
+            return ApiResponse.fail("Pincode is required");
+        }
+        String trimmedPincode = pincode.trim();
+        return deliveryZoneRepository.findByPincode(trimmedPincode)
+                .map(zone -> ApiResponse.ok().with("charge", zone.getCharge()).with("area", zone.getArea()))
+                .orElse(ApiResponse.fail("Delivery not available in your area"));
+    }
 }
