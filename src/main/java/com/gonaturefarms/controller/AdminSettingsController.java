@@ -34,7 +34,7 @@ public class AdminSettingsController {
 
     private static final Set<String> ALLOWED_KEYS = Set.of(
             "site_name", "tagline", "footer_text", "payment_instructions", "store_location",
-            "qr_code", "upi_scanner_url", "upi_scanner_public_id", "hdr_bg", "hdr_text", "hdr_font_size", 
+            "upi_scanner_url", "upi_scanner_public_id", "hdr_bg", "hdr_text", "hdr_font_size", 
             "ftr_bg", "ftr_text", "ftr_font_size",
             "banner_msgs", "free_delivery_above", "delivery_charge_below", "whatsapp_number", "screenshot_number",
             "trust_badges", "footer_desc", "footer_phone", "support_fields", "footer_bg_image",
@@ -224,12 +224,18 @@ public class AdminSettingsController {
                     "folder", "settings",
                     "public_id", "upi_scanner_" + System.currentTimeMillis(),
                     "overwrite", true,
-                    "secure", true
+                    "secure", true,
+                    "resource_type", "image"
             );
 
             var uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadParams);
             String newUrl = (String) uploadResult.get("secure_url");
             String newPublicId = (String) uploadResult.get("public_id");
+
+            // Ensure URL is HTTPS
+            if (newUrl != null && newUrl.startsWith("http://")) {
+                newUrl = newUrl.replace("http://", "https://");
+            }
 
             // Save new URL and public ID to database
             Map<String, String> updates = new java.util.LinkedHashMap<>();
