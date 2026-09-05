@@ -30,6 +30,12 @@ public class AdminScrollBlockController {
         return scrollBlockService.list();
     }
 
+    @GetMapping("/admin-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse adminList() {
+        return scrollBlockService.listAll();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody ScrollBlockRequest request) {

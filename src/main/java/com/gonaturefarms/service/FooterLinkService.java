@@ -24,6 +24,17 @@ public class FooterLinkService {
     @Transactional(readOnly = true)
     public ApiResponse list() {
         List<FooterLink> links = footerLinkRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Filter out pending links for public view
+        List<FooterLink> activeLinks = links.stream()
+                .filter(link -> link.getPending() == null || !link.getPending())
+                .toList();
+        return ApiResponse.ok().with("links", activeLinks);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listAll() {
+        List<FooterLink> links = footerLinkRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Include pending links for admin view
         return ApiResponse.ok().with("links", links);
     }
 
@@ -44,6 +55,7 @@ public class FooterLinkService {
                 .url(req.getUrl())
                 .category(category)
                 .sortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0)
+                .pending(true)
                 .build();
         link = footerLinkRepository.save(link);
         return ApiResponse.ok("Footer link added successfully").with("id", link.getId());
@@ -67,6 +79,7 @@ public class FooterLinkService {
             link.setSortOrder(req.getSortOrder());
         }
         
+        link.setPending(true);
         link.setUpdatedAt(java.time.LocalDateTime.now());
         link = footerLinkRepository.save(link);
         return ApiResponse.ok("Footer link updated successfully");

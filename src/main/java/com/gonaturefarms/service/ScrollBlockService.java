@@ -8,6 +8,9 @@ import com.gonaturefarms.repository.ScrollBlockRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class ScrollBlockService {
 
@@ -19,7 +22,19 @@ public class ScrollBlockService {
 
     @Transactional(readOnly = true)
     public ApiResponse list() {
-        return ApiResponse.ok().with("blocks", scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc());
+        List<ScrollBlock> allBlocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Filter out pending blocks for public view
+        List<ScrollBlock> activeBlocks = allBlocks.stream()
+                .filter(block -> block.getPending() == null || !block.getPending())
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("blocks", activeBlocks);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listAll() {
+        List<ScrollBlock> allBlocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
+        // Include pending blocks for admin view
+        return ApiResponse.ok().with("blocks", allBlocks);
     }
 
     @Transactional
@@ -43,6 +58,7 @@ public class ScrollBlockService {
                 .style(parseStyle(req.getStyle()))
                 .backgroundColor(req.getBackgroundColor())
                 .textColor(req.getTextColor())
+                .pending(true)
                 .build();
         block = scrollBlockRepository.save(block);
         return ApiResponse.ok("Block added").with("id", block.getId());
@@ -92,7 +108,8 @@ public class ScrollBlockService {
         if (req.getTextColor() != null) {
             block.setTextColor(req.getTextColor());
         }
-        
+
+        block.setPending(true);
         block = scrollBlockRepository.save(block);
         return ApiResponse.ok("Block updated successfully");
     }

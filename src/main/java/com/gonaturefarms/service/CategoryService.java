@@ -9,6 +9,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class CategoryService {
 
@@ -16,6 +19,23 @@ public class CategoryService {
 
     public CategoryService(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse list() {
+        List<Category> allCategories = categoryRepository.findAllByOrderByNameAsc();
+        // Filter out pending categories for public view
+        List<Category> activeCategories = allCategories.stream()
+                .filter(category -> category.getPending() == null || !category.getPending())
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("categories", activeCategories);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listAll() {
+        List<Category> allCategories = categoryRepository.findAllByOrderByNameAsc();
+        // Include pending categories for admin view
+        return ApiResponse.ok().with("categories", allCategories);
     }
 
     @Transactional
@@ -27,7 +47,7 @@ public class CategoryService {
         // INSERT IGNORE semantics
         if (categoryRepository.findByName(name).isEmpty()) {
             try {
-                categoryRepository.save(Category.builder().name(name).build());
+                categoryRepository.save(Category.builder().name(name).pending(true).build());
             } catch (DataIntegrityViolationException ignored) {
                 // already exists, treat as success
             }

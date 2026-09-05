@@ -43,6 +43,10 @@ public class FooterLink {
     @Builder.Default
     private Integer sortOrder = 0;
 
+    @Builder.Default
+    @Column
+    private Boolean pending = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -71,6 +75,9 @@ public class FooterLink {
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -88,6 +95,7 @@ public class FooterLink {
         private String url;
         private LinkCategory category = LinkCategory.QUICK_LINKS;
         private Integer sortOrder = 0;
+        private Boolean pending = false;
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime updatedAt;
 
@@ -113,6 +121,11 @@ public class FooterLink {
 
         public FooterLinkBuilder sortOrder(Integer sortOrder) {
             this.sortOrder = sortOrder;
+            return this;
+        }
+
+        public FooterLinkBuilder pending(Boolean pending) {
+            this.pending = pending;
             return this;
         }
 

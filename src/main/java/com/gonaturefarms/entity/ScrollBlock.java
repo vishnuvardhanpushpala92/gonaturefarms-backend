@@ -47,6 +47,10 @@ public class ScrollBlock {
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 
+    @Builder.Default
+    @Column
+    private Boolean pending = false;
+
     @Column(name = "background_color", length = 20)
     private String backgroundColor;
 
@@ -80,6 +84,9 @@ public class ScrollBlock {
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
 
@@ -101,6 +108,7 @@ public class ScrollBlock {
         private String icon = "\uD83D\uDCCB";
         private BlockStyle style = BlockStyle.info;
         private Integer sortOrder = 0;
+        private Boolean pending = false;
         private String backgroundColor;
         private String textColor;
         private LocalDateTime createdAt = LocalDateTime.now();
@@ -135,6 +143,11 @@ public class ScrollBlock {
             return this;
         }
 
+        public ScrollBlockBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public ScrollBlockBuilder backgroundColor(String backgroundColor) {
             this.backgroundColor = backgroundColor;
             return this;
@@ -158,6 +171,7 @@ public class ScrollBlock {
             scrollBlock.icon = this.icon;
             scrollBlock.style = this.style;
             scrollBlock.sortOrder = this.sortOrder;
+            scrollBlock.pending = this.pending;
             scrollBlock.backgroundColor = this.backgroundColor;
             scrollBlock.textColor = this.textColor;
             scrollBlock.createdAt = this.createdAt;

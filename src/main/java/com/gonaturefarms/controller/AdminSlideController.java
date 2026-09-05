@@ -30,6 +30,12 @@ public class AdminSlideController {
         return slideService.list();
     }
 
+    @GetMapping("/admin-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse adminList() {
+        return slideService.listAll();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody SlideRequest request) {

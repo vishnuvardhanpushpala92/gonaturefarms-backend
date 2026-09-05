@@ -18,6 +18,16 @@ public class AdminCategoryController {
         this.categoryService = categoryService;
     }
 
+    @GetMapping
+    public ApiResponse list() {
+        return categoryService.list();
+    }
+
+    @GetMapping("/admin-list")
+    public ApiResponse adminList() {
+        return categoryService.listAll();
+    }
+
     @PostMapping
     public ApiResponse create(@RequestBody CategoryRequest request) {
         return categoryService.create(request);

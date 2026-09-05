@@ -31,4 +31,11 @@ public interface FooterLinkRepository extends JpaRepository<FooterLink, Long> {
      * SQL Equivalent: DELETE FROM footer_links WHERE category = ?
      */
     void deleteByCategory(LinkCategory category);
+
+    /**
+     * Find footer links where pending is true or null
+     * JPA Repository Method: Uses Spring Data JPA's automatic query generation
+     * SQL Equivalent: SELECT * FROM footer_links WHERE pending = true OR pending IS NULL
+     */
+    List<FooterLink> findByPendingTrue();
 }

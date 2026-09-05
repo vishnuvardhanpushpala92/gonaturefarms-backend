@@ -42,6 +42,10 @@ public class Slide {
     private Integer sortOrder = 0;
 
     @Builder.Default
+    @Column
+    private Boolean pending = false;
+
+    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -51,12 +55,14 @@ public class Slide {
     public String getCaption() { return caption; }
     public String getSubText() { return subText; }
     public Integer getSortOrder() { return sortOrder; }
+    public Boolean getPending() { return pending; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     // Additional setters for manual construction
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setCaption(String caption) { this.caption = caption; }
     public void setSubText(String subText) { this.subText = subText; }
+    public void setPending(Boolean pending) { this.pending = pending; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static SlideBuilder builder() {
@@ -69,6 +75,7 @@ public class Slide {
         private String caption = "";
         private String subText = "";
         private Integer sortOrder = 0;
+        private Boolean pending = false;
         private LocalDateTime createdAt = LocalDateTime.now();
 
         public SlideBuilder id(Long id) {
@@ -96,6 +103,11 @@ public class Slide {
             return this;
         }
 
+        public SlideBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public SlideBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -108,6 +120,7 @@ public class Slide {
             slide.caption = this.caption;
             slide.subText = this.subText;
             slide.sortOrder = this.sortOrder;
+            slide.pending = this.pending;
             slide.createdAt = this.createdAt;
             return slide;
         }

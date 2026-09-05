@@ -1,6 +1,8 @@
 package com.gonaturefarms.service;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +24,19 @@ public class DeliveryZoneService {
 
     @Transactional(readOnly = true)
     public ApiResponse list() {
-        return ApiResponse.ok().with("zones", deliveryZoneRepository.findAllByOrderByPincodeAsc());
+        List<DeliveryZone> allZones = deliveryZoneRepository.findAllByOrderByPincodeAsc();
+        // Filter out pending zones for public view
+        List<DeliveryZone> activeZones = allZones.stream()
+                .filter(zone -> zone.getPending() == null || !zone.getPending())
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("zones", activeZones);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse listAll() {
+        List<DeliveryZone> allZones = deliveryZoneRepository.findAllByOrderByPincodeAsc();
+        // Include pending zones for admin view
+        return ApiResponse.ok().with("zones", allZones);
     }
 
     @Transactional
@@ -37,6 +51,7 @@ public class DeliveryZoneService {
         zone.setCity(req.getCity() == null ? "" : req.getCity());
         zone.setState(req.getState() == null ? "" : req.getState());
         zone.setCharge(req.getCharge() == null ? BigDecimal.ZERO : req.getCharge());
+        zone.setPending(true);
         deliveryZoneRepository.save(zone);
         return ApiResponse.ok("Zone saved");
     }

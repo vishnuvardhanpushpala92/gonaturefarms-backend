@@ -30,6 +30,12 @@ public class FooterLinkController {
         return footerLinkService.list();
     }
 
+    @GetMapping("/admin-list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse adminList() {
+        return footerLinkService.listAll();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestBody FooterLinkRequest request) {

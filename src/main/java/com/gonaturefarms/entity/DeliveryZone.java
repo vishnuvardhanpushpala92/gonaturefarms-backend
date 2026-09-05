@@ -45,11 +45,23 @@ public class DeliveryZone {
     @Column(precision = 6, scale = 2)
     private BigDecimal charge = BigDecimal.ZERO;
 
+    @Builder.Default
+    @Column
+    private Boolean pending = false;
+
     // Additional setters for manual construction
     public void setArea(String area) { this.area = area; }
     public void setCity(String city) { this.city = city; }
     public void setState(String state) { this.state = state; }
     public void setCharge(BigDecimal charge) { this.charge = charge; }
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
+
+    // Additional getters
+    public String getArea() { return area; }
+    public String getCity() { return city; }
+    public String getState() { return state; }
+    public BigDecimal getCharge() { return charge; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static DeliveryZoneBuilder builder() {
@@ -63,6 +75,7 @@ public class DeliveryZone {
         private String city = "";
         private String state = "";
         private BigDecimal charge = BigDecimal.ZERO;
+        private Boolean pending = false;
 
         public DeliveryZoneBuilder id(Long id) {
             this.id = id;
@@ -94,6 +107,11 @@ public class DeliveryZone {
             return this;
         }
 
+        public DeliveryZoneBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public DeliveryZone build() {
             DeliveryZone zone = new DeliveryZone();
             zone.id = this.id;
@@ -102,6 +120,7 @@ public class DeliveryZone {
             zone.city = this.city;
             zone.state = this.state;
             zone.charge = this.charge;
+            zone.pending = this.pending;
             return zone;
         }
     }

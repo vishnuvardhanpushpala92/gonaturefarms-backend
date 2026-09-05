@@ -10,4 +10,11 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByOrderByNameAsc();
     Optional<Category> findByName(String name);
     void deleteByName(String name);
+
+    /**
+     * Find categories where pending is true or null
+     * JPA Repository Method: Uses Spring Data JPA's automatic query generation
+     * SQL Equivalent: SELECT * FROM categories WHERE pending = true OR pending IS NULL
+     */
+    List<Category> findByPendingTrue();
 }

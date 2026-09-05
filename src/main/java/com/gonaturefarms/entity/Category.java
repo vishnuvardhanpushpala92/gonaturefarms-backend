@@ -27,12 +27,19 @@ public class Category {
     @Column(nullable = false, unique = true, length = 80)
     private String name;
 
+    @Builder.Default
+    @Column
+    private Boolean pending = false;
+
     // Manual getters and setters as failsafe for Lombok processing issues
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public Boolean getPending() { return pending; }
+    public void setPending(Boolean pending) { this.pending = pending; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static CategoryBuilder builder() {
@@ -42,6 +49,7 @@ public class Category {
     public static class CategoryBuilder {
         private Long id;
         private String name;
+        private Boolean pending = false;
 
         public CategoryBuilder id(Long id) {
             this.id = id;
@@ -53,10 +61,16 @@ public class Category {
             return this;
         }
 
+        public CategoryBuilder pending(Boolean pending) {
+            this.pending = pending;
+            return this;
+        }
+
         public Category build() {
             Category category = new Category();
             category.id = this.id;
             category.name = this.name;
+            category.pending = this.pending;
             return category;
         }
     }
