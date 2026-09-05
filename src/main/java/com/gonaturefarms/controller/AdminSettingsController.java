@@ -38,7 +38,7 @@ public class AdminSettingsController {
             "ftr_bg", "ftr_text", "ftr_font_size",
             "banner_msgs", "free_delivery_above", "delivery_charge_below", "whatsapp_number", "screenshot_number",
             "trust_badges", "footer_desc", "footer_phone", "support_fields", "footer_bg_image",
-            "logo", "favicon", "upi_id"
+            "logo", "favicon", "upi_id", "admin_session_timeout"
     );
 
     private final SiteSettingService siteSettingService;
