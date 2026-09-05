@@ -223,11 +223,12 @@ public class AdminSettingsController {
             var uploadParams = ObjectUtils.asMap(
                     "folder", "settings",
                     "public_id", "upi_scanner_" + System.currentTimeMillis(),
-                    "overwrite", true
+                    "overwrite", true,
+                    "secure", true
             );
 
             var uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadParams);
-            String newUrl = (String) uploadResult.get("url");
+            String newUrl = (String) uploadResult.get("secure_url");
             String newPublicId = (String) uploadResult.get("public_id");
 
             // Save new URL and public ID to database
