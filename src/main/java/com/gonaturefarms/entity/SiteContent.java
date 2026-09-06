@@ -2,6 +2,7 @@ package com.gonaturefarms.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,18 +37,23 @@ public class SiteContent {
     private String description;
 
     @Column(name = "image_url", columnDefinition = "TEXT")
+    @JsonProperty("imageUrl")
     private String imageUrl;
 
     @Column(name = "person_name", length = 200)
+    @JsonProperty("personName")
     private String personName;
 
     @Column(name = "person_role", length = 200)
+    @JsonProperty("personRole")
     private String personRole;
 
     @Column(name = "person_image_url", columnDefinition = "TEXT")
+    @JsonProperty("personImageUrl")
     private String personImageUrl;
 
     @Column(name = "optional_link", columnDefinition = "TEXT")
+    @JsonProperty("optionalLink")
     private String optionalLink;
 
     @Builder.Default
@@ -56,9 +62,11 @@ public class SiteContent {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
+    @JsonProperty("createdAt")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "updated_at")
+    @JsonProperty("updatedAt")
     private LocalDateTime updatedAt;
 
     // Manual getters and setters as failsafe for Lombok processing issues
