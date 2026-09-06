@@ -40,11 +40,15 @@ public class VideoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestParam("title") String title,
                               @RequestParam("file") MultipartFile file,
+                              @RequestParam(value = "productId", required = false) Long productId,
+                              @RequestParam(value = "posterUrl", required = false) String posterUrl,
                               @RequestParam(value = "enabled", defaultValue = "true") Boolean enabled,
                               @RequestParam(value = "sortOrder", defaultValue = "0") Integer sortOrder,
                               @RequestParam(value = "orientation", defaultValue = "landscape") String orientation) {
         Video video = new Video();
         video.setTitle(title);
+        video.setProductId(productId);
+        video.setPosterUrl(posterUrl);
         video.setEnabled(enabled);
         video.setSortOrder(sortOrder);
         video.setOrientation(orientation);
@@ -56,11 +60,15 @@ public class VideoController {
     public ApiResponse update(@PathVariable Long id,
                               @RequestParam("title") String title,
                               @RequestParam(value = "file", required = false) MultipartFile file,
+                              @RequestParam(value = "productId", required = false) Long productId,
+                              @RequestParam(value = "posterUrl", required = false) String posterUrl,
                               @RequestParam(value = "enabled", defaultValue = "true") Boolean enabled,
                               @RequestParam(value = "sortOrder", defaultValue = "0") Integer sortOrder,
                               @RequestParam(value = "orientation", defaultValue = "landscape") String orientation) {
         Video video = new Video();
         video.setTitle(title);
+        video.setProductId(productId);
+        video.setPosterUrl(posterUrl);
         video.setEnabled(enabled);
         video.setSortOrder(sortOrder);
         video.setOrientation(orientation);

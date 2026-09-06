@@ -4,32 +4,29 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "videos")
-public class Video {
+@Table(name = "testimonials")
+public class Testimonial {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String customerName;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String quote;
 
     @Column(nullable = false)
-    private String filePath;
+    private Integer rating;
 
     @Column
-    private String posterUrl;
-
-    @Column
-    private Long productId;
+    private String avatarUrl;
 
     @Column(nullable = false)
     private Boolean enabled = true;
 
     @Column
     private Integer sortOrder = 0;
-
-    @Column(nullable = false)
-    private String orientation = "landscape";
 
     @Column
     private Boolean pending = false;
@@ -55,26 +52,23 @@ public class Video {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
 
-    public String getFilePath() { return filePath; }
-    public void setFilePath(String filePath) { this.filePath = filePath; }
+    public String getQuote() { return quote; }
+    public void setQuote(String quote) { this.quote = quote; }
 
-    public String getPosterUrl() { return posterUrl; }
-    public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { this.rating = rating; }
 
-    public Long getProductId() { return productId; }
-    public void setProductId(Long productId) { this.productId = productId; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public Boolean getEnabled() { return enabled; }
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
 
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
-
-    public String getOrientation() { return orientation; }
-    public void setOrientation(String orientation) { this.orientation = orientation; }
 
     public Boolean getPending() { return pending; }
     public void setPending(Boolean pending) { this.pending = pending; }

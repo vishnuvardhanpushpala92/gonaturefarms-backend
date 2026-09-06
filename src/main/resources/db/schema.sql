@@ -322,6 +322,29 @@ SELECT * FROM (VALUES
 ) AS v(question, answer, created_at)
 WHERE NOT EXISTS (SELECT 1 FROM faqs);
 
+-- ── TESTIMONIALS ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS testimonials (
+  id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  customer_name VARCHAR(120) NOT NULL,
+  quote         TEXT NOT NULL,
+  rating        SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  avatar_url    TEXT,
+  enabled       BOOLEAN DEFAULT TRUE,
+  sort_order    INT DEFAULT 0,
+  pending       BOOLEAN DEFAULT FALSE,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_testimonials_enabled ON testimonials(enabled);
+CREATE INDEX IF NOT EXISTS idx_testimonials_sort ON testimonials(sort_order);
+
+INSERT INTO testimonials (customer_name, quote, rating, enabled, sort_order, created_at, updated_at)
+VALUES
+('B.B', 'I just got your natural honey n turmeric feels good to buy organic n original products.', 5, true, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('R.K', 'The quality of products is amazing. Best organic products I have ever used.', 5, true, 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('S.M', 'Fast delivery and excellent customer service. Highly recommended!', 4, true, 3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT DO NOTHING;
+
 -- ── DELIVERY ZONES ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS delivery_zones (
   id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -343,13 +366,20 @@ CREATE TABLE IF NOT EXISTS videos (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   title      VARCHAR(200) NOT NULL,
   file_path  TEXT NOT NULL,
+  poster_url TEXT,
+  product_id BIGINT REFERENCES products(id) ON DELETE SET NULL,
   enabled    BOOLEAN DEFAULT true,
   sort_order INT DEFAULT 0,
   orientation VARCHAR(20) NOT NULL DEFAULT 'landscape',
+  pending    BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_videos_enabled ON videos(enabled);
+CREATE INDEX IF NOT EXISTS idx_videos_product ON videos(product_id);
+ALTER TABLE videos ADD COLUMN IF NOT EXISTS poster_url TEXT;
+ALTER TABLE videos ADD COLUMN IF NOT EXISTS product_id BIGINT REFERENCES products(id) ON DELETE SET NULL;
+ALTER TABLE videos ADD COLUMN IF NOT EXISTS pending BOOLEAN DEFAULT false;
 
 -- ── SCROLL BLOCKS ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS scroll_blocks (

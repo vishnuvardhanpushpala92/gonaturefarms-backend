@@ -8,6 +8,7 @@ import com.gonaturefarms.entity.Product;
 import com.gonaturefarms.entity.ScrollBlock;
 import com.gonaturefarms.entity.SiteContent;
 import com.gonaturefarms.entity.Slide;
+import com.gonaturefarms.entity.Testimonial;
 import com.gonaturefarms.entity.Video;
 import com.gonaturefarms.repository.CategoryRepository;
 import com.gonaturefarms.repository.DeliveryZoneRepository;
@@ -17,6 +18,7 @@ import com.gonaturefarms.repository.ProductRepository;
 import com.gonaturefarms.repository.ScrollBlockRepository;
 import com.gonaturefarms.repository.SiteContentRepository;
 import com.gonaturefarms.repository.SlideRepository;
+import com.gonaturefarms.repository.TestimonialRepository;
 import com.gonaturefarms.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +60,9 @@ public class AdminCommitController {
 
     @Autowired
     private SlideRepository slideRepository;
+
+    @Autowired
+    private TestimonialRepository testimonialRepository;
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> commitChanges() {
@@ -145,20 +150,30 @@ public class AdminCommitController {
                 slideCount++;
             }
 
+            // Commit pending testimonials (including NULL as pending)
+            List<Testimonial> pendingTestimonials = testimonialRepository.findByPendingTrue();
+            int testimonialCount = 0;
+            for (Testimonial testimonial : pendingTestimonials) {
+                testimonial.setPending(false);
+                testimonialRepository.save(testimonial);
+                testimonialCount++;
+            }
+
             response.put("success", true);
             response.put("message", "Changes committed successfully");
-            response.put("details", Map.of(
-                "products", productCount,
-                "siteContent", siteContentCount,
-                "faqs", faqCount,
-                "videos", videoCount,
-                "footerLinks", footerLinkCount,
-                "scrollBlocks", scrollBlockCount,
-                "deliveryZones", deliveryZoneCount,
-                "categories", categoryCount,
-                "slides", slideCount,
-                "total", productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount
-            ));
+            Map<String, Object> details = new HashMap<>();
+            details.put("products", productCount);
+            details.put("siteContent", siteContentCount);
+            details.put("faqs", faqCount);
+            details.put("videos", videoCount);
+            details.put("footerLinks", footerLinkCount);
+            details.put("scrollBlocks", scrollBlockCount);
+            details.put("deliveryZones", deliveryZoneCount);
+            details.put("categories", categoryCount);
+            details.put("slides", slideCount);
+            details.put("testimonials", testimonialCount);
+            details.put("total", productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount + testimonialCount);
+            response.put("details", details);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -182,21 +197,23 @@ public class AdminCommitController {
             int deliveryZoneCount = deliveryZoneRepository.findByPendingTrue().size();
             int categoryCount = categoryRepository.findByPendingTrue().size();
             int slideCount = slideRepository.findByPendingTrue().size();
-            int total = productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount;
+            int testimonialCount = testimonialRepository.findByPendingTrue().size();
+            int total = productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount + testimonialCount;
 
             response.put("success", true);
             response.put("count", total);
-            response.put("details", Map.of(
-                "products", productCount,
-                "siteContent", siteContentCount,
-                "faqs", faqCount,
-                "videos", videoCount,
-                "footerLinks", footerLinkCount,
-                "scrollBlocks", scrollBlockCount,
-                "deliveryZones", deliveryZoneCount,
-                "categories", categoryCount,
-                "slides", slideCount
-            ));
+            Map<String, Object> details = new HashMap<>();
+            details.put("products", productCount);
+            details.put("siteContent", siteContentCount);
+            details.put("faqs", faqCount);
+            details.put("videos", videoCount);
+            details.put("footerLinks", footerLinkCount);
+            details.put("scrollBlocks", scrollBlockCount);
+            details.put("deliveryZones", deliveryZoneCount);
+            details.put("categories", categoryCount);
+            details.put("slides", slideCount);
+            details.put("testimonials", testimonialCount);
+            response.put("details", details);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

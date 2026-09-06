@@ -14,7 +14,9 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.Video;
+import com.gonaturefarms.entity.Product;
 import com.gonaturefarms.repository.VideoRepository;
+import com.gonaturefarms.repository.ProductRepository;
 
 import jakarta.annotation.PostConstruct;
 
@@ -22,6 +24,7 @@ import jakarta.annotation.PostConstruct;
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final ProductRepository productRepository;
     private Cloudinary cloudinary;
 
     // Inject Cloudinary credentials from application.properties
@@ -34,8 +37,9 @@ public class VideoService {
     @Value("${cloudinary.api-secret}")
     private String apiSecret;
 
-    public VideoService(VideoRepository videoRepository) {
+    public VideoService(VideoRepository videoRepository, ProductRepository productRepository) {
         this.videoRepository = videoRepository;
+        this.productRepository = productRepository;
     }
 
     // Initialize Cloudinary once the Spring bean is created
@@ -54,19 +58,58 @@ public class VideoService {
         List<Video> publicVideos = videos.stream()
                 .filter(v -> v.getPending() == null || !v.getPending())
                 .collect(Collectors.toList());
-        return ApiResponse.ok().with("videos", publicVideos);
+        
+        // Enrich videos with product information
+        List<Map<String, Object>> enrichedVideos = publicVideos.stream()
+                .map(this::enrichVideoWithProduct)
+                .collect(Collectors.toList());
+        
+        return ApiResponse.ok().with("videos", enrichedVideos);
     }
 
     @Transactional(readOnly = true)
     public ApiResponse adminAll() {
         try {
             List<Video> videos = videoRepository.findAll();
-            return ApiResponse.ok().with("videos", videos);
+            // Enrich videos with product information
+            List<Map<String, Object>> enrichedVideos = videos.stream()
+                    .map(this::enrichVideoWithProduct)
+                    .collect(Collectors.toList());
+            return ApiResponse.ok().with("videos", enrichedVideos);
         } catch (Exception e) {
             System.err.println("!!! CRITICAL ERROR IN Admin Videos Service !!!");
             e.printStackTrace();
             return ApiResponse.fail("Error loading admin videos: " + e.getMessage());
         }
+    }
+
+    private Map<String, Object> enrichVideoWithProduct(Video video) {
+        Map<String, Object> enriched = new java.util.HashMap<>();
+        enriched.put("id", video.getId());
+        enriched.put("title", video.getTitle());
+        enriched.put("filePath", video.getFilePath());
+        enriched.put("posterUrl", video.getPosterUrl());
+        enriched.put("productId", video.getProductId());
+        enriched.put("enabled", video.getEnabled());
+        enriched.put("sortOrder", video.getSortOrder());
+        enriched.put("orientation", video.getOrientation());
+        enriched.put("pending", video.getPending());
+        enriched.put("createdAt", video.getCreatedAt());
+        enriched.put("updatedAt", video.getUpdatedAt());
+        
+        // Fetch product information if productId is set
+        if (video.getProductId() != null) {
+            productRepository.findById(video.getProductId()).ifPresent(product -> {
+                Map<String, Object> productInfo = new java.util.HashMap<>();
+                productInfo.put("id", product.getId());
+                productInfo.put("name", product.getName());
+                productInfo.put("price", product.getPrice());
+                productInfo.put("imgUrl", product.getImgUrl());
+                enriched.put("product", productInfo);
+            });
+        }
+        
+        return enriched;
     }
 
     @Transactional
@@ -80,7 +123,7 @@ public class VideoService {
         video.setPending(true);
 
         Video saved = videoRepository.save(video);
-        return ApiResponse.ok("Video created successfully").with("video", saved);
+        return ApiResponse.ok("Video created successfully").with("video", enrichVideoWithProduct(saved));
     }
 
     @Transactional
@@ -88,6 +131,8 @@ public class VideoService {
         return videoRepository.findById(id)
             .map(existing -> {
                 existing.setTitle(video.getTitle());
+                existing.setProductId(video.getProductId());
+                existing.setPosterUrl(video.getPosterUrl());
                 existing.setEnabled(video.getEnabled());
                 existing.setSortOrder(video.getSortOrder());
                 existing.setPending(true);
@@ -101,7 +146,7 @@ public class VideoService {
                 }
 
                 Video updated = videoRepository.save(existing);
-                return ApiResponse.ok("Video updated successfully").with("video", updated);
+                return ApiResponse.ok("Video updated successfully").with("video", enrichVideoWithProduct(updated));
             })
             .orElse(ApiResponse.fail("Video not found"));
     }
