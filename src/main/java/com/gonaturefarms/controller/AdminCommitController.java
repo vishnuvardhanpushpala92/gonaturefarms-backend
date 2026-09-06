@@ -7,7 +7,6 @@ import com.gonaturefarms.entity.FooterLink;
 import com.gonaturefarms.entity.Product;
 import com.gonaturefarms.entity.ScrollBlock;
 import com.gonaturefarms.entity.SiteContent;
-import com.gonaturefarms.entity.Slide;
 import com.gonaturefarms.entity.Testimonial;
 import com.gonaturefarms.entity.Video;
 import com.gonaturefarms.repository.CategoryRepository;
@@ -17,7 +16,6 @@ import com.gonaturefarms.repository.FooterLinkRepository;
 import com.gonaturefarms.repository.ProductRepository;
 import com.gonaturefarms.repository.ScrollBlockRepository;
 import com.gonaturefarms.repository.SiteContentRepository;
-import com.gonaturefarms.repository.SlideRepository;
 import com.gonaturefarms.repository.TestimonialRepository;
 import com.gonaturefarms.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,9 +55,6 @@ public class AdminCommitController {
 
     @Autowired
     private CategoryRepository categoryRepository;
-
-    @Autowired
-    private SlideRepository slideRepository;
 
     @Autowired
     private TestimonialRepository testimonialRepository;
@@ -141,15 +136,6 @@ public class AdminCommitController {
                 categoryCount++;
             }
 
-            // Commit pending slides (including NULL as pending)
-            List<Slide> pendingSlides = slideRepository.findByPendingTrue();
-            int slideCount = 0;
-            for (Slide slide : pendingSlides) {
-                slide.setPending(false);
-                slideRepository.save(slide);
-                slideCount++;
-            }
-
             // Commit pending testimonials (including NULL as pending)
             List<Testimonial> pendingTestimonials = testimonialRepository.findByPendingTrue();
             int testimonialCount = 0;
@@ -170,9 +156,8 @@ public class AdminCommitController {
             details.put("scrollBlocks", scrollBlockCount);
             details.put("deliveryZones", deliveryZoneCount);
             details.put("categories", categoryCount);
-            details.put("slides", slideCount);
             details.put("testimonials", testimonialCount);
-            details.put("total", productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount + testimonialCount);
+            details.put("total", productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + testimonialCount);
             response.put("details", details);
 
             return ResponseEntity.ok(response);
@@ -196,9 +181,8 @@ public class AdminCommitController {
             int scrollBlockCount = scrollBlockRepository.findByPendingTrue().size();
             int deliveryZoneCount = deliveryZoneRepository.findByPendingTrue().size();
             int categoryCount = categoryRepository.findByPendingTrue().size();
-            int slideCount = slideRepository.findByPendingTrue().size();
             int testimonialCount = testimonialRepository.findByPendingTrue().size();
-            int total = productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + slideCount + testimonialCount;
+            int total = productCount + siteContentCount + faqCount + videoCount + footerLinkCount + scrollBlockCount + deliveryZoneCount + categoryCount + testimonialCount;
 
             response.put("success", true);
             response.put("count", total);
@@ -211,7 +195,6 @@ public class AdminCommitController {
             details.put("scrollBlocks", scrollBlockCount);
             details.put("deliveryZones", deliveryZoneCount);
             details.put("categories", categoryCount);
-            details.put("slides", slideCount);
             details.put("testimonials", testimonialCount);
             response.put("details", details);
 

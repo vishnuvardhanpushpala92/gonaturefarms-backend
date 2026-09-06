@@ -24,11 +24,8 @@ public class SlideService {
     @Transactional(readOnly = true)
     public ApiResponse list() {
         List<Slide> allSlides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
-        // Filter out pending slides for public view
-        List<Slide> activeSlides = allSlides.stream()
-                .filter(slide -> slide.getPending() == null || !slide.getPending())
-                .collect(Collectors.toList());
-        return ApiResponse.ok().with("slides", activeSlides);
+        // Slides are no longer pending by default, so show all active slides
+        return ApiResponse.ok().with("slides", allSlides);
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +45,7 @@ public class SlideService {
                 .caption(req.getCaption() == null ? "" : req.getCaption())
                 .subText(req.getSubText() == null ? "" : req.getSubText())
                 .sortOrder(req.getSortOrder() != null ? req.getSortOrder().intValue() : 0)
-                .pending(true)
+                .pending(false)  // Changed to false so slides appear immediately
                 .build();
         slide = slideRepository.save(slide);
         return ApiResponse.ok("Slide added").with("id", slide.getId());
@@ -61,7 +58,7 @@ public class SlideService {
         slide.setImageUrl(req.getImageUrl());
         slide.setCaption(req.getCaption() == null ? "" : req.getCaption());
         slide.setSubText(req.getSubText() == null ? "" : req.getSubText());
-        slide.setPending(true);
+        slide.setPending(false);  // Changed to false for immediate visibility
         slideRepository.save(slide);
         return ApiResponse.ok("Slide updated");
     }

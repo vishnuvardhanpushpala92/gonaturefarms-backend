@@ -2,6 +2,7 @@ package com.gonaturefarms.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +28,7 @@ public class Slide {
     private Long id;
 
     @Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
+    @JsonProperty("imageUrl")
     private String imageUrl;
 
     @Builder.Default
@@ -35,10 +37,12 @@ public class Slide {
 
     @Builder.Default
     @Column(name = "sub_text", length = 200)
+    @JsonProperty("subText")
     private String subText = "";
 
     @Builder.Default
     @Column(name = "sort_order")
+    @JsonProperty("sortOrder")
     private Integer sortOrder = 0;
 
     @Builder.Default
@@ -47,6 +51,7 @@ public class Slide {
 
     @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
+    @JsonProperty("createdAt")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // Manual getters as failsafe for Lombok processing issues
