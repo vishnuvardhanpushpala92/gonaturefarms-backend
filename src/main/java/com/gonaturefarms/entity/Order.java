@@ -16,6 +16,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -41,6 +43,10 @@ public class Order {
 
     @Column(name = "user_id")
     private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
     @Column(name = "customer_name", nullable = false, length = 120)
     private String customerName;
@@ -185,6 +191,8 @@ public class Order {
 
     public Long getUserId() { return userId; }
 
+    public User getUser() { return user; }
+
     public String getCustomerName() { return customerName; }
 
     public String getPhone() { return phone; }
@@ -251,6 +259,8 @@ public class Order {
     public void setOrderId(String orderId) { this.orderId = orderId; }
 
     public void setUserId(Long userId) { this.userId = userId; }
+
+    public void setUser(User user) { this.user = user; }
 
     public void setCustomerName(String customerName) { this.customerName = customerName; }
 
