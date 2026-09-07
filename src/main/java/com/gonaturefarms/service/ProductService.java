@@ -66,9 +66,11 @@ public class ProductService {
                 .filter(p -> p.getPending() == null || !p.getPending())
                 .collect(Collectors.toList());
 
+        // Use JOIN FETCH to prevent N+1 query issue
         for (Product product : products) {
-            List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
-            product.setVariants(variants);
+            productRepository.findByIdWithVariants(product.getId()).ifPresent(p -> {
+                product.setVariants(p.getVariants());
+            });
         }
 
         return ApiResponse.ok().with("products", products);
@@ -81,10 +83,11 @@ public class ProductService {
                 spec, org.springframework.data.domain.Sort.by(
                         org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Include pending products for admin view
+        // Use JOIN FETCH to prevent N+1 query issue
         for (Product product : products) {
-            List<ProductVariant> variants = productVariantRepository.findByProductId(product.getId());
-            product.setVariants(variants);
+            productRepository.findByIdWithVariants(product.getId()).ifPresent(p -> {
+                product.setVariants(p.getVariants());
+            });
         }
 
         return ApiResponse.ok().with("products", products);
