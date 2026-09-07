@@ -86,4 +86,16 @@ public class VideoController {
     public ApiResponse toggleEnabled(@PathVariable Long id) {
         return videoService.toggleEnabled(id);
     }
+
+    @PutMapping("/admin/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse approve(@PathVariable Long id) {
+        return videoService.approve(id);
+    }
+
+    @PutMapping("/admin/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse reject(@PathVariable Long id) {
+        return videoService.reject(id);
+    }
 }

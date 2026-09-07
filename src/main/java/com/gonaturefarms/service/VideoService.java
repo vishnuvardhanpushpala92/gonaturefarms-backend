@@ -175,6 +175,27 @@ public class VideoService {
             .orElse(ApiResponse.fail("Video not found"));
     }
 
+    @Transactional
+    public ApiResponse approve(Long id) {
+        return videoRepository.findById(id)
+            .map(video -> {
+                video.setPending(false);
+                Video updated = videoRepository.save(video);
+                return ApiResponse.ok("Video approved successfully").with("video", enrichVideoWithProduct(updated));
+            })
+            .orElse(ApiResponse.fail("Video not found"));
+    }
+
+    @Transactional
+    public ApiResponse reject(Long id) {
+        return videoRepository.findById(id)
+            .map(video -> {
+                videoRepository.deleteById(id);
+                return ApiResponse.ok("Video rejected and deleted successfully");
+            })
+            .orElse(ApiResponse.fail("Video not found"));
+    }
+
     // NEW: This is the permanent fix. It uploads directly to Cloudinary and returns the URL.
     private String saveFile(MultipartFile file) {
         try {
