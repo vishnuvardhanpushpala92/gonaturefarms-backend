@@ -14,4 +14,11 @@ public interface ScrollBlockRepository extends JpaRepository<ScrollBlock, Long> 
      * SQL Equivalent: SELECT * FROM scroll_blocks WHERE pending = true OR pending IS NULL
      */
     List<ScrollBlock> findByPendingTrue();
+
+    /**
+     * Count scroll blocks where pending is false or null (active blocks)
+     * JPA Repository Method: Uses Spring Data JPA's automatic query generation
+     * SQL Equivalent: SELECT COUNT(*) FROM scroll_blocks WHERE pending = false OR pending IS NULL
+     */
+    long countByPendingFalseOrPendingNull();
 }

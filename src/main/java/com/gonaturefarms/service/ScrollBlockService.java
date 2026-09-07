@@ -43,6 +43,12 @@ public class ScrollBlockService {
             throw new ApiException("Title is required");
         }
         
+        // Check if maximum 6 blocks limit is reached
+        long activeCount = scrollBlockRepository.countByPendingFalseOrPendingNull();
+        if (activeCount >= 6) {
+            throw new ApiException("Maximum 6 features allowed. Delete existing features first.");
+        }
+        
         // Use custom icon if provided, otherwise use regular icon or default
         String iconValue = req.getIcon();
         if ("custom".equals(iconValue) && req.getCustomIcon() != null && !req.getCustomIcon().isBlank()) {
@@ -58,7 +64,7 @@ public class ScrollBlockService {
                 .style(parseStyle(req.getStyle()))
                 .backgroundColor(req.getBackgroundColor())
                 .textColor(req.getTextColor())
-                .pending(true)
+                .pending(false) // Set to false so features appear immediately on homepage
                 .build();
         block = scrollBlockRepository.save(block);
         return ApiResponse.ok("Block added").with("id", block.getId());
@@ -109,7 +115,7 @@ public class ScrollBlockService {
             block.setTextColor(req.getTextColor());
         }
 
-        block.setPending(true);
+        block.setPending(false); // Set to false so updated features appear on homepage
         block = scrollBlockRepository.save(block);
         return ApiResponse.ok("Block updated successfully");
     }
