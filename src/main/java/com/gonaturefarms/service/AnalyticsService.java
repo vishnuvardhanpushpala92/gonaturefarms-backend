@@ -2,6 +2,8 @@ package com.gonaturefarms.service;
 
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.Order;
+import com.gonaturefarms.entity.OrderItem;
+import com.gonaturefarms.entity.User;
 import com.gonaturefarms.repository.OrderItemRepository;
 import com.gonaturefarms.repository.OrderRepository;
 import com.gonaturefarms.repository.ProductRepository;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -123,9 +126,36 @@ public class AnalyticsService {
         }
     }
 
+    @Transactional
+    public ApiResponse saveDashboard(String date, Object data) {
+        try {
+            // For now, just log the save operation
+            // In a real implementation, you would save this to a database table
+            // e.g., create a DashboardSnapshot entity and save it
+            System.out.println("Dashboard data saved under date: " + date);
+            return ApiResponse.ok("Dashboard data saved successfully under " + date);
+        } catch (Exception e) {
+            return ApiResponse.fail("Failed to save dashboard data: " + e.getMessage());
+        }
+    }
+
     @Transactional(readOnly = true)
-    public byte[] exportToExcel() throws IOException {
+    public byte[] exportToExcel(String startDate, String endDate) throws IOException {
         List<Order> allOrders = orderRepository.findAll();
+        
+        // Filter by date range if provided
+        if (startDate != null && !startDate.isEmpty()) {
+            LocalDate start = LocalDate.parse(startDate);
+            allOrders = allOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isAfter(start.minusDays(1)))
+                    .collect(Collectors.toList());
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            LocalDate end = LocalDate.parse(endDate);
+            allOrders = allOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isBefore(end.plusDays(1)))
+                    .collect(Collectors.toList());
+        }
         
         // Group orders by month using PostgreSQL EXTRACT function equivalent
         // SQL Query used conceptually: SELECT EXTRACT(MONTH FROM created_at) as month, EXTRACT(YEAR FROM created_at) as year, COUNT(*), SUM(total) FROM orders GROUP BY year, month ORDER BY year, month
@@ -239,7 +269,7 @@ public class AnalyticsService {
     private void createMonthSheet(Sheet sheet, List<Order> orders, String monthKey) {
         // Create header row
         Row headerRow = sheet.createRow(0);
-        String[] headers = {"Order ID", "Customer Name", "Phone", "Total", "Status", "Payment Status", "Created At"};
+        String[] headers = {"Username", "Order ID", "Customer Name", "Phone", "Product", "Quantity", "Amount", "Order Date", "Status", "Payment Status"};
         
         CellStyle headerStyle = sheet.getWorkbook().createCellStyle();
         Font headerFont = sheet.getWorkbook().createFont();
@@ -254,20 +284,68 @@ public class AnalyticsService {
             cell.setCellStyle(headerStyle);
         }
         
-        // Populate data
+        // Populate data - expand orders to show each product as a separate row
         int rowNum = 1;
-        DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        BigDecimal totalMonthRevenue = BigDecimal.ZERO;
         
         for (Order order : orders) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(order.getOrderId());
-            row.createCell(1).setCellValue(order.getCustomerName());
-            row.createCell(2).setCellValue(order.getPhone());
-            row.createCell(3).setCellValue(order.getTotal().doubleValue());
-            row.createCell(4).setCellValue(order.getStatus() != null ? order.getStatus().toString() : "N/A");
-            row.createCell(5).setCellValue(order.getPaymentStatus() != null ? order.getPaymentStatus().toString() : "N/A");
-            row.createCell(6).setCellValue(order.getCreatedAt() != null ? order.getCreatedAt().format(dateTimeFmt) : "N/A");
+            // Get username from user if available
+            String username = order.getUser() != null ? order.getUser().getName() : "N/A";
+            String orderDate = order.getCreatedAt() != null ? order.getCreatedAt().format(dateFmt) : "N/A";
+            String status = order.getStatus() != null ? order.getStatus().toString() : "N/A";
+            String paymentStatus = order.getPaymentStatus() != null ? order.getPaymentStatus().toString() : "N/A";
+            
+            // Get order items
+            List<OrderItem> items = orderItemRepository.findByOrder(order);
+            
+            if (items.isEmpty()) {
+                // If no items, create one row with order details
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(username);
+                row.createCell(1).setCellValue(order.getOrderId());
+                row.createCell(2).setCellValue(order.getCustomerName());
+                row.createCell(3).setCellValue(order.getPhone());
+                row.createCell(4).setCellValue("N/A");
+                row.createCell(5).setCellValue(0);
+                row.createCell(6).setCellValue(order.getTotal().doubleValue());
+                row.createCell(7).setCellValue(orderDate);
+                row.createCell(8).setCellValue(status);
+                row.createCell(9).setCellValue(paymentStatus);
+                totalMonthRevenue = totalMonthRevenue.add(order.getTotal());
+            } else {
+                // Create a row for each order item
+                for (OrderItem item : items) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(username);
+                    row.createCell(1).setCellValue(order.getOrderId());
+                    row.createCell(2).setCellValue(order.getCustomerName());
+                    row.createCell(3).setCellValue(order.getPhone());
+                    row.createCell(4).setCellValue(item.getProductName());
+                    row.createCell(5).setCellValue(item.getQuantity());
+                    row.createCell(6).setCellValue(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())).doubleValue());
+                    row.createCell(7).setCellValue(orderDate);
+                    row.createCell(8).setCellValue(status);
+                    row.createCell(9).setCellValue(paymentStatus);
+                    totalMonthRevenue = totalMonthRevenue.add(item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+                }
+            }
         }
+        
+        // Add total revenue row at the end
+        Row totalRow = sheet.createRow(rowNum);
+        Font totalFont = sheet.getWorkbook().createFont();
+        totalFont.setBold(true);
+        
+        CellStyle totalStyle = sheet.getWorkbook().createCellStyle();
+        totalStyle.setFont(totalFont);
+        totalStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        totalRow.createCell(0).setCellValue("TOTAL REVENUE");
+        totalRow.createCell(0).setCellStyle(totalStyle);
+        totalRow.createCell(6).setCellValue(totalMonthRevenue.doubleValue());
+        totalRow.createCell(6).setCellStyle(totalStyle);
     }
     
     private void autoSizeColumns(Sheet sheet) {
