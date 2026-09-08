@@ -28,13 +28,13 @@ public class VideoService {
     private Cloudinary cloudinary;
 
     // Inject Cloudinary credentials from application.properties
-    @Value("${cloudinary.cloud-name}")
+    @Value("${cloudinary.cloud.name}")
     private String cloudName;
 
-    @Value("${cloudinary.api-key}")
+    @Value("${cloudinary.api.key}")
     private String apiKey;
 
-    @Value("${cloudinary.api-secret}")
+    @Value("${cloudinary.api.secret}")
     private String apiSecret;
 
     public VideoService(VideoRepository videoRepository, ProductRepository productRepository) {
