@@ -30,6 +30,16 @@ public class SiteSettingService {
         return ApiResponse.ok().with("settings", map);
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse getServiceablePincodes() {
+        SiteSetting setting = siteSettingRepository.findByKey("serviceable_pincodes")
+                .orElse(null);
+        if (setting == null) {
+            return ApiResponse.ok().with("serviceable_pincodes", "");
+        }
+        return ApiResponse.ok().with("serviceable_pincodes", setting.getValue());
+    }
+
     @Transactional
     public ApiResponse update(Map<String, String> updates) {
         for (Map.Entry<String, String> entry : updates.entrySet()) {

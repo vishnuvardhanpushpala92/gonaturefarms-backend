@@ -38,7 +38,7 @@ public class AdminSettingsController {
             "ftr_bg", "ftr_text", "ftr_font_size",
             "banner_msgs", "free_delivery_above", "delivery_charge_below", "whatsapp_number", "screenshot_number",
             "trust_badges", "footer_desc", "footer_phone", "support_fields", "footer_bg_image",
-            "logo", "favicon", "upi_id", "admin_session_timeout"
+            "logo", "favicon", "upi_id", "admin_session_timeout", "serviceable_pincodes"
     );
 
     private final SiteSettingService siteSettingService;
@@ -59,6 +59,11 @@ public class AdminSettingsController {
     @GetMapping("/settings/public")
     public ApiResponse publicSettings() {
         return siteSettingService.publicSettings();
+    }
+
+    @GetMapping("/settings/serviceable-pincodes")
+    public ApiResponse getServiceablePincodes() {
+        return siteSettingService.getServiceablePincodes();
     }
 
     @PutMapping("/settings")

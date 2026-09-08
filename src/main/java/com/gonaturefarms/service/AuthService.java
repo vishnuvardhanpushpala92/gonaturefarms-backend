@@ -53,8 +53,22 @@ public class AuthService {
             throw new ApiException("Name is required");
         }
         
-        if (request.getPassword() == null || request.getPassword().length() < 6) {
-            throw new ApiException("Password must be at least 6 characters");
+        // Strong password validation
+        String password = request.getPassword();
+        if (password == null || password.length() < 8) {
+            throw new ApiException("Password must be at least 8 characters");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new ApiException("Password must contain at least one uppercase letter");
+        }
+        if (!password.matches(".*[a-z].*")) {
+            throw new ApiException("Password must contain at least one lowercase letter");
+        }
+        if (!password.matches(".*[0-9].*")) {
+            throw new ApiException("Password must contain at least one number");
+        }
+        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
+            throw new ApiException("Password must contain at least one special character");
         }
 
         // Check for existing phone number
