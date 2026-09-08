@@ -53,17 +53,17 @@ public class VideoService {
     }
 
     public ApiResponse getAllEnabled() {
-        List<Video> videos = videoRepository.findByEnabledTrueOrderBySortOrderAsc();
+        List<Video> videos = videoRepository.findByEnabledTrueOrderByPriority();
         // Filter out pending videos for public view (treat NULL as false)
         List<Video> publicVideos = videos.stream()
                 .filter(v -> v.getPending() == null || !v.getPending())
                 .collect(Collectors.toList());
-        
+
         // Enrich videos with product information
         List<Map<String, Object>> enrichedVideos = publicVideos.stream()
                 .map(this::enrichVideoWithProduct)
                 .collect(Collectors.toList());
-        
+
         return ApiResponse.ok().with("videos", enrichedVideos);
     }
 
@@ -71,6 +71,18 @@ public class VideoService {
     public ApiResponse adminAll() {
         try {
             List<Video> videos = videoRepository.findAll();
+            // Sort videos by priority (NULLs last)
+            videos.sort((a, b) -> {
+                if (a.getSortOrder() == null && b.getSortOrder() == null) {
+                    return 0;
+                } else if (a.getSortOrder() == null) {
+                    return 1;
+                } else if (b.getSortOrder() == null) {
+                    return -1;
+                } else {
+                    return a.getSortOrder().compareTo(b.getSortOrder());
+                }
+            });
             // Enrich videos with product information
             List<Map<String, Object>> enrichedVideos = videos.stream()
                     .map(this::enrichVideoWithProduct)

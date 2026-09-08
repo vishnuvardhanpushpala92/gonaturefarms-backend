@@ -15,6 +15,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.id = :id")
     Optional<Product> findByIdWithVariants(Long id);
 
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.id IN :ids")
+    List<Product> findAllByIdWithVariants(List<Long> ids);
+
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants")
     List<Product> findAllWithVariants();
 }

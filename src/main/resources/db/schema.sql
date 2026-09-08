@@ -377,6 +377,7 @@ CREATE TABLE IF NOT EXISTS videos (
 );
 CREATE INDEX IF NOT EXISTS idx_videos_enabled ON videos(enabled);
 CREATE INDEX IF NOT EXISTS idx_videos_product ON videos(product_id);
+CREATE INDEX IF NOT EXISTS idx_videos_sort_order ON videos(sort_order);
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS poster_url TEXT;
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS product_id BIGINT REFERENCES products(id) ON DELETE SET NULL;
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS pending BOOLEAN DEFAULT false;

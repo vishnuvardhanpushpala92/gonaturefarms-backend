@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.gonaturefarms.entity.ProductVariant;
 
 /** Business logic for browsing and (admin) managing products. */
 @Service
@@ -66,11 +67,13 @@ public class ProductService {
                 .filter(p -> p.getPending() == null || !p.getPending())
                 .collect(Collectors.toList());
 
-        // Use JOIN FETCH to prevent N+1 query issue
-        for (Product product : products) {
-            productRepository.findByIdWithVariants(product.getId()).ifPresent(p -> {
-                product.setVariants(p.getVariants());
-            });
+        // Use batch query to fetch all variants at once (prevent N+1)
+        if (!products.isEmpty()) {
+            List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+            List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
+            Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
+            products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
         }
 
         return ApiResponse.ok().with("products", products);
@@ -83,11 +86,13 @@ public class ProductService {
                 spec, org.springframework.data.domain.Sort.by(
                         org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Use JOIN FETCH to prevent N+1 query issue
-        for (Product product : products) {
-            productRepository.findByIdWithVariants(product.getId()).ifPresent(p -> {
-                product.setVariants(p.getVariants());
-            });
+        // Use batch query to fetch all variants at once (prevent N+1)
+        if (!products.isEmpty()) {
+            List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+            List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
+            Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
+                .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
+            products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
         }
 
         return ApiResponse.ok().with("products", products);
