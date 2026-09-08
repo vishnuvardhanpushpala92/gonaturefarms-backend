@@ -380,6 +380,10 @@ CREATE INDEX IF NOT EXISTS idx_videos_product ON videos(product_id);
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS poster_url TEXT;
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS product_id BIGINT REFERENCES products(id) ON DELETE SET NULL;
 ALTER TABLE videos ADD COLUMN IF NOT EXISTS pending BOOLEAN DEFAULT false;
+ALTER TABLE videos ALTER COLUMN title DROP NOT NULL;
+ALTER TABLE videos ALTER COLUMN sort_order DROP DEFAULT;
+ALTER TABLE videos ALTER COLUMN sort_order SET DATA TYPE INT USING sort_order::INT;
+ALTER TABLE videos ALTER COLUMN sort_order DROP NOT NULL;
 
 -- ── SCROLL BLOCKS ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS scroll_blocks (

@@ -10,7 +10,7 @@ public class Video {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     private String title;
 
     @Column(nullable = false)
@@ -26,7 +26,7 @@ public class Video {
     private Boolean enabled = true;
 
     @Column
-    private Integer sortOrder = 0;
+    private Integer sortOrder;
 
     @Column(nullable = false)
     private String orientation = "landscape";
