@@ -36,10 +36,18 @@ public class AdminOrderService {
         Specification<Order> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (status != null && !status.isBlank()) {
-                predicates.add(cb.equal(root.get("status"), Order.OrderStatus.valueOf(status)));
+                try {
+                    predicates.add(cb.equal(root.get("status"), Order.OrderStatus.valueOf(status)));
+                } catch (IllegalArgumentException e) {
+                    // Invalid status value, ignore this filter
+                }
             }
             if (paymentStatus != null && !paymentStatus.isBlank()) {
-                predicates.add(cb.equal(root.get("paymentStatus"), Order.PaymentStatus.valueOf(paymentStatus)));
+                try {
+                    predicates.add(cb.equal(root.get("paymentStatus"), Order.PaymentStatus.valueOf(paymentStatus)));
+                } catch (IllegalArgumentException e) {
+                    // Invalid paymentStatus value, ignore this filter
+                }
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
