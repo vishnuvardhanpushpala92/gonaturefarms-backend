@@ -121,6 +121,7 @@ public class SecurityConfig {
                     // ✅ FIX: Add these to permit public access for Pincode validation and Featured Reviews
                     .requestMatchers(HttpMethod.GET, "/api/admin/zones", "/api/admin/zones/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/settings/serviceable-pincodes").permitAll()
 
                     // ── All other API endpoints require authentication ───────────
                     .requestMatchers("/api/**").authenticated()
