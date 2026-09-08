@@ -1,6 +1,7 @@
 package com.gonaturefarms.service;
 
 import com.gonaturefarms.dto.common.ApiResponse;
+import com.gonaturefarms.dto.order.OrderDTO;
 import com.gonaturefarms.entity.Order;
 import com.gonaturefarms.repository.OrderItemRepository;
 import com.gonaturefarms.repository.OrderRepository;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Powers GET /api/admin/orders (filterable listing) and DELETE /api/admin/orders/all. */
 @Service
@@ -52,7 +54,13 @@ public class AdminOrderService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         List<Order> orders = orderRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok().with("orders", orders);
+        
+        // Convert to DTOs to avoid LazyInitializationException with User relationship
+        List<OrderDTO> orderDTOs = orders.stream()
+                .map(OrderDTO::fromEntity)
+                .collect(Collectors.toList());
+        
+        return ApiResponse.ok().with("orders", orderDTOs);
     }
 
     @Transactional
@@ -75,6 +83,11 @@ public class AdminOrderService {
 
     private byte[] exportOrdersToExcel() throws IOException {
         List<Order> allOrders = orderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        // Convert to DTOs to avoid LazyInitializationException
+        List<OrderDTO> orderDTOs = allOrders.stream()
+                .map(OrderDTO::fromEntity)
+                .collect(Collectors.toList());
         
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -99,8 +112,8 @@ public class AdminOrderService {
             // Create data rows
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             
-            for (int i = 0; i < allOrders.size(); i++) {
-                Order order = allOrders.get(i);
+            for (int i = 0; i < orderDTOs.size(); i++) {
+                OrderDTO order = orderDTOs.get(i);
                 Row row = sheet.createRow(i + 1);
                 
                 row.createCell(0).setCellValue(order.getOrderId());
