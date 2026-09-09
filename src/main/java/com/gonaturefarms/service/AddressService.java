@@ -4,6 +4,7 @@ import com.gonaturefarms.dto.address.AddressRequest;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.entity.Address;
 import com.gonaturefarms.exception.ApiException;
+import com.gonaturefarms.exception.DuplicateFieldException;
 import com.gonaturefarms.repository.AddressRepository;
 import com.gonaturefarms.security.CurrentUser;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,25 @@ public class AddressService {
 
     @Transactional
     public ApiResponse createAddress(Long userId, AddressRequest request) {
+        // Check for duplicate phone number
+        boolean phoneExists = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId).stream()
+                .anyMatch(addr -> addr.getPhone().equals(request.getPhone()));
+        if (phoneExists) {
+            throw new DuplicateFieldException("Phone number already exists.", "phone");
+        }
+
+        // Check for duplicate address
+        boolean addressExists = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId).stream()
+                .anyMatch(addr -> 
+                    addr.getAddressLine().equals(request.getAddressLine()) &&
+                    addr.getCity().equals(request.getCity()) &&
+                    addr.getState().equals(request.getState()) &&
+                    addr.getPincode().equals(request.getPincode())
+                );
+        if (addressExists) {
+            throw new DuplicateFieldException("This address already exists.", "address", "DUPLICATE_ADDRESS");
+        }
+
         // If setting as default, unset other default addresses
         if (Boolean.TRUE.equals(request.getIsDefault())) {
             addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId).stream()
@@ -58,6 +78,27 @@ public class AddressService {
     public ApiResponse updateAddress(Long userId, Long addressId, AddressRequest request) {
         Address address = addressRepository.findByIdAndUserId(addressId, userId)
                 .orElseThrow(() -> new ApiException("Address not found"));
+
+        // Check for duplicate phone number (excluding current address)
+        boolean phoneExists = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId).stream()
+                .filter(addr -> !addr.getId().equals(addressId))
+                .anyMatch(addr -> addr.getPhone().equals(request.getPhone()));
+        if (phoneExists) {
+            throw new DuplicateFieldException("Phone number already exists.", "phone");
+        }
+
+        // Check for duplicate address (excluding current address)
+        boolean addressExists = addressRepository.findByUserIdOrderByIsDefaultDescCreatedAtDesc(userId).stream()
+                .filter(addr -> !addr.getId().equals(addressId))
+                .anyMatch(addr -> 
+                    addr.getAddressLine().equals(request.getAddressLine()) &&
+                    addr.getCity().equals(request.getCity()) &&
+                    addr.getState().equals(request.getState()) &&
+                    addr.getPincode().equals(request.getPincode())
+                );
+        if (addressExists) {
+            throw new DuplicateFieldException("This address already exists.", "address", "DUPLICATE_ADDRESS");
+        }
 
         // If setting as default, unset other default addresses
         if (Boolean.TRUE.equals(request.getIsDefault()) && !address.getIsDefault()) {

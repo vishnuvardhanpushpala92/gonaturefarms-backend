@@ -38,6 +38,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(ApiResponse.fail(ex.getMessage()));
     }
 
+    /** Duplicate field errors -> HTTP 409 Conflict with field information. */
+    @ExceptionHandler(DuplicateFieldException.class)
+    public ResponseEntity<ApiResponse> handleDuplicateField(DuplicateFieldException ex) {
+        ApiResponse response = ApiResponse.fail(ex.getMessage());
+        response.with("field", ex.getField());
+        response.with("error", ex.getErrorType());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     /** Entity not found -> HTTP 404, matching res.status(404).json(...) in products/orders routes. */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse> handleNotFound(ResourceNotFoundException ex) {
@@ -61,10 +70,43 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
         log.error("Data integrity violation:", ex);
         String message = "Unable to complete your request. Please try again.";
-        if (ex.getMessage() != null && ex.getMessage().contains("foreign key")) {
-            message = "Cannot delete: resource is referenced by other records";
+        String field = null;
+        String errorType = "DATA_INTEGRITY";
+        
+        if (ex.getMessage() != null) {
+            String msg = ex.getMessage().toLowerCase();
+            
+            // Detect duplicate field violations
+            if (msg.contains("duplicate") || msg.contains("unique") || msg.contains("constraint")) {
+                errorType = "DUPLICATE_FIELD";
+                
+                if (msg.contains("phone") || msg.contains("contact")) {
+                    message = "Phone number already exists.";
+                    field = "phone";
+                } else if (msg.contains("address") || msg.contains("address_line")) {
+                    message = "This address already exists.";
+                    field = "address";
+                } else if (msg.contains("pincode") || msg.contains("postal")) {
+                    message = "This pincode already exists.";
+                    field = "pincode";
+                } else if (msg.contains("name")) {
+                    message = "This name already exists.";
+                    field = "name";
+                } else {
+                    message = "This record already exists.";
+                }
+            } else if (msg.contains("foreign key")) {
+                message = "Cannot delete: resource is referenced by other records";
+            }
         }
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(message));
+        
+        ApiResponse response = ApiResponse.fail(message);
+        if (field != null) {
+            response.with("field", field);
+        }
+        response.with("error", errorType);
+        
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     /** Bean Validation failures on @Valid request bodies -> HTTP 400 with the first violation message. */
