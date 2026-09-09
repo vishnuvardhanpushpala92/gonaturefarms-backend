@@ -86,15 +86,12 @@ public class OrderController {
 
     @PostMapping("/{orderId}/return")
     public ApiResponse requestReturn(@PathVariable String orderId, @RequestBody ReturnRequest request) {
-        try {
-            // Try to get current user if authenticated
-            var currentUserOpt = SecurityUtils.getCurrentUser();
-            Long userId = currentUserOpt != null && currentUserOpt.isPresent() ? currentUserOpt.get().id() : null;
-            return orderService.requestReturn(orderId, request, userId);
-        } catch (Exception e) {
-            // If authentication fails, proceed without user ID for phone-based returns
-            return orderService.requestReturn(orderId, request, null);
+        var currentUserOpt = SecurityUtils.getCurrentUser();
+        if (currentUserOpt == null || !currentUserOpt.isPresent()) {
+            return ApiResponse.fail("Please log in to request a return");
         }
+        Long userId = currentUserOpt.get().id();
+        return orderService.requestReturn(orderId, request, userId);
     }
 
     @PutMapping("/{orderId}/refund")

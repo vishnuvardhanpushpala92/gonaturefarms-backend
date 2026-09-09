@@ -198,8 +198,17 @@ public class OrderService {
 
     @Transactional
     public ApiResponse requestReturn(String orderId, ReturnRequest request, Long userId) {
+        if (userId == null) {
+            throw new ApiException("User authentication required for return requests");
+        }
+
         Order order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Verify order ownership
+        if (!userId.equals(order.getUserId())) {
+            throw new ApiException("You can only request returns for your own orders");
+        }
 
         // Check if return is already requested
         if (order.getReturnRequested()) {
@@ -209,11 +218,6 @@ public class OrderService {
         // Only allow returns for delivered orders
         if (order.getStatus() != Order.OrderStatus.Delivered) {
             throw new ApiException("Returns are only allowed for delivered orders");
-        }
-
-        // If userId is provided, verify ownership
-        if (userId != null && !userId.equals(order.getUserId())) {
-            throw new ApiException("You can only request returns for your own orders");
         }
 
         order.setReturnRequested(true);
