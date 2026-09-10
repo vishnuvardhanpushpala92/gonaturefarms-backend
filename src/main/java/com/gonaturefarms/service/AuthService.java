@@ -46,35 +46,35 @@ public class AuthService {
 
         // Additional validation
         if (request.getPhone() == null || request.getPhone().length() != 10) {
-            throw new ApiException("Phone must be exactly 10 digits");
+            throw new ApiException("Mobile Number incorrect");
         }
         
         if (request.getName() == null || request.getName().trim().isEmpty()) {
-            throw new ApiException("Name is required");
+            throw new ApiException("Name incorrect");
         }
         
         // Strong password validation
         String password = request.getPassword();
         if (password == null || password.length() < 8) {
-            throw new ApiException("Password must be at least 8 characters");
+            throw new ApiException("Password incorrect");
         }
         if (!password.matches(".*[A-Z].*")) {
-            throw new ApiException("Password must contain at least one uppercase letter");
+            throw new ApiException("Password incorrect");
         }
         if (!password.matches(".*[a-z].*")) {
-            throw new ApiException("Password must contain at least one lowercase letter");
+            throw new ApiException("Password incorrect");
         }
         if (!password.matches(".*[0-9].*")) {
-            throw new ApiException("Password must contain at least one number");
+            throw new ApiException("Password incorrect");
         }
         if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
-            throw new ApiException("Password must contain at least one special character");
+            throw new ApiException("Password incorrect");
         }
 
         // Check for existing phone number
         if (userRepository.existsByPhone(request.getPhone())) {
             System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
-            throw new ApiException("Phone number already registered");
+            throw new ApiException("Phone number already exists. Try a different number.");
         }
 
         // Check for existing email (only if email is provided)
@@ -82,7 +82,7 @@ public class AuthService {
             // Basic email validation
             String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
             if (!request.getEmail().matches(emailRegex)) {
-                throw new ApiException("Email must be valid");
+                throw new ApiException("Email incorrect");
             }
             
             if (userRepository.existsByEmail(request.getEmail())) {
@@ -114,9 +114,9 @@ public class AuthService {
     @Transactional(readOnly = true)
     public ApiResponse login(LoginRequest request) {
         User user = userRepository.findCustomerByIdentifier(request.getIdentifier())
-                .orElseThrow(() -> new ApiException("User not found. Please check your phone number or register a new account."));
+                .orElseThrow(() -> new ApiException("Invalid number"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new ApiException("Incorrect password. Please try again.");
+            throw new ApiException("Invalid password");
         }
         String token = jwtService.generateToken(user);
         return ApiResponse.ok("Login successful")
@@ -151,7 +151,7 @@ public class AuthService {
         // handled the same friendly way as every other forgot-password outcome,
         // instead of surfacing as a raw 404 in the browser console.
         User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
+                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
         if (user.getSecurityQuestion() == null) {
             throw new ApiException("No security question set for this account");
         }
@@ -162,9 +162,9 @@ public class AuthService {
     @Transactional
     public ApiResponse resetPassword(ResetPasswordRequest request) {
         User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
-                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
+                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
-            throw new ApiException("Incorrect security answer");
+            throw new ApiException("Security Answer incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
@@ -174,9 +174,9 @@ public class AuthService {
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
         User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail()) // ✅ Changed to getEmail()
-                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
+                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) { // ✅ Changed to getAnswer()
-            throw new ApiException("Incorrect security answer");
+            throw new ApiException("Security Answer incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
@@ -186,7 +186,7 @@ public class AuthService {
     @Transactional
     public ApiResponse forgotPassword(com.gonaturefarms.dto.auth.ForgotPasswordRequest request) {
         userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ApiException("No account found with that phone number or email"));
+                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
         return ApiResponse.ok("If the account exists, a reset process will begin");
     }
 
