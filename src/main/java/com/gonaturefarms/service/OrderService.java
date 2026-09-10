@@ -68,6 +68,21 @@ public class OrderService {
             throw new ApiException("Missing required order fields");
         }
 
+        // Transaction ID validation for UPI payments
+        if ("UPI".equals(req.getPaymentMethod())) {
+            String paymentUtr = req.getPaymentUtr();
+            if (isBlank(paymentUtr)) {
+                System.err.println("VALIDATION FAILED: Transaction ID is required for UPI payment");
+                throw new ApiException("Transaction ID is required.");
+            }
+            // Trim and validate minimum length
+            String trimmedUtr = paymentUtr.trim();
+            if (trimmedUtr.length() < 12) {
+                System.err.println("VALIDATION FAILED: Transaction ID must be at least 12 characters - Length: " + trimmedUtr.length());
+                throw new ApiException("Transaction ID must be at least 12 characters.");
+            }
+        }
+
         long zoneCount = deliveryZoneRepository.count();
         boolean zoneKnown = deliveryZoneRepository.findByPincode(req.getPincode().trim()).isPresent();
         if (zoneCount > 0 && !zoneKnown) {
@@ -90,7 +105,7 @@ public class OrderService {
         order.setState(req.getState() == null ? "" : req.getState());
         order.setPincode(req.getPincode());
         order.setPaymentMethod(isBlank(req.getPaymentMethod()) ? "UPI" : req.getPaymentMethod());
-        order.setPaymentUtr(req.getPaymentUtr() == null ? "" : req.getPaymentUtr());
+        order.setPaymentUtr(req.getPaymentUtr() == null ? "" : req.getPaymentUtr().trim());
         order.setPaymentScreenshotUrl(req.getPaymentScreenshotUrl() == null ? "" : req.getPaymentScreenshotUrl());
         order.setSubtotal(nz(req.getSubtotal()));
         order.setGstAmount(nz(req.getGstAmount()));
