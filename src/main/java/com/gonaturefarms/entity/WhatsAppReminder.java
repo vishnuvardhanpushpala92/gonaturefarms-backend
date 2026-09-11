@@ -35,6 +35,9 @@ public class WhatsAppReminder {
     @Column(nullable = false, length = 50)
     private ReminderType reminderType;
 
+    @Column(name = "product_id")
+    private Long productId;
+
     @Column(columnDefinition = "TEXT")
     private String message;
 
@@ -73,6 +76,7 @@ public class WhatsAppReminder {
     public Long getId() { return id; }
     public Long getAdminId() { return adminId; }
     public ReminderType getReminderType() { return reminderType; }
+    public Long getProductId() { return productId; }
     public String getMessage() { return message; }
     public LocalDateTime getScheduledAt() { return scheduledAt; }
     public ReminderStatus getStatus() { return status; }
@@ -84,6 +88,7 @@ public class WhatsAppReminder {
     public void setId(Long id) { this.id = id; }
     public void setAdminId(Long adminId) { this.adminId = adminId; }
     public void setReminderType(ReminderType reminderType) { this.reminderType = reminderType; }
+    public void setProductId(Long productId) { this.productId = productId; }
     public void setMessage(String message) { this.message = message; }
     public void setScheduledAt(LocalDateTime scheduledAt) { this.scheduledAt = scheduledAt; }
     public void setStatus(ReminderStatus status) { this.status = status; }
@@ -110,6 +115,7 @@ public class WhatsAppReminder {
         public WhatsAppReminderBuilder id(Long id) { this.id = id; return this; }
         public WhatsAppReminderBuilder adminId(Long adminId) { this.adminId = adminId; return this; }
         public WhatsAppReminderBuilder reminderType(ReminderType reminderType) { this.reminderType = reminderType; return this; }
+        public WhatsAppReminderBuilder productId(Long productId) { this.productId = productId; return this; }
         public WhatsAppReminderBuilder message(String message) { this.message = message; return this; }
         public WhatsAppReminderBuilder scheduledAt(LocalDateTime scheduledAt) { this.scheduledAt = scheduledAt; return this; }
         public WhatsAppReminderBuilder status(ReminderStatus status) { this.status = status; return this; }
@@ -122,6 +128,7 @@ public class WhatsAppReminder {
             reminder.id = this.id;
             reminder.adminId = this.adminId;
             reminder.reminderType = this.reminderType;
+            reminder.productId = this.productId;
             reminder.message = this.message;
             reminder.scheduledAt = this.scheduledAt;
             reminder.status = this.status;

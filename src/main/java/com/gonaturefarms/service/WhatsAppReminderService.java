@@ -4,15 +4,21 @@ import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.whatsapp.WhatsAppReminderRequest;
 import com.gonaturefarms.entity.User;
 import com.gonaturefarms.entity.WhatsAppReminder;
+import com.gonaturefarms.entity.Product;
 import com.gonaturefarms.repository.UserRepository;
 import com.gonaturefarms.repository.WhatsAppReminderRepository;
+import com.gonaturefarms.repository.OrderRepository;
+import com.gonaturefarms.repository.ProductRepository;
 import com.gonaturefarms.security.CurrentUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class WhatsAppReminderService {
@@ -21,10 +27,14 @@ public class WhatsAppReminderService {
 
     private final WhatsAppReminderRepository reminderRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
-    public WhatsAppReminderService(WhatsAppReminderRepository reminderRepository, UserRepository userRepository) {
+    public WhatsAppReminderService(WhatsAppReminderRepository reminderRepository, UserRepository userRepository, OrderRepository orderRepository, ProductRepository productRepository) {
         this.reminderRepository = reminderRepository;
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
+        this.productRepository = productRepository;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +56,7 @@ public class WhatsAppReminderService {
         WhatsAppReminder reminder = WhatsAppReminder.builder()
                 .adminId(adminId)
                 .reminderType(reminderType)
+                .productId(request.getProductId())
                 .message(request.getMessage())
                 .scheduledAt(request.getScheduledAt())
                 .status(WhatsAppReminder.ReminderStatus.Pending)
@@ -115,6 +126,7 @@ public class WhatsAppReminderService {
         WhatsAppReminder reminder = WhatsAppReminder.builder()
                 .adminId(adminId)
                 .reminderType(reminderType)
+                .productId(request.getProductId())
                 .message(request.getMessage())
                 .scheduledAt(request.getScheduledAt() != null ? request.getScheduledAt() : LocalDateTime.now())
                 .status(WhatsAppReminder.ReminderStatus.Sent)
@@ -155,5 +167,103 @@ public class WhatsAppReminderService {
         }
 
         return ApiResponse.ok("Generated " + customers.size() + " product reminders for customers");
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getCustomersByProduct(Long productId) {
+        // Find customers who ordered this specific product
+        List<com.gonaturefarms.entity.Order> orders = orderRepository.findAll();
+        Set<Long> customerIds = new HashSet<>();
+        
+        for (com.gonaturefarms.entity.Order order : orders) {
+            if (order.getItems() != null) {
+                for (com.gonaturefarms.entity.OrderItem item : order.getItems()) {
+                    if (item.getProductId() != null && item.getProductId().equals(productId)) {
+                        customerIds.add(order.getUserId());
+                        break;
+                    }
+                }
+            }
+        }
+        
+        List<User> customers = userRepository.findAllById(customerIds).stream()
+                .filter(u -> u.getRole() == User.UserRole.customer)
+                .filter(u -> !Boolean.TRUE.equals(u.getWhatsappOptOut()))
+                .collect(Collectors.toList());
+        
+        return ApiResponse.ok().with("customers", customers);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getCustomersByCategory(String category) {
+        // Find all products in this category
+        List<Product> productsInCategory = productRepository.findAll().stream()
+                .filter(p -> p.getCat() != null && p.getCat().equalsIgnoreCase(category))
+                .collect(Collectors.toList());
+        
+        if (productsInCategory.isEmpty()) {
+            return ApiResponse.ok("No products found in this category")
+                    .with("customers", List.of());
+        }
+        
+        // Find customers who ordered any product from this category
+        List<com.gonaturefarms.entity.Order> orders = orderRepository.findAll();
+        Set<Long> customerIds = new HashSet<>();
+        
+        for (com.gonaturefarms.entity.Order order : orders) {
+            if (order.getItems() != null) {
+                for (com.gonaturefarms.entity.OrderItem item : order.getItems()) {
+                    if (item.getProductId() != null) {
+                        // Check if this product is in the category
+                        for (Product product : productsInCategory) {
+                            if (product.getId().equals(item.getProductId())) {
+                                customerIds.add(order.getUserId());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        List<User> customers = userRepository.findAllById(customerIds).stream()
+                .filter(u -> u.getRole() == User.UserRole.customer)
+                .filter(u -> !Boolean.TRUE.equals(u.getWhatsappOptOut()))
+                .collect(Collectors.toList());
+        
+        return ApiResponse.ok().with("customers", customers);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse checkDuplicateReminders(Long adminId, WhatsAppReminderRequest request) {
+        // Check if similar reminder was sent recently (last 7 days)
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        
+        List<WhatsAppReminder> recentReminders = reminderRepository.findByAdminIdAndCreatedAtAfter(adminId, sevenDaysAgo);
+        
+        // Count customers who would receive duplicate reminders
+        int duplicateCount = 0;
+        if (request.getProductId() != null && request.getReminderType() != null && 
+            request.getReminderType().equalsIgnoreCase("Product")) {
+            for (Long customerId : request.getCustomerIds()) {
+                for (WhatsAppReminder reminder : recentReminders) {
+                    if (reminder.getReminderType() == WhatsAppReminder.ReminderType.Product &&
+                        reminder.getProductId() != null && reminder.getProductId().equals(request.getProductId())) {
+                        duplicateCount++;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (duplicateCount > 0) {
+            return ApiResponse.ok("Found " + duplicateCount + " customers who already received this product reminder recently")
+                    .with("duplicateCount", duplicateCount)
+                    .with("hasDuplicates", true);
+        }
+        
+        return ApiResponse.ok("No duplicate reminders found")
+                .with("duplicateCount", 0)
+                .with("hasDuplicates", false);
     }
 }

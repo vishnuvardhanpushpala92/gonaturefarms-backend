@@ -423,6 +423,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_reminders (
     id BIGSERIAL PRIMARY KEY,
     admin_id BIGINT NOT NULL,
     reminder_type VARCHAR(50) NOT NULL,
+    product_id BIGINT,
     message TEXT NOT NULL,
     scheduled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     sent_at TIMESTAMP,
@@ -430,6 +431,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_reminders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_reminders_admin_id ON whatsapp_reminders(admin_id);
+ALTER TABLE whatsapp_reminders ADD COLUMN IF NOT EXISTS product_id BIGINT;
 
 -- ── FOOTER LINKS ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS footer_links (

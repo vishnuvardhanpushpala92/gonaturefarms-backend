@@ -55,6 +55,22 @@ public class WhatsAppReminderController {
         return reminderService.generateProductReminder(adminId, productId, productName);
     }
 
+    @GetMapping("/customers-by-product/{productId}")
+    public ApiResponse getCustomersByProduct(@PathVariable Long productId) {
+        return reminderService.getCustomersByProduct(productId);
+    }
+
+    @GetMapping("/customers-by-category/{category}")
+    public ApiResponse getCustomersByCategory(@PathVariable String category) {
+        return reminderService.getCustomersByCategory(category);
+    }
+
+    @PostMapping("/check-duplicates")
+    public ApiResponse checkDuplicateReminders(@RequestBody WhatsAppReminderRequest request) {
+        Long adminId = SecurityUtils.requireCurrentUser().id();
+        return reminderService.checkDuplicateReminders(adminId, request);
+    }
+
     @DeleteMapping("/reminders/{reminderId}")
     public ApiResponse deleteReminder(@PathVariable Long reminderId) {
         return reminderService.deleteReminder(reminderId);
