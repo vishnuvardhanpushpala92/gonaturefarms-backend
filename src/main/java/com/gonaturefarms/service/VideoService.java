@@ -53,18 +53,24 @@ public class VideoService {
     }
 
     public ApiResponse getAllEnabled() {
-        List<Video> videos = videoRepository.findByEnabledTrueOrderByPriority();
-        // Filter out pending videos for public view (treat NULL as false)
-        List<Video> publicVideos = videos.stream()
-                .filter(v -> v.getPending() == null || !v.getPending())
-                .collect(Collectors.toList());
+        try {
+            List<Video> videos = videoRepository.findByEnabledTrueOrderByPriority();
+            // Filter out pending videos for public view (treat NULL as false)
+            List<Video> publicVideos = videos.stream()
+                    .filter(v -> v.getPending() == null || !v.getPending())
+                    .collect(Collectors.toList());
 
-        // Enrich videos with product information
-        List<Map<String, Object>> enrichedVideos = publicVideos.stream()
-                .map(this::enrichVideoWithProduct)
-                .collect(Collectors.toList());
+            // Enrich videos with product information
+            List<Map<String, Object>> enrichedVideos = publicVideos.stream()
+                    .map(this::enrichVideoWithProduct)
+                    .collect(Collectors.toList());
 
-        return ApiResponse.ok().with("videos", enrichedVideos);
+            return ApiResponse.ok().with("videos", enrichedVideos);
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Video Service.getAllEnabled() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error loading videos: " + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

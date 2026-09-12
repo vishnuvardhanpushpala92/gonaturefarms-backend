@@ -23,16 +23,28 @@ public class SlideService {
 
     @Transactional(readOnly = true)
     public ApiResponse list() {
-        List<Slide> allSlides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
-        // Slides are no longer pending by default, so show all active slides
-        return ApiResponse.ok().with("slides", allSlides);
+        try {
+            List<Slide> allSlides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
+            // Slides are no longer pending by default, so show all active slides
+            return ApiResponse.ok().with("slides", allSlides);
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Slide Service.list() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error loading slides: " + e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
     public ApiResponse listAll() {
-        List<Slide> allSlides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
-        // Include pending slides for admin view
-        return ApiResponse.ok().with("slides", allSlides);
+        try {
+            List<Slide> allSlides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
+            // Include pending slides for admin view
+            return ApiResponse.ok().with("slides", allSlides);
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Slide Service.listAll() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error loading admin slides: " + e.getMessage());
+        }
     }
 
     @Transactional
