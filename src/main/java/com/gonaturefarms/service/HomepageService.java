@@ -59,27 +59,31 @@ public class HomepageService {
     @Transactional(readOnly = true)
     public ApiResponse getHomepageData() {
         try {
-            // Critical data for first viewport (optimized - only what's needed)
+            // Critical data for first viewport
             Map<String, String> settings = getPublicSettings();
             List<?> slides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
             List<?> blocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
 
-            // Secondary data - fetch only enabled videos and limited products
+            // Secondary data - fetch all homepage data at once
+            List<?> faqs = faqRepository.findAllByOrderBySortOrderAscIdAsc();
+            List<?> zones = deliveryZoneRepository.findAll();
+            List<?> footerLinks = footerLinkRepository.findAll();
+            List<?> testimonials = testimonialRepository.findAll();
             List<?> videos = videoRepository.findByEnabledTrueOrderByPriority();
             // Limit products to first 12 for initial load (pagination for more)
             List<?> products = productRepository.findAll();
             List<?> limitedProducts = products.size() > 12 ? products.subList(0, 12) : products;
 
-            // Footer data - fetch separately if needed
-            List<?> footerLinks = footerLinkRepository.findAll();
-
             return ApiResponse.ok()
                     .with("settings", settings)
                     .with("slides", slides)
                     .with("blocks", blocks)
+                    .with("faqs", faqs)
+                    .with("zones", zones)
+                    .with("footerLinks", footerLinks)
+                    .with("testimonials", testimonials)
                     .with("videos", videos)
-                    .with("products", limitedProducts)
-                    .with("footerLinks", footerLinks);
+                    .with("products", limitedProducts);
         } catch (Exception e) {
             System.err.println("!!! CRITICAL ERROR IN HomepageService.getHomepageData() !!!");
             e.printStackTrace();
