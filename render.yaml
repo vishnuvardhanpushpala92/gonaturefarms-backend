@@ -1,42 +1,32 @@
 services:
   - type: web
     name: gonaturefarms-backend
-    runtime: docker
-    plan: free
+    env: java
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/gonaturefarms-backend.jar
     envVars:
-      - key: PGHOST
-        fromDatabase:
-          name: gonaturefarms-db
-          property: host
-      - key: PGPORT
-        fromDatabase:
-          name: gonaturefarms-db
-          property: port
-      - key: PGDATABASE
-        fromDatabase:
-          name: gonaturefarms-db
-          property: databaseName
-      - key: PGUSER
-        fromDatabase:
-          name: gonaturefarms-db
-          property: user
-      - key: PGPASSWORD
-        fromDatabase:
-          name: gonaturefarms-db
-          property: password
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        value: jdbc:postgresql://gonaturefarms-salt-graph.ovh2.cloud.layerbase.dev:5432/gonaturefarms?sslmode=require
+      - key: DATABASE_USERNAME
+        value: postgres
+      - key: DATABASE_PASSWORD
+        value: cPJvP7F3td8uQJG8TJaEXTKd
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        value: https://gonaturefarms-frontend-fvn3mbf18-gonatuefarms.vercel.app
+        value: https://gonaturefarms-frontend.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ul0dvore
+      - key: CLOUDINARY_API_KEY
+        value: eZKE0F2D_EdpwdqBgS6bPEerEOs
+      - key: CLOUDINARY_API_SECRET
+        value: 3F3wQ3PFCQQ8YCBjTHP_NlUkQuY
       - key: ADMIN_DEFAULT_USER
         value: Vishnu
       - key: ADMIN_DEFAULT_PASS
         value: 918252
-
-databases:
-  - name: gonaturefarms-db
-    databaseName: gnf_y4iw
-    user: gnf_y4iw_user
-    plan: free
+    healthCheckPath: /actuator/health
