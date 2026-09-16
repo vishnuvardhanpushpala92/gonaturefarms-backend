@@ -219,7 +219,7 @@ public class VideoService {
     // NEW: This is the permanent fix. It uploads directly to Cloudinary and returns the URL.
     private String saveFile(MultipartFile file) {
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+            Map uploadResult = getCloudinary().uploader().upload(file.getBytes(),
                 ObjectUtils.asMap("resource_type", "video"));
             return (String) uploadResult.get("secure_url");
         } catch (IOException e) {
