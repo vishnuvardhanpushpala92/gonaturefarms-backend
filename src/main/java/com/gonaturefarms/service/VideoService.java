@@ -107,16 +107,22 @@ public class VideoService {
         Map<String, Object> enriched = new java.util.HashMap<>();
         enriched.put("id", video.getId());
         enriched.put("title", video.getTitle());
-        enriched.put("filePath", video.getFilePath());
-        enriched.put("posterUrl", video.getPosterUrl());
-        enriched.put("productId", video.getProductId());
+        enriched.put("file_path", video.getFilePath()); // snake_case for consistency
+        enriched.put("filePath", video.getFilePath()); // camelCase for backward compatibility
+        enriched.put("poster_url", video.getPosterUrl()); // snake_case for consistency
+        enriched.put("posterUrl", video.getPosterUrl()); // camelCase for backward compatibility
+        enriched.put("product_id", video.getProductId()); // snake_case for consistency
+        enriched.put("productId", video.getProductId()); // camelCase for backward compatibility
         enriched.put("enabled", video.getEnabled());
-        enriched.put("sortOrder", video.getSortOrder());
+        enriched.put("sort_order", video.getSortOrder()); // snake_case for consistency
+        enriched.put("sortOrder", video.getSortOrder()); // camelCase for backward compatibility
         enriched.put("orientation", video.getOrientation());
         enriched.put("pending", video.getPending());
-        enriched.put("createdAt", video.getCreatedAt());
-        enriched.put("updatedAt", video.getUpdatedAt());
-        
+        enriched.put("created_at", video.getCreatedAt()); // snake_case for consistency
+        enriched.put("createdAt", video.getCreatedAt()); // camelCase for backward compatibility
+        enriched.put("updated_at", video.getUpdatedAt()); // snake_case for consistency
+        enriched.put("updatedAt", video.getUpdatedAt()); // camelCase for backward compatibility
+
         // Fetch product information if productId is set
         if (video.getProductId() != null) {
             productRepository.findById(video.getProductId()).ifPresent(product -> {
@@ -124,11 +130,12 @@ public class VideoService {
                 productInfo.put("id", product.getId());
                 productInfo.put("name", product.getName());
                 productInfo.put("price", product.getPrice());
-                productInfo.put("imgUrl", product.getImgUrl());
+                productInfo.put("img_url", product.getImgUrl()); // snake_case for consistency
+                productInfo.put("imgUrl", product.getImgUrl()); // camelCase for backward compatibility
                 enriched.put("product", productInfo);
             });
         }
-        
+
         return enriched;
     }
 
