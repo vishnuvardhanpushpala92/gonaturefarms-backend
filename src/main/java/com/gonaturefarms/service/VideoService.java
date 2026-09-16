@@ -42,14 +42,16 @@ public class VideoService {
         this.productRepository = productRepository;
     }
 
-    // Initialize Cloudinary once the Spring bean is created
-    @PostConstruct
-    public void init() {
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", cloudName,
-            "api_key", apiKey,
-            "api_secret", apiSecret
-        ));
+    // Initialize Cloudinary lazily when needed instead of @PostConstruct
+    private Cloudinary getCloudinary() {
+        if (cloudinary == null) {
+            this.cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", cloudName,
+                "api_key", apiKey,
+                "api_secret", apiSecret
+            ));
+        }
+        return cloudinary;
     }
 
     public ApiResponse getAllEnabled() {
