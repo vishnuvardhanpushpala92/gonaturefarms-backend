@@ -25,6 +25,32 @@ public class WhatsAppReminderService {
 
     private static final Logger logger = Logger.getLogger(WhatsAppReminderService.class.getName());
 
+    // Helper method to get appropriate emoji for product
+    private String getProductEmoji(String productName, String category) {
+        String lowerName = productName.toLowerCase();
+        String lowerCat = category != null ? category.toLowerCase() : "";
+
+        // Product-specific emojis
+        if (lowerName.contains("amla") || lowerName.contains("pickle")) return "🥭";
+        if (lowerName.contains("ghee")) return "🐄";
+        if (lowerName.contains("coconut") || lowerName.contains("oil")) return "🥥";
+        if (lowerName.contains("groundnut")) return "🥜";
+        if (lowerName.contains("milk")) return "🥛";
+        if (lowerName.contains("honey")) return "🍯";
+        if (lowerName.contains("fruit") || lowerName.contains("laddu")) return "🍎";
+        if (lowerName.contains("curd") || lowerName.contains("yogurt")) return "🥣";
+        if (lowerName.contains("butter")) return "🧈";
+
+        // Category-based emojis
+        if (lowerCat.contains("dairy")) return "🥛";
+        if (lowerCat.contains("oil")) return "🫒";
+        if (lowerCat.contains("pickle")) return "🥭";
+        if (lowerCat.contains("sweet")) return "🍬";
+
+        // Default emoji
+        return "🌾";
+    }
+
     private final WhatsAppReminderRepository reminderRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
@@ -98,22 +124,30 @@ public class WhatsAppReminderService {
 
         // If product is selected, generate dynamic message with product details
         String message = request.getMessage();
+        Product product = null;
         if (request.getProductId() != null) {
-            Product product = productRepository.findById(request.getProductId())
+            product = productRepository.findById(request.getProductId())
                     .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
 
-            // Generate clean message format without emojis
+            // Get appropriate emoji for product
+            String productEmoji = getProductEmoji(product.getName(), product.getCat());
+
+            // Generate message format with emojis
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.append(product.getName()).append("\n\n");
+            messageBuilder.append(productEmoji).append(" ").append(product.getName()).append("\n\n");
             messageBuilder.append(product.getDescription()).append("\n\n");
-            messageBuilder.append("Price: Rs.").append(product.getPrice()).append("\n");
-            messageBuilder.append("MRP: Rs.").append(product.getMrp()).append("\n\n");
-            messageBuilder.append("Fresh - Natural - Quality Assured\n\n");
-            messageBuilder.append("Go Nature Farms\n\n");
-            messageBuilder.append("Shop Now:\n");
+            messageBuilder.append("💰 Price: ₹").append(product.getPrice()).append("\n");
+            messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n\n");
+            messageBuilder.append("🌿 Fresh • Natural • Quality Assured\n\n");
+            messageBuilder.append("🌱 Go Nature Farms\n\n");
+            messageBuilder.append("🛒 Shop Now:\n");
             messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(product.getId());
 
             message = messageBuilder.toString();
+
+            // Log the message to verify emoji encoding
+            logger.info("Generated WhatsApp message for product: " + product.getName());
+            logger.info("Message: " + message);
         }
 
         java.util.List<String> whatsappLinks = new java.util.ArrayList<>();
@@ -134,8 +168,8 @@ public class WhatsAppReminderService {
                 phoneNumber = "91" + phoneNumber;
             }
 
-            // Create WhatsApp click-to-chat link
-            String encodedMessage = java.net.URLEncoder.encode(request.getMessage(), java.nio.charset.StandardCharsets.UTF_8);
+            // Create WhatsApp click-to-chat link with UTF-8 encoding
+            String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
             String whatsappLink = "https://wa.me/" + phoneNumber + "?text=" + encodedMessage;
             whatsappLinks.add(whatsappLink);
 
@@ -147,7 +181,7 @@ public class WhatsAppReminderService {
                 .adminId(adminId)
                 .reminderType(reminderType)
                 .productId(request.getProductId())
-                .message(request.getMessage())
+                .message(message)
                 .scheduledAt(request.getScheduledAt() != null ? request.getScheduledAt() : LocalDateTime.now())
                 .status(WhatsAppReminder.ReminderStatus.Sent)
                 .sentAt(LocalDateTime.now())
@@ -155,8 +189,15 @@ public class WhatsAppReminderService {
 
         reminderRepository.save(reminder);
 
-        return ApiResponse.ok("WhatsApp links generated for " + whatsappLinks.size() + " customers")
+        // Include product image URL if product was selected
+        ApiResponse response = ApiResponse.ok("WhatsApp links generated for " + whatsappLinks.size() + " customers")
                 .with("whatsappLinks", whatsappLinks);
+
+        if (product != null && product.getImgUrl() != null) {
+            response.with("productImageUrl", product.getImgUrl());
+        }
+
+        return response;
     }
 
     @Transactional
@@ -173,15 +214,18 @@ public class WhatsAppReminderService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
 
-        // Generate clean message format without emojis
+        // Get appropriate emoji for product
+        String productEmoji = getProductEmoji(product.getName(), product.getCat());
+
+        // Generate message format with emojis
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append(product.getName()).append("\n\n");
+        messageBuilder.append(productEmoji).append(" ").append(product.getName()).append("\n\n");
         messageBuilder.append(product.getDescription()).append("\n\n");
-        messageBuilder.append("Price: Rs.").append(product.getPrice()).append("\n");
-        messageBuilder.append("MRP: Rs.").append(product.getMrp()).append("\n\n");
-        messageBuilder.append("Fresh - Natural - Quality Assured\n\n");
-        messageBuilder.append("Go Nature Farms\n\n");
-        messageBuilder.append("Shop Now:\n");
+        messageBuilder.append("💰 Price: ₹").append(product.getPrice()).append("\n");
+        messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n\n");
+        messageBuilder.append("🌿 Fresh • Natural • Quality Assured\n\n");
+        messageBuilder.append("🌱 Go Nature Farms\n\n");
+        messageBuilder.append("🛒 Shop Now:\n");
         messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(productId);
 
         String message = messageBuilder.toString();
