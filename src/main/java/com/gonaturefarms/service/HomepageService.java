@@ -70,9 +70,8 @@ public class HomepageService {
             List<?> footerLinks = footerLinkRepository.findAll();
             List<?> testimonials = testimonialRepository.findAll();
             List<?> videos = videoRepository.findByEnabledTrueOrderByPriority();
-            // Limit products to first 12 for initial load (pagination for more)
+            // Fetch all products (both current and future/coming soon) - no limit to ensure featured/future products are visible
             List<?> products = productRepository.findAll();
-            List<?> limitedProducts = products.size() > 12 ? products.subList(0, 12) : products;
 
             return ApiResponse.ok()
                     .with("settings", settings)
@@ -83,7 +82,7 @@ public class HomepageService {
                     .with("footerLinks", footerLinks)
                     .with("testimonials", testimonials)
                     .with("videos", videos)
-                    .with("products", limitedProducts);
+                    .with("products", products);
         } catch (Exception e) {
             System.err.println("!!! CRITICAL ERROR IN HomepageService.getHomepageData() !!!");
             e.printStackTrace();
