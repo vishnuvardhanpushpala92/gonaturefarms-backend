@@ -74,6 +74,15 @@ public class ProductService {
             Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
                 .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
             products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
+            
+            // Log variants for debugging
+            System.out.println("Products with variants loaded:");
+            for (Product p : products) {
+                System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
+                for (ProductVariant v : p.getVariants()) {
+                    System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                }
+            }
         }
 
         return ApiResponse.ok().with("products", products);
@@ -93,6 +102,15 @@ public class ProductService {
             Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
                 .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
             products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
+            
+            // Log variants for debugging
+            System.out.println("Products with variants loaded:");
+            for (Product p : products) {
+                System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
+                for (ProductVariant v : p.getVariants()) {
+                    System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                }
+            }
         }
 
         return ApiResponse.ok().with("products", products);
