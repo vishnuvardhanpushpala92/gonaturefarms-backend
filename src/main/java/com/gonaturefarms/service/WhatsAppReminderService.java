@@ -148,6 +148,11 @@ public class WhatsAppReminderService {
             // Log the message to verify emoji encoding
             logger.info("Generated WhatsApp message for product: " + product.getName());
             logger.info("Message: " + message);
+            logger.info("Message contains emojis: " + message.matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
+        } else {
+            // Log custom message to verify emoji encoding
+            logger.info("Custom WhatsApp message: " + message);
+            logger.info("Custom message contains emojis: " + message.matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
         }
 
         java.util.List<String> whatsappLinks = new java.util.ArrayList<>();
@@ -169,8 +174,12 @@ public class WhatsAppReminderService {
             }
 
             // Create WhatsApp click-to-chat link with UTF-8 encoding
+            logger.info("Encoding message for WhatsApp link: " + message);
+            logger.info("Message before encoding contains emojis: " + message.matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
             String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
+            logger.info("Encoded message: " + encodedMessage);
             String whatsappLink = "https://wa.me/" + phoneNumber + "?text=" + encodedMessage;
+            logger.info("WhatsApp link: " + whatsappLink);
             whatsappLinks.add(whatsappLink);
 
             logger.info("WhatsApp link generated for " + customer.getName() + " (" + phoneNumber + ")");

@@ -40,6 +40,10 @@ public class WhatsAppReminderController {
     @PostMapping("/send")
     public ApiResponse sendToCustomers(@Valid @RequestBody WhatsAppReminderRequest request) {
         Long adminId = SecurityUtils.requireCurrentUser().id();
+        // Log incoming request to verify emoji preservation
+        System.out.println("[WhatsApp Controller] Incoming message: " + request.getMessage());
+        System.out.println("[WhatsApp Controller] Message length: " + request.getMessage().length());
+        System.out.println("[WhatsApp Controller] Contains emojis: " + request.getMessage().matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
         return reminderService.sendToCustomers(adminId, request);
     }
 
