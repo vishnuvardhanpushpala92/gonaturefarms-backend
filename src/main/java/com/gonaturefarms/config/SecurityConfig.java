@@ -3,7 +3,6 @@ package com.gonaturefarms.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.gonaturefarms.security.JwtAuthenticationFilter;
 import com.gonaturefarms.util.JsonUtil;
@@ -138,17 +136,6 @@ public class SecurityConfig {
             // .addFilterBefore(rateLimitFilter, JwtAuthenticationFilter.class); // Temporarily disabled
 
         return http.build();
-    }
-
-    @Bean
-    public FilterRegistrationBean<CharacterEncodingFilter> characterEncodingFilter() {
-        FilterRegistrationBean<CharacterEncodingFilter> registrationBean = new FilterRegistrationBean<>();
-        CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter();
-        characterEncodingFilter.setEncoding("UTF-8");
-        characterEncodingFilter.setForceEncoding(true);
-        registrationBean.setFilter(characterEncodingFilter);
-        registrationBean.addUrlPatterns("/*");
-        return registrationBean;
     }
 
     @Bean
