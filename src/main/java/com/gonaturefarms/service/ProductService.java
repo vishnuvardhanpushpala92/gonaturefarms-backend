@@ -81,35 +81,41 @@ public class ProductService {
             // Use batch query to fetch all variants at once (prevent N+1)
             if (!products.isEmpty()) {
                 try {
-                    List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+                    List<Long> productIds = products.stream()
+                        .filter(p -> p != null && p.getId() != null)
+                        .map(Product::getId)
+                        .collect(Collectors.toList());
+                    
                     System.out.println("Fetching variants for product IDs: " + productIds);
                     
-                    List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
-                    System.out.println("Products with variants fetched: " + productsWithVariants.size());
-                    
-                    // Use merge function to handle potential duplicates
-                    Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
-                        .collect(Collectors.toMap(
-                            Product::getId, 
-                            p -> p.getVariants(),
-                            (existing, replacement) -> existing  // keep first occurrence if duplicate
-                        ));
-                    
-                    products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
-                    
-                    // Log variants for debugging
-                    System.out.println("Products with variants loaded:");
-                    for (Product p : products) {
-                        System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
-                        for (ProductVariant v : p.getVariants()) {
-                            System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
-                        }
+                    if (!productIds.isEmpty()) {
+                        List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
+                        System.out.println("Products with variants fetched: " + productsWithVariants.size());
+                        
+                        // Use merge function to handle potential duplicates
+                        Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
+                            .filter(p -> p != null && p.getId() != null)
+                            .collect(Collectors.toMap(
+                                Product::getId, 
+                                p -> p.getVariants() != null ? p.getVariants() : new ArrayList<>(),
+                                (existing, replacement) -> existing
+                            ));
+                        
+                        products.forEach(p -> {
+                            if (p != null) {
+                                p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>()));
+                            }
+                        });
                     }
                 } catch (Exception e) {
                     System.out.println("ERROR during variant loading: " + e.getMessage());
                     e.printStackTrace();
                     // If variant loading fails, set empty variants and continue
-                    products.forEach(p -> p.setVariants(new ArrayList<>()));
+                    products.forEach(p -> {
+                        if (p != null) {
+                            p.setVariants(new ArrayList<>());
+                        }
+                    });
                 }
             }
 
@@ -134,69 +140,19 @@ public class ProductService {
                     spec, org.springframework.data.domain.Sort.by(
                             org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
             
-            System.out.println("Products found (before variant loading): " + products.size());
+            System.out.println("Products found: " + products.size());
             for (Product p : products) {
                 System.out.println("  - ID: " + p.getId() + ", Name: " + p.getName());
             }
 
-            // Ensure products list is not null
-            if (products == null) {
-                products = new ArrayList<>();
-            }
-
-            // Use batch query to fetch all variants at once (prevent N+1)
-            if (!products.isEmpty()) {
-                try {
-                    List<Long> productIds = products.stream()
-                        .filter(p -> p != null && p.getId() != null)
-                        .map(Product::getId)
-                        .collect(Collectors.toList());
-                    
-                    System.out.println("Fetching variants for product IDs: " + productIds);
-                    
-                    if (!productIds.isEmpty()) {
-                        List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
-                        System.out.println("Products with variants fetched: " + productsWithVariants.size());
-                        
-                        // Use merge function to handle potential duplicates
-                        Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
-                            .filter(p -> p != null && p.getId() != null)
-                            .collect(Collectors.toMap(
-                                Product::getId, 
-                                p -> p.getVariants() != null ? p.getVariants() : new ArrayList<>(),
-                                (existing, replacement) -> existing  // keep first occurrence if duplicate
-                            ));
-                        
-                        products.forEach(p -> {
-                            if (p != null) {
-                                p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>()));
-                            }
-                        });
-                        
-                        // Log variants for debugging
-                        System.out.println("Products with variants loaded:");
-                        for (Product p : products) {
-                            if (p != null) {
-                                System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
-                                if (p.getVariants() != null) {
-                                    for (ProductVariant v : p.getVariants()) {
-                                        System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("ERROR during variant loading: " + e.getMessage());
-                    e.printStackTrace();
-                    // If variant loading fails, set empty variants and continue
-                    products.forEach(p -> {
-                        if (p != null) {
-                            p.setVariants(new ArrayList<>());
-                        }
-                    });
+            // Simplify: Don't load variants in admin list view
+            // Variants are only needed when editing a product, not in the list
+            // Set empty variants for all products to avoid serialization issues
+            products.forEach(p -> {
+                if (p != null) {
+                    p.setVariants(new ArrayList<>());
                 }
-            }
+            });
 
             System.out.println("Returning " + products.size() + " products");
             System.out.println("=== END ADMIN PRODUCT LIST DEBUG ===");
