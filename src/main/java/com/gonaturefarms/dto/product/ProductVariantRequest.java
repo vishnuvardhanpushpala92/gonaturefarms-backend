@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ProductVariantRequest {
-    @NotBlank(message = "Variant name is required")
     private String variantName;
 
     private BigDecimal price;

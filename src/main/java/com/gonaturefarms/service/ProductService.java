@@ -303,23 +303,30 @@ public class ProductService {
     //  HELPER METHODS
     // ──────────────────────────────────────────────
 
-    /**
-     * Saves variants while preventing any duplicate names.
-     * Also auto-syncs price to MRP if price is missing or 0.
-     */
     private void saveUniqueVariants(Product product, List<com.gonaturefarms.dto.product.ProductVariantRequest> variantReqs) {
         if (variantReqs == null || variantReqs.isEmpty()) return;
+
+        System.out.println("=== SAVE VARIANTS DEBUG ===");
+        System.out.println("Product: " + product.getName());
+        System.out.println("Number of variant requests: " + variantReqs.size());
+        for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : variantReqs) {
+            System.out.println("Received variantReq - variantName: [" + variantReq.getVariantName() + "], price: " + variantReq.getPrice());
+        }
 
         Map<String, Boolean> seenNames = new HashMap<>();
 
         for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : variantReqs) {
             // Log variant details for debugging
-            System.out.println("Saving variant: " + variantReq.getVariantName() + ", price: " + variantReq.getPrice());
+            System.out.println("Processing variant: " + variantReq.getVariantName() + ", price: " + variantReq.getPrice());
 
-            if (variantReq.getVariantName() == null || variantReq.getVariantName().isBlank()) continue;
+            // Do NOT skip variants with empty variantName - save them as-is
+            // The admin panel should ensure variantName is populated
 
             // 🛑 BLOCK: Skip if duplicate name
-            if (seenNames.containsKey(variantReq.getVariantName())) continue;
+            if (seenNames.containsKey(variantReq.getVariantName())) {
+                System.out.println("SKIPPING duplicate variant: " + variantReq.getVariantName());
+                continue;
+            }
             seenNames.put(variantReq.getVariantName(), true);
 
             // ✅ FIX: Auto-sync Price with MRP if Price is 0 or missing
@@ -336,8 +343,10 @@ public class ProductService {
                     .stock(variantReq.getStock() == null ? 100 : variantReq.getStock())
                     .build();
 
+            System.out.println("Saving variant to DB: " + variant.getVariantName() + ", price: " + variant.getPrice());
             productVariantRepository.save(variant);
         }
+        System.out.println("=== END SAVE VARIANTS DEBUG ===");
     }
 
     private Specification<Product> buildSpecification(String cat, String status, String search) {
