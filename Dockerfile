@@ -14,13 +14,16 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 EXPOSE 8080
 
-# JVM optimizations for fast startup and low memory footprint
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-  -XX:MaxRAMPercentage=75.0 \
-  -XX:+UseG1GC \
-  -XX:+UseStringDeduplication \
+# JVM optimizations for Render's 512MB memory limit
+ENV JAVA_OPTS="-Xmx300m \
+  -Xms128m \
+  -Xss512k \
+  -XX:+UseSerialGC \
+  -XX:+UseContainerSupport \
+  -XX:MaxRAMPercentage=60.0 \
   -XX:+OptimizeStringConcat \
   -Djava.awt.headless=true \
-  -Dspring.jmx.enabled=false"
+  -Dspring.jmx.enabled=false \
+  -Dlogging.level.root=WARN"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
