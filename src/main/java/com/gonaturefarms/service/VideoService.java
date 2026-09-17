@@ -104,6 +104,11 @@ public class VideoService {
     }
 
     private Map<String, Object> enrichVideoWithProduct(Video video) {
+        System.out.println("=== ENRICH VIDEO WITH PRODUCT ===");
+        System.out.println("Video ID: " + video.getId());
+        System.out.println("Video Title: " + video.getTitle());
+        System.out.println("Product ID: " + video.getProductId());
+        
         Map<String, Object> enriched = new java.util.HashMap<>();
         enriched.put("id", video.getId());
         enriched.put("title", video.getTitle());
@@ -125,7 +130,9 @@ public class VideoService {
 
         // Fetch product information if productId is set
         if (video.getProductId() != null) {
-            productRepository.findById(video.getProductId()).ifPresent(product -> {
+            System.out.println("Fetching product with ID: " + video.getProductId());
+            productRepository.findById(video.getProductId()).ifPresentOrElse(product -> {
+                System.out.println("Product found: " + product.getName());
                 Map<String, Object> productInfo = new java.util.HashMap<>();
                 productInfo.put("id", product.getId());
                 productInfo.put("name", product.getName());
@@ -133,9 +140,14 @@ public class VideoService {
                 productInfo.put("img_url", product.getImgUrl()); // snake_case for consistency
                 productInfo.put("imgUrl", product.getImgUrl()); // camelCase for backward compatibility
                 enriched.put("product", productInfo);
+            }, () -> {
+                System.out.println("Product NOT found with ID: " + video.getProductId());
             });
+        } else {
+            System.out.println("No product ID set for this video");
         }
 
+        System.out.println("=== END ENRICH VIDEO ===");
         return enriched;
     }
 
