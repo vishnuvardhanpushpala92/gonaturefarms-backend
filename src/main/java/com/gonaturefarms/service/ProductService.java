@@ -57,63 +57,106 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ApiResponse listProducts(String cat, String status, String search) {
-        Specification<Product> spec = buildSpecification(cat, status, search);
-        List<Product> products = productRepository.findAll(
-                spec, org.springframework.data.domain.Sort.by(
-                        org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
+        System.out.println("=== PUBLIC PRODUCT LIST DEBUG ===");
+        System.out.println("cat: " + cat + ", status: " + status + ", search: " + search);
+        
+        try {
+            Specification<Product> spec = buildSpecification(cat, status, search);
+            List<Product> products = productRepository.findAll(
+                    spec, org.springframework.data.domain.Sort.by(
+                            org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
-        // Filter out pending products for public view (treat NULL as false)
-        products = products.stream()
-                .filter(p -> p.getPending() == null || !p.getPending())
-                .collect(Collectors.toList());
-
-        // Use batch query to fetch all variants at once (prevent N+1)
-        if (!products.isEmpty()) {
-            List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
-            List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
-            Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
-            products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
-            
-            // Log variants for debugging
-            System.out.println("Products with variants loaded:");
+            System.out.println("Products found (before variant loading): " + products.size());
             for (Product p : products) {
-                System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
-                for (ProductVariant v : p.getVariants()) {
-                    System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                System.out.println("  - ID: " + p.getId() + ", Name: " + p.getName());
+            }
+
+            // Filter out pending products for public view (treat NULL as false)
+            products = products.stream()
+                    .filter(p -> p.getPending() == null || !p.getPending())
+                    .collect(Collectors.toList());
+            
+            System.out.println("Products after pending filter: " + products.size());
+
+            // Use batch query to fetch all variants at once (prevent N+1)
+            if (!products.isEmpty()) {
+                List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+                System.out.println("Fetching variants for product IDs: " + productIds);
+                
+                List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
+                System.out.println("Products with variants fetched: " + productsWithVariants.size());
+                
+                Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
+                    .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
+                products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
+                
+                // Log variants for debugging
+                System.out.println("Products with variants loaded:");
+                for (Product p : products) {
+                    System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
+                    for (ProductVariant v : p.getVariants()) {
+                        System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                    }
                 }
             }
-        }
 
-        return ApiResponse.ok().with("products", products);
+            System.out.println("Returning " + products.size() + " products");
+            System.out.println("=== END PUBLIC PRODUCT LIST DEBUG ===");
+            return ApiResponse.ok().with("products", products);
+        } catch (Exception e) {
+            System.out.println("ERROR in listProducts: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
     public ApiResponse listProductsAdmin(String cat, String status, String search) {
-        Specification<Product> spec = buildSpecification(cat, status, search);
-        List<Product> products = productRepository.findAll(
-                spec, org.springframework.data.domain.Sort.by(
-                        org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
-
-        // Use batch query to fetch all variants at once (prevent N+1)
-        if (!products.isEmpty()) {
-            List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
-            List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
-            Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
-            products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
+        System.out.println("=== ADMIN PRODUCT LIST DEBUG ===");
+        System.out.println("cat: " + cat + ", status: " + status + ", search: " + search);
+        
+        try {
+            Specification<Product> spec = buildSpecification(cat, status, search);
+            List<Product> products = productRepository.findAll(
+                    spec, org.springframework.data.domain.Sort.by(
+                            org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
             
-            // Log variants for debugging
-            System.out.println("Products with variants loaded:");
+            System.out.println("Products found (before variant loading): " + products.size());
             for (Product p : products) {
-                System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
-                for (ProductVariant v : p.getVariants()) {
-                    System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                System.out.println("  - ID: " + p.getId() + ", Name: " + p.getName());
+            }
+
+            // Use batch query to fetch all variants at once (prevent N+1)
+            if (!products.isEmpty()) {
+                List<Long> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+                System.out.println("Fetching variants for product IDs: " + productIds);
+                
+                List<Product> productsWithVariants = productRepository.findAllByIdWithVariants(productIds);
+                System.out.println("Products with variants fetched: " + productsWithVariants.size());
+                
+                Map<Long, List<ProductVariant>> variantsMap = productsWithVariants.stream()
+                    .collect(Collectors.toMap(Product::getId, p -> p.getVariants()));
+                
+                products.forEach(p -> p.setVariants(variantsMap.getOrDefault(p.getId(), new ArrayList<>())));
+                
+                // Log variants for debugging
+                System.out.println("Products with variants loaded:");
+                for (Product p : products) {
+                    System.out.println("Product: " + p.getName() + ", Variants: " + p.getVariants());
+                    for (ProductVariant v : p.getVariants()) {
+                        System.out.println("  - ID: " + v.getId() + ", Name: " + v.getVariantName() + ", Price: " + v.getPrice());
+                    }
                 }
             }
-        }
 
-        return ApiResponse.ok().with("products", products);
+            System.out.println("Returning " + products.size() + " products");
+            System.out.println("=== END ADMIN PRODUCT LIST DEBUG ===");
+            return ApiResponse.ok().with("products", products);
+        } catch (Exception e) {
+            System.out.println("ERROR in listProductsAdmin: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
