@@ -185,7 +185,31 @@ public class GlobalExceptionHandler {
     /** Fallback for anything unexpected -> HTTP 500, matching the Express catch-all error handler. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {
-        log.error("Unhandled error:", ex);
+        log.error("=== UNHANDLED EXCEPTION ===");
+        log.error("Exception type: {}", ex.getClass().getName());
+        log.error("Exception message: {}", ex.getMessage());
+        log.error("Stack trace:", ex);
+        
+        // Print to console for immediate visibility
+        System.err.println("=== UNHANDLED EXCEPTION ===");
+        System.err.println("Exception type: " + ex.getClass().getName());
+        System.err.println("Exception message: " + ex.getMessage());
+        ex.printStackTrace(System.err);
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail("Internal server error"));
+    }
+    
+    /** Handle LazyInitializationException specifically */
+    @ExceptionHandler(org.hibernate.LazyInitializationException.class)
+    public ResponseEntity<ApiResponse> handleLazyInitialization(org.hibernate.LazyInitializationException ex) {
+        log.error("=== LAZY INITIALIZATION EXCEPTION ===");
+        log.error("Exception message: {}", ex.getMessage());
+        log.error("Stack trace:", ex);
+        
+        System.err.println("=== LAZY INITIALIZATION EXCEPTION ===");
+        System.err.println("Exception message: " + ex.getMessage());
+        ex.printStackTrace(System.err);
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail("Lazy initialization error - please check entity relationships"));
     }
 }
