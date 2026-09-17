@@ -285,8 +285,8 @@ public class ProductService {
     //  HELPER METHODS
     // ──────────────────────────────────────────────
 
-    /** 
-     * Saves variants while preventing any duplicate names. 
+    /**
+     * Saves variants while preventing any duplicate names.
      * Also auto-syncs price to MRP if price is missing or 0.
      */
     private void saveUniqueVariants(Product product, List<com.gonaturefarms.dto.product.ProductVariantRequest> variantReqs) {
@@ -295,6 +295,9 @@ public class ProductService {
         Map<String, Boolean> seenNames = new HashMap<>();
 
         for (com.gonaturefarms.dto.product.ProductVariantRequest variantReq : variantReqs) {
+            // Log variant details for debugging
+            System.out.println("Saving variant: " + variantReq.getVariantName() + ", price: " + variantReq.getPrice());
+
             if (variantReq.getVariantName() == null || variantReq.getVariantName().isBlank()) continue;
 
             // 🛑 BLOCK: Skip if duplicate name
