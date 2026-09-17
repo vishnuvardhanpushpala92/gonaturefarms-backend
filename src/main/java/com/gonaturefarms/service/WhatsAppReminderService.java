@@ -96,6 +96,26 @@ public class WhatsAppReminderService {
             reminderType = WhatsAppReminder.ReminderType.Custom; // Default to Custom if invalid
         }
 
+        // If product is selected, generate dynamic message with product details
+        String message = request.getMessage();
+        if (request.getProductId() != null) {
+            Product product = productRepository.findById(request.getProductId())
+                    .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
+
+            // Generate clean message format without emojis
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.append(product.getName()).append("\n\n");
+            messageBuilder.append(product.getDescription()).append("\n\n");
+            messageBuilder.append("Price: Rs.").append(product.getPrice()).append("\n");
+            messageBuilder.append("MRP: Rs.").append(product.getMrp()).append("\n\n");
+            messageBuilder.append("Fresh - Natural - Quality Assured\n\n");
+            messageBuilder.append("Go Nature Farms\n\n");
+            messageBuilder.append("Shop Now:\n");
+            messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(product.getId());
+
+            message = messageBuilder.toString();
+        }
+
         java.util.List<String> whatsappLinks = new java.util.ArrayList<>();
 
         for (Long customerId : request.getCustomerIds()) {
@@ -149,6 +169,23 @@ public class WhatsAppReminderService {
 
     @Transactional
     public ApiResponse generateProductReminder(Long adminId, Long productId, String productName) {
+        // Fetch product details to generate dynamic message
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
+
+        // Generate clean message format without emojis
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append(product.getName()).append("\n\n");
+        messageBuilder.append(product.getDescription()).append("\n\n");
+        messageBuilder.append("Price: Rs.").append(product.getPrice()).append("\n");
+        messageBuilder.append("MRP: Rs.").append(product.getMrp()).append("\n\n");
+        messageBuilder.append("Fresh - Natural - Quality Assured\n\n");
+        messageBuilder.append("Go Nature Farms\n\n");
+        messageBuilder.append("Shop Now:\n");
+        messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(productId);
+
+        String message = messageBuilder.toString();
+
         // Generate reminders for all customers who haven't opted out
         List<User> customers = userRepository.findAll().stream()
                 .filter(u -> u.getRole() == User.UserRole.customer)
@@ -159,7 +196,8 @@ public class WhatsAppReminderService {
             WhatsAppReminder reminder = WhatsAppReminder.builder()
                     .adminId(adminId)
                     .reminderType(WhatsAppReminder.ReminderType.Product)
-                    .message("New product available: " + productName + ". Check it out on Go Nature Farms!")
+                    .productId(productId)
+                    .message(message)
                     .scheduledAt(LocalDateTime.now())
                     .status(WhatsAppReminder.ReminderStatus.Pending)
                     .build();
