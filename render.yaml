@@ -3,7 +3,7 @@ services:
     name: gonaturefarms-backend
     env: java
     buildCommand: mvn clean package -DskipTests
-    startCommand: java -Xmx300m -Xms128m -Xss512k -XX:+UseSerialGC -XX:+UseContainerSupport -XX:MaxRAMPercentage=60.0 -Djava.awt.headless=true -Dspring.jmx.enabled=false -jar target/gonaturefarms-backend.jar
+    startCommand: java -Xmx300m -Xms128m -Xss512k -XX:+UseSerialGC -XX:+UseContainerSupport -XX:MaxRAMPercentage=60.0 -XX:TieredStopAtLevel=1 -Djava.awt.headless=true -Dspring.jmx.enabled=false -jar target/gonaturefarms-backend.jar
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod

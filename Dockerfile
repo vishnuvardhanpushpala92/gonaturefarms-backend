@@ -14,13 +14,14 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 EXPOSE 8080
 
-# JVM optimizations for Render's 512MB memory limit
+# JVM optimizations for Render's 512MB memory limit and fast startup
 ENV JAVA_OPTS="-Xmx300m \
   -Xms128m \
   -Xss512k \
   -XX:+UseSerialGC \
   -XX:+UseContainerSupport \
   -XX:MaxRAMPercentage=60.0 \
+  -XX:TieredStopAtLevel=1 \
   -XX:+OptimizeStringConcat \
   -Djava.awt.headless=true \
   -Dspring.jmx.enabled=false \
