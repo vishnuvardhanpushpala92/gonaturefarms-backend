@@ -27,4 +27,4 @@ ENV JAVA_OPTS="-Xmx300m \
   -Dspring.jmx.enabled=false \
   -Dlogging.level.root=WARN"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["java", "-Xmx300m", "-Xms128m", "-Xss512k", "-XX:+UseSerialGC", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=60.0", "-XX:TieredStopAtLevel=1", "-Djava.awt.headless=true", "-Dspring.jmx.enabled=false", "-jar", "app.jar"]
