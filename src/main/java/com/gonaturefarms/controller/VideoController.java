@@ -40,14 +40,19 @@ public class VideoController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse create(@RequestParam(value = "title", required = false) String title,
                               @RequestParam("file") MultipartFile file,
-                              @RequestParam(value = "productId", required = false) Long productId,
+                              @RequestParam(value = "productId", required = false) String productId,
                               @RequestParam(value = "posterUrl", required = false) String posterUrl,
                               @RequestParam(value = "enabled", defaultValue = "true") Boolean enabled,
                               @RequestParam(value = "sortOrder", required = false) Integer sortOrder,
                               @RequestParam(value = "orientation", defaultValue = "landscape") String orientation) {
         Video video = new Video();
         video.setTitle(title);
-        video.setProductId(productId);
+        // Convert empty string to null to properly clear product association
+        try {
+            video.setProductId(productId != null && !productId.isEmpty() ? Long.parseLong(productId) : null);
+        } catch (NumberFormatException e) {
+            video.setProductId(null);
+        }
         video.setPosterUrl(posterUrl);
         video.setEnabled(enabled);
         video.setSortOrder(sortOrder);
@@ -60,14 +65,19 @@ public class VideoController {
     public ApiResponse update(@PathVariable Long id,
                               @RequestParam(value = "title", required = false) String title,
                               @RequestParam(value = "file", required = false) MultipartFile file,
-                              @RequestParam(value = "productId", required = false) Long productId,
+                              @RequestParam(value = "productId", required = false) String productId,
                               @RequestParam(value = "posterUrl", required = false) String posterUrl,
                               @RequestParam(value = "enabled", defaultValue = "true") Boolean enabled,
                               @RequestParam(value = "sortOrder", required = false) Integer sortOrder,
                               @RequestParam(value = "orientation", defaultValue = "landscape") String orientation) {
         Video video = new Video();
         video.setTitle(title);
-        video.setProductId(productId);
+        // Convert empty string to null to properly clear product association
+        try {
+            video.setProductId(productId != null && !productId.isEmpty() ? Long.parseLong(productId) : null);
+        } catch (NumberFormatException e) {
+            video.setProductId(null);
+        }
         video.setPosterUrl(posterUrl);
         video.setEnabled(enabled);
         video.setSortOrder(sortOrder);

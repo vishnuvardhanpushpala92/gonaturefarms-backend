@@ -170,7 +170,12 @@ public class VideoService {
         return videoRepository.findById(id)
             .map(existing -> {
                 existing.setTitle(video.getTitle());
-                existing.setProductId(video.getProductId());
+                // Handle null productId to properly clear product association
+                if (video.getProductId() != null) {
+                    existing.setProductId(video.getProductId());
+                } else {
+                    existing.setProductId(null);
+                }
                 existing.setPosterUrl(video.getPosterUrl());
                 existing.setEnabled(video.getEnabled());
                 existing.setSortOrder(video.getSortOrder());
