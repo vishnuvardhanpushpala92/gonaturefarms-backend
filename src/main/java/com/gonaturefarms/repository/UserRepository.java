@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole(User.UserRole role);
 
+    boolean existsByRole(User.UserRole role);
+
     /** Allow login by username, phone, or email for customers */
     @Query("SELECT u FROM User u WHERE u.role = 'customer' " +
            "AND (u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
