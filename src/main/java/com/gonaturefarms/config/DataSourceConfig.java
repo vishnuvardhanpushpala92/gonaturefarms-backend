@@ -29,15 +29,16 @@ public class DataSourceConfig {
         if (url != null && url.startsWith("postgres://")) {
             // Convert postgres:// to jdbc:postgresql://
             String jdbcUrl = url.replace("postgres://", "jdbc:postgresql://");
-            dataSourceProperties.setUrl(jdbcUrl);
             
             // Force SSL to be disabled for internal Render connections
             if (!jdbcUrl.contains("sslmode=")) {
-                dataSourceProperties.setUrl(jdbcUrl + "?sslmode=disable");
+                jdbcUrl = jdbcUrl + "?sslmode=disable";
             } else {
                 // Replace any existing SSL mode with disable
-                dataSourceProperties.setUrl(jdbcUrl.replaceAll("sslmode=[^&]*", "sslmode=disable"));
+                jdbcUrl = jdbcUrl.replaceAll("sslmode=[^&]*", "sslmode=disable");
             }
+            
+            dataSourceProperties.setUrl(jdbcUrl);
         }
     }
 }
