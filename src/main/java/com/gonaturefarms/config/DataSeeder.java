@@ -5,18 +5,25 @@ import com.gonaturefarms.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Data seeder to create the default admin user on first run.
- * 
+ *
  * This component runs after application startup and checks if an admin user
  * exists. If not, it creates one using the configured default credentials.
+ *
+ * Uses ApplicationRunner with @Order to ensure it runs after Hibernate
+ * has initialized and created the tables.
  */
 @Component
-public class DataSeeder implements CommandLineRunner {
+@Order(100) // Run after other startup tasks
+public class DataSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
@@ -35,19 +42,26 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) {
+    @Transactional
+    public void run(ApplicationArguments args) {
+        log.info("=== DataSeeder Starting ===");
+        log.info("Default admin username from config: {}", defaultAdminUsername);
+        log.info("Default admin password from config: {}", defaultAdminPassword != null ? "***" : "null");
+
         try {
             // Check if admin user already exists
-            boolean adminExists = userRepository.existsByRole(User.UserRole.admin);
-            
-            if (adminExists) {
-                log.info("Admin user already exists, skipping seed");
+            log.info("Checking if admin user already exists...");
+            long adminCount = userRepository.countByRole(User.UserRole.admin);
+            log.info("Admin user count: {}", adminCount);
+
+            if (adminCount > 0) {
+                log.info("Admin user already exists (count: {}), skipping seed", adminCount);
                 return;
             }
 
             // Create default admin user
             log.info("Creating default admin user with username: {}", defaultAdminUsername);
-            
+
             User admin = User.builder()
                     .name("Default Admin")
                     .username(defaultAdminUsername)
@@ -60,13 +74,19 @@ public class DataSeeder implements CommandLineRunner {
                     .whatsappOptOut(false)
                     .build();
 
-            userRepository.save(admin);
-            log.info("Default admin user created successfully with ID: {}", admin.getId());
-            log.warn("SECURITY WARNING: Please change the default admin password immediately after first login!");
-            
+            User savedAdmin = userRepository.save(admin);
+            log.info("=== Default admin user created successfully ===");
+            log.info("Admin ID: {}", savedAdmin.getId());
+            log.info("Admin Username: {}", savedAdmin.getUsername());
+            log.info("Admin Email: {}", savedAdmin.getEmail());
+            log.warn("=== SECURITY WARNING: Please change the default admin password immediately after first login! ===");
+
         } catch (Exception e) {
-            log.error("Failed to seed default admin user", e);
+            log.error("=== FAILED to seed default admin user ===", e);
+            log.error("Error message: {}", e.getMessage());
             // Don't fail the application startup, just log the error
         }
+
+        log.info("=== DataSeeder Complete ===");
     }
 }
