@@ -8,11 +8,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: DATABASE_URL
-        value: jdbc:postgresql://gonaturefarms-salt-graph.ovh2.cloud.layerbase.dev:5432/gonaturefarms?sslmode=require
-      - key: DATABASE_USERNAME
-        value: postgres
-      - key: DATABASE_PASSWORD
-        value: cPJvP7F3td8uQJG8TJaEXTKd
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
