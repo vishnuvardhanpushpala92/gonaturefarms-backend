@@ -7,18 +7,6 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gonaturefarms-db
-          property: connectionString
-      - key: DATABASE_USERNAME
-        fromDatabase:
-          name: gonaturefarms-db
-          property: user
-      - key: DATABASE_PASSWORD
-        fromDatabase:
-          name: gonaturefarms-db
-          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
@@ -36,7 +24,3 @@ services:
       - key: ADMIN_DEFAULT_PASS
         value: 918252
     healthCheckPath: /api/health
-
-databases:
-  - name: gonaturefarms-db
-    databaseName: gnf_hoyo
