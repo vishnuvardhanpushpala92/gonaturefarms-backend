@@ -41,35 +41,42 @@ public class DataSourceConfig {
         String username = dataSourceProperties.getUsername();
         String password = dataSourceProperties.getPassword();
 
-        log.info("=== DataSource Configuration ===");
-        log.info("Original URL: {}", url);
-        log.info("Username: {}", username);
+        log.warn("=== CRITICAL: DataSource Configuration ===");
+        log.warn("Original URL: {}", url);
+        log.warn("Username: {}", username);
+
+        // FAIL FAST if old Layerbase URL is detected
+        if (url != null && (url.toLowerCase().contains("layerbase") || url.contains("gonaturefarms-salt-graph"))) {
+            String errorMsg = "CRITICAL ERROR: Old Layerbase database URL detected! This is an obsolete configuration. Please check Render dashboard environment variables and remove any manual DATABASE_URL, DATABASE_USERNAME, or DATABASE_PASSWORD overrides. The render.yaml should inject the correct values from the gonaturefarms-db database service.";
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
 
         // Convert postgres:// to jdbc:postgresql:// if needed
         if (url != null && url.startsWith("postgres://")) {
             url = url.replace("postgres://", "jdbc:postgresql://");
-            log.info("Converted postgres:// to jdbc:postgresql://");
+            log.warn("Converted postgres:// to jdbc:postgresql://");
         }
 
         // Detect if this is an internal Render connection (no .render.com in hostname)
         boolean isInternalConnection = url != null && !url.contains(".render.com");
-        log.info("Connection type: {}", isInternalConnection ? "INTERNAL (no SSL required)" : "EXTERNAL (SSL may be required)");
+        log.warn("Connection type: {}", isInternalConnection ? "INTERNAL (no SSL required)" : "EXTERNAL (SSL may be required)");
 
         // For internal Render connections, explicitly disable SSL to prevent handshake failures
         if (isInternalConnection && url != null) {
             if (!url.contains("sslmode=")) {
                 url = url + "?sslmode=disable";
-                log.info("Added sslmode=disable for internal connection");
+                log.warn("Added sslmode=disable for internal connection");
             } else {
                 // Replace any existing SSL mode with disable for internal connections
                 url = url.replaceAll("sslmode=[^&]*", "sslmode=disable");
-                log.info("Replaced sslmode with disable for internal connection");
+                log.warn("Replaced sslmode with disable for internal connection");
             }
         }
 
         // Log the final URL (without password)
         String safeUrl = url != null ? url.replaceAll(":[^:@]+@", ":****@") : null;
-        log.info("Final JDBC URL: {}", safeUrl);
+        log.warn("Final JDBC URL: {}", safeUrl);
 
         dataSourceProperties.setUrl(url);
         dataSourceProperties.setUsername(username);
@@ -79,7 +86,7 @@ public class DataSourceConfig {
                 .type(HikariDataSource.class)
                 .build();
 
-        log.info("=== DataSource Configuration Complete ===");
+        log.warn("=== DataSource Configuration Complete ===");
         return dataSource;
     }
 }
