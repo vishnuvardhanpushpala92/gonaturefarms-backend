@@ -3,10 +3,16 @@ services:
     name: gonaturefarms-backend
     env: java
     buildCommand: mvn clean package -DskipTests
-    startCommand: java -Xmx300m -Xms128m -Xss512k -XX:+UseSerialGC -XX:+UseContainerSupport -XX:MaxRAMPercentage=60.0 -XX:TieredStopAtLevel=1 -Djava.awt.headless=true -Dspring.jmx.enabled=false -Dspring.main.lazy-initialization=true -jar target/gonaturefarms-backend.jar
+    startCommand: java -Xmx300m -Xms128m -Xss512k -XX:+UseSerialGC -XX:+UseContainerSupport -XX:MaxRAMPercentage=60.0 -XX:TieredStopAtLevel=1 -Djava.awt.headless=true -Dspring.jmx.enabled=false -Dspring.main.lazy-initialization=true -Dspring.datasource.url=jdbc:postgresql://dpg-dbau4lm7bikc73b095kg-a:5432/gnf_hoyo?sslmode=disable -jar target/gonaturefarms-backend.jar
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: DATABASE_URL
+        value: ""
+      - key: SPRING_DATASOURCE_URL
+        value: ""
+      - key: JDBC_DATABASE_URL
+        value: ""
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
