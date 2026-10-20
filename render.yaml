@@ -8,7 +8,9 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: gonaturefarms
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
@@ -26,3 +28,7 @@ services:
       - key: ADMIN_DEFAULT_PASS
         value: 918252
     healthCheckPath: /api/health
+
+databases:
+  - name: gonaturefarms
+    databaseName: gonaturefarms
