@@ -27,9 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "AND (u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
     Optional<User> findCustomerByIdentifier(@Param("identifier") String identifier);
 
-    /** Mirrors: SELECT * FROM users WHERE role='admin' AND (phone=? OR name=? OR email=?) LIMIT 1 */
+    /** Allow login by username, phone, or email for admin */
     @Query("SELECT u FROM User u WHERE u.role = :role " +
-           "AND (u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
+           "AND (u.username = :identifier OR u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
     Optional<User> findFirstByRoleAndIdentifier(@Param("role") User.UserRole role,
                                                  @Param("identifier") String identifier);
 
