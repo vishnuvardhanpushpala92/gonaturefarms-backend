@@ -74,7 +74,7 @@ public class AuthService {
         // Check for existing phone number
         if (userRepository.existsByPhone(request.getPhone())) {
             System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
-            throw new ApiException("Phone number already exists. Try a different number.");
+            throw new ApiException("This phone number is already registered. Please log in or click Forgot Password.");
         }
 
         // Check for existing email (only if email is provided)
@@ -173,21 +173,41 @@ public class AuthService {
 
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
-        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail()) // ✅ Changed to getEmail()
+        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
                 .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
-        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) { // ✅ Changed to getAnswer()
+        if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
             throw new ApiException("Security Answer incorrect");
         }
-        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        
+        // Validate new password with same rules as registration
+        String newPassword = request.getNewPassword();
+        if (newPassword == null || newPassword.length() < 8) {
+            throw new ApiException("Password must be at least 8 characters");
+        }
+        if (!newPassword.matches(".*[A-Z].*")) {
+            throw new ApiException("Password must contain at least one uppercase letter");
+        }
+        if (!newPassword.matches(".*[a-z].*")) {
+            throw new ApiException("Password must contain at least one lowercase letter");
+        }
+        if (!newPassword.matches(".*[0-9].*")) {
+            throw new ApiException("Password must contain at least one number");
+        }
+        if (!newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
+            throw new ApiException("Password must contain at least one special character");
+        }
+        
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        return ApiResponse.ok("Password reset successfully");
+        return ApiResponse.ok("Password reset successfully. Please login with your new password.");
     }
 
     @Transactional
     public ApiResponse forgotPassword(com.gonaturefarms.dto.auth.ForgotPasswordRequest request) {
-        userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
-        return ApiResponse.ok("If the account exists, a reset process will begin");
+        // Generic response to prevent account enumeration
+        // Always return success regardless of whether account exists
+        userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier());
+        return ApiResponse.ok("If an account exists with this phone number or email, you will receive instructions to reset your password.");
     }
 
     @Transactional

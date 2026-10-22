@@ -32,9 +32,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final long WINDOW_MILLIS = 15 * 60 * 1000L;
     private static final int GENERAL_LIMIT = 300;
     private static final int AUTH_LIMIT = 20;
+    private static final int FORGOT_PASSWORD_LIMIT = 5; // Stricter limit for password reset
+    private static final int SECURITY_QUESTION_LIMIT = 3; // Very strict limit for security question attempts
 
     private final ConcurrentHashMap<String, Window> generalWindows = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Window> authWindows = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Window> forgotPasswordWindows = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Window> securityQuestionWindows = new ConcurrentHashMap<>();
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -62,6 +66,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         String clientKey = clientKey(request);
+
+        // Stricter rate limiting for forgot password endpoints to prevent abuse
+        if (path.startsWith("/api/auth/forgot-password") && exceeded(forgotPasswordWindows, clientKey, FORGOT_PASSWORD_LIMIT)) {
+            respondTooManyRequests(response, "Too many password reset attempts. Please try again later.");
+            return;
+        }
+
+        // Very strict rate limiting for security question verification to prevent brute force
+        if (path.equals("/api/auth/forgot-password/verify") && exceeded(securityQuestionWindows, clientKey, SECURITY_QUESTION_LIMIT)) {
+            respondTooManyRequests(response, "Too many verification attempts. Please try again later.");
+            return;
+        }
 
         if (path.startsWith("/api/auth/") && exceeded(authWindows, clientKey, AUTH_LIMIT)) {
             respondTooManyRequests(response, "Too many auth attempts, please try again later.");
@@ -99,6 +115,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
                    path.equals("/api/coupons/validate") ||
                    path.equals("/api/support");
         }
+        
+        // Forgot password endpoints are NOT public - they should be rate-limited
+        // to prevent abuse and account enumeration
         
         return false;
     }
