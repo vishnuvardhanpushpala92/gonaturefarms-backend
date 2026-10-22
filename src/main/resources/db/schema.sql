@@ -248,7 +248,7 @@ INSERT INTO site_settings (setting_key, value, updated_at) VALUES
 ('tagline',       'Nature is Our Future', CURRENT_TIMESTAMP),
 ('upi_id',        'gonaturefarms@upi', CURRENT_TIMESTAMP),
 ('qr_code',       '', CURRENT_TIMESTAMP),
-('logo_url',      '', CURRENT_TIMESTAMP),
+('logo_url',      '/logo.jpeg', CURRENT_TIMESTAMP),
 ('hdr_bg',        '#ffffff', CURRENT_TIMESTAMP),
 ('ftr_bg',        '#FF8C00', CURRENT_TIMESTAMP),
 ('ftr_text',      '#FFFFFF', CURRENT_TIMESTAMP),
