@@ -33,6 +33,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findFirstByRoleAndIdentifier(@Param("role") User.UserRole role,
                                                  @Param("identifier") String identifier);
 
+    /** Find user by phone or email with flexible phone matching (handles +91 prefix and spaces) */
+    @Query("SELECT u FROM User u WHERE " +
+           "(:email IS NOT NULL AND u.email = :email) OR " +
+           "(:phone IS NOT NULL AND (u.phone = :phone OR u.phone = CONCAT('+91', :phone) OR " +
+           "REPLACE(REPLACE(u.phone, ' ', ''), '+91', '') = REPLACE(REPLACE(:phone, ' ', ''), '+91', '')))")
+    Optional<User> findByPhoneOrEmailFlexible(@Param("phone") String phone, @Param("email") String email);
+
     @Query("SELECT u FROM User u WHERE u.role = 'customer' AND (u.whatsappOptOut IS NULL OR u.whatsappOptOut = false)")
     List<User> findCustomersWhoHaveNotOptedOut();
 

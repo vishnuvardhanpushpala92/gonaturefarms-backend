@@ -31,6 +31,21 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
+    /**
+     * Normalize phone number by removing all non-digit characters
+     * This ensures consistent storage and lookup regardless of formatting
+     */
+    private String normalizePhone(String phone) {
+        if (phone == null) return null;
+        // Remove all non-digit characters
+        String normalized = phone.replaceAll("[^0-9]", "");
+        // If it starts with country code (e.g., 91 for India), remove it if it results in 10 digits
+        if (normalized.length() == 12 && normalized.startsWith("91")) {
+            normalized = normalized.substring(2);
+        }
+        return normalized;
+    }
+
     @Transactional
     public ApiResponse register(RegisterRequest request) {
         System.out.println("=== REGISTRATION DEBUG ===");
@@ -44,8 +59,12 @@ public class AuthService {
         System.out.println("Security Answer: " + request.getSecurityAnswer());
         System.out.println("==========================");
 
+        // Normalize phone number
+        String normalizedPhone = normalizePhone(request.getPhone());
+        System.out.println("Normalized phone: " + normalizedPhone);
+
         // Additional validation
-        if (request.getPhone() == null || request.getPhone().length() != 10) {
+        if (normalizedPhone == null || normalizedPhone.length() != 10) {
             throw new ApiException("Mobile Number incorrect");
         }
         
@@ -71,9 +90,9 @@ public class AuthService {
             throw new ApiException("Password incorrect");
         }
 
-        // Check for existing phone number
-        if (userRepository.existsByPhone(request.getPhone())) {
-            System.err.println("Registration failed: Phone number already registered - " + request.getPhone());
+        // Check for existing phone number using normalized phone
+        if (userRepository.existsByPhone(normalizedPhone)) {
+            System.err.println("Registration failed: Phone number already registered - " + normalizedPhone);
             throw new ApiException("This phone number is already registered. Please log in or click Forgot Password.");
         }
 
@@ -94,7 +113,7 @@ public class AuthService {
         User user = User.builder()
                 .name(request.getName())
                 .username(request.getUsername())
-                .phone(request.getPhone())
+                .phone(normalizedPhone)
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(User.UserRole.customer)
@@ -113,7 +132,15 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse login(LoginRequest request) {
-        User user = userRepository.findCustomerByIdentifier(request.getIdentifier())
+        // Normalize identifier for phone numbers
+        String normalizedIdentifier = request.getIdentifier();
+        if (normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$")) {
+            // It's a phone number (only digits), normalize it
+            normalizedIdentifier = normalizePhone(normalizedIdentifier);
+            System.out.println("Normalized phone for login: " + normalizedIdentifier);
+        }
+        
+        User user = userRepository.findCustomerByIdentifier(normalizedIdentifier)
                 .orElseThrow(() -> new ApiException("Invalid number"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new ApiException("Invalid password");
@@ -146,12 +173,20 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse verifySecurityQuestion(SecurityQuestionVerifyRequest request) {
-        // ✅ FIX: Use ApiException (-> HTTP 200, success:false) instead of
-        // ResourceNotFoundException (-> HTTP 404) so a "no such account" result is
-        // handled the same friendly way as every other forgot-password outcome,
-        // instead of surfacing as a raw 404 in the browser console.
-        User user = userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
+        // Normalize identifier for phone numbers
+        String normalizedIdentifier = request.getIdentifier();
+        boolean isPhone = normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$");
+        
+        if (isPhone) {
+            // It's a phone number (only digits), normalize it
+            normalizedIdentifier = normalizePhone(normalizedIdentifier);
+            System.out.println("Normalized phone for forgot password: " + normalizedIdentifier);
+        }
+        
+        // Try to find user by phone or email using flexible matching
+        User user = userRepository.findByPhoneOrEmailFlexible(isPhone ? normalizedIdentifier : null, isPhone ? null : request.getIdentifier())
+                .orElseThrow(() -> new ApiException("If an account exists with this phone number or email, you will receive instructions to reset your password."));
+        
         if (user.getSecurityQuestion() == null) {
             throw new ApiException("No security question set for this account");
         }
@@ -161,8 +196,16 @@ public class AuthService {
 
     @Transactional
     public ApiResponse resetPassword(ResetPasswordRequest request) {
-        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
-                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
+        // Normalize identifier for phone numbers
+        String normalizedIdentifier = request.getEmail();
+        boolean isPhone = normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$");
+        
+        if (isPhone) {
+            normalizedIdentifier = normalizePhone(normalizedIdentifier);
+        }
+        
+        User user = userRepository.findByPhoneOrEmailFlexible(isPhone ? normalizedIdentifier : null, isPhone ? null : request.getEmail())
+                .orElseThrow(() -> new ApiException("If an account exists, the security answer is incorrect"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
             throw new ApiException("Security Answer incorrect");
         }
@@ -173,8 +216,16 @@ public class AuthService {
 
     @Transactional
     public ApiResponse resetPasswordWithSecurityQuestion(SecurityQuestionResetRequest request) {
-        User user = userRepository.findByPhoneOrEmail(request.getEmail(), request.getEmail())
-                .orElseThrow(() -> new ApiException("Mobile Number or Email incorrect"));
+        // Normalize identifier for phone numbers
+        String normalizedIdentifier = request.getEmail();
+        boolean isPhone = normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$");
+        
+        if (isPhone) {
+            normalizedIdentifier = normalizePhone(normalizedIdentifier);
+        }
+        
+        User user = userRepository.findByPhoneOrEmailFlexible(isPhone ? normalizedIdentifier : null, isPhone ? null : request.getEmail())
+                .orElseThrow(() -> new ApiException("If an account exists, the security answer is incorrect"));
         if (!user.getSecurityAnswer().equalsIgnoreCase(request.getAnswer())) {
             throw new ApiException("Security Answer incorrect");
         }
@@ -204,9 +255,19 @@ public class AuthService {
 
     @Transactional
     public ApiResponse forgotPassword(com.gonaturefarms.dto.auth.ForgotPasswordRequest request) {
+        // Normalize identifier for phone numbers
+        String normalizedIdentifier = request.getIdentifier();
+        boolean isPhone = normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$");
+        
+        if (isPhone) {
+            // It's a phone number (only digits), normalize it
+            normalizedIdentifier = normalizePhone(normalizedIdentifier);
+            System.out.println("Normalized phone for forgot password request: " + normalizedIdentifier);
+        }
+        
         // Generic response to prevent account enumeration
         // Always return success regardless of whether account exists
-        userRepository.findByPhoneOrEmail(request.getIdentifier(), request.getIdentifier());
+        userRepository.findByPhoneOrEmailFlexible(isPhone ? normalizedIdentifier : null, isPhone ? null : request.getIdentifier());
         return ApiResponse.ok("If an account exists with this phone number or email, you will receive instructions to reset your password.");
     }
 
