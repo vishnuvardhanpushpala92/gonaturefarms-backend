@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+    @Query("SELECT p FROM Product p WHERE p.pending = false OR p.pending IS NULL")
+    List<Product> findByPendingFalseOrNull();
+
     @Query("SELECT p FROM Product p WHERE p.pending = true OR p.pending IS NULL")
     List<Product> findByPendingTrue();
 
@@ -21,9 +24,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants")
     List<Product> findAllWithVariants();
 
-    @Query("SELECT p FROM Product p WHERE (p.pending = true OR p.pending IS NULL) ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Product p WHERE (p.pending = false OR p.pending IS NULL) ORDER BY p.createdAt DESC")
     List<Product> findTop20ByOrderByCreatedAtDesc();
 
-    @Query("SELECT p FROM Product p WHERE (p.pending = true OR p.pending IS NULL) ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Product p WHERE (p.pending = false OR p.pending IS NULL) ORDER BY p.createdAt DESC")
     List<Product> findTop12ByOrderByCreatedAtDesc();
 }

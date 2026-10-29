@@ -212,7 +212,7 @@ public class ProductService {
                 .imgUrl(req.getImgUrl() == null ? "" : req.getImgUrl())
                 .additionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages())
                 .status(parseStatus(req.getStatus()))
-                .pending(true)
+                .pending(false)
                 .build();
         product = productRepository.save(product);
 
@@ -237,7 +237,7 @@ public class ProductService {
         product.setImgUrl(req.getImgUrl() == null ? "" : req.getImgUrl());
         product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
         product.setStatus(parseStatus(req.getStatus()));
-        product.setPending(true);
+        product.setPending(false);
         productRepository.save(product);
 
         // ✅ CRITICAL: Delete ALL old variants first so we don't create duplicates
