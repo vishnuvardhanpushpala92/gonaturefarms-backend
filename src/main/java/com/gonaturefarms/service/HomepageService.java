@@ -70,8 +70,8 @@ public class HomepageService {
             List<?> footerLinks = footerLinkRepository.findTop10ByOrderBySortOrderAscIdAsc();
             List<?> testimonials = testimonialRepository.findTop6ByOrderByCreatedAtDesc();
             List<?> videos = videoRepository.findTop5ByEnabledTrueOrderByPriority();
-            // Limit products to featured ones for better performance
-            List<?> products = productRepository.findTop20ByOrderByFeaturedDescCreatedAtDesc();
+            // Limit products to latest ones for better performance
+            List<?> products = productRepository.findTop20ByOrderByCreatedAtDesc();
 
             return ApiResponse.ok()
                     .with("settings", settings)
