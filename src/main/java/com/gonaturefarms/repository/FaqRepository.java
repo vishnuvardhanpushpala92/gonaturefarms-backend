@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface FaqRepository extends JpaRepository<Faq, Long> {
     List<Faq> findAllByOrderBySortOrderAscIdAsc();
+    List<Faq> findTop10ByOrderBySortOrderAscIdAsc();
     @Query("SELECT f FROM Faq f WHERE f.pending = true OR f.pending IS NULL")
     List<Faq> findByPendingTrue();
 }

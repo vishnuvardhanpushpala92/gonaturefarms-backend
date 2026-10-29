@@ -20,4 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants")
     List<Product> findAllWithVariants();
+
+    @Query("SELECT p FROM Product p WHERE (p.pending = true OR p.pending IS NULL) ORDER BY p.featured DESC, p.createdAt DESC")
+    List<Product> findTop20ByOrderByFeaturedDescCreatedAtDesc();
 }

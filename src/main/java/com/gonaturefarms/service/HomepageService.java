@@ -64,14 +64,14 @@ public class HomepageService {
             List<?> slides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
             List<?> blocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
 
-            // Secondary data - fetch all homepage data at once
-            List<?> faqs = faqRepository.findAllByOrderBySortOrderAscIdAsc();
+            // Secondary data - fetch with limits for performance
+            List<?> faqs = faqRepository.findTop10ByOrderBySortOrderAscIdAsc();
             List<?> zones = deliveryZoneRepository.findAll();
-            List<?> footerLinks = footerLinkRepository.findAll();
-            List<?> testimonials = testimonialRepository.findAll();
-            List<?> videos = videoRepository.findByEnabledTrueOrderByPriority();
-            // Fetch all products (both current and future/coming soon) - no limit to ensure featured/future products are visible
-            List<?> products = productRepository.findAll();
+            List<?> footerLinks = footerLinkRepository.findTop10ByOrderBySortOrderAscIdAsc();
+            List<?> testimonials = testimonialRepository.findTop6ByOrderByCreatedAtDesc();
+            List<?> videos = videoRepository.findTop5ByEnabledTrueOrderByPriority();
+            // Limit products to featured ones for better performance
+            List<?> products = productRepository.findTop20ByOrderByFeaturedDescCreatedAtDesc();
 
             return ApiResponse.ok()
                     .with("settings", settings)

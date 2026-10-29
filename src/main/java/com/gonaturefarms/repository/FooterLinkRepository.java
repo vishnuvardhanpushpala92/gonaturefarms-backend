@@ -19,6 +19,13 @@ public interface FooterLinkRepository extends JpaRepository<FooterLink, Long> {
     List<FooterLink> findAllByOrderBySortOrderAscIdAsc();
     
     /**
+     * Find top 10 footer links ordered by sort order and then by ID
+     * JPA Repository Method: Uses Spring Data JPA's automatic query generation
+     * SQL Equivalent: SELECT * FROM footer_links ORDER BY sort_order ASC, id ASC LIMIT 10
+     */
+    List<FooterLink> findTop10ByOrderBySortOrderAscIdAsc();
+    
+    /**
      * Find footer links by category ordered by sort order
      * JPA Repository Method: Uses Spring Data JPA's automatic query generation
      * SQL Equivalent: SELECT * FROM footer_links WHERE category = ? ORDER BY sort_order ASC, id ASC
