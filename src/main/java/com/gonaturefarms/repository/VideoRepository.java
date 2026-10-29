@@ -13,6 +13,8 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findByEnabledTrueOrderByPriority();
     @Query("SELECT v FROM Video v WHERE v.enabled = true ORDER BY CASE WHEN v.sortOrder IS NULL THEN 1 ELSE 0 END, v.sortOrder ASC")
     List<Video> findTop5ByEnabledTrueOrderByPriority();
+    @Query("SELECT v FROM Video v WHERE v.enabled = true ORDER BY CASE WHEN v.sortOrder IS NULL THEN 1 ELSE 0 END, v.sortOrder ASC")
+    List<Video> findTop3ByEnabledTrueOrderByPriority();
     @Query("SELECT v FROM Video v WHERE v.pending = true OR v.pending IS NULL")
     List<Video> findByPendingTrue();
 }

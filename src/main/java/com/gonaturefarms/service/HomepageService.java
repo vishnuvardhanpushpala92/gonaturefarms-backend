@@ -65,13 +65,13 @@ public class HomepageService {
             List<?> blocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
 
             // Secondary data - fetch with limits for performance
-            List<?> faqs = faqRepository.findTop10ByOrderBySortOrderAscIdAsc();
+            List<?> faqs = faqRepository.findTop6ByOrderBySortOrderAscIdAsc();
             List<?> zones = deliveryZoneRepository.findAll();
-            List<?> footerLinks = footerLinkRepository.findTop10ByOrderBySortOrderAscIdAsc();
-            List<?> testimonials = testimonialRepository.findTop6ByOrderByCreatedAtDesc();
-            List<?> videos = videoRepository.findTop5ByEnabledTrueOrderByPriority();
+            List<?> footerLinks = footerLinkRepository.findTop8ByOrderBySortOrderAscIdAsc();
+            List<?> testimonials = testimonialRepository.findTop4ByOrderByCreatedAtDesc();
+            List<?> videos = videoRepository.findTop3ByEnabledTrueOrderByPriority();
             // Limit products to latest ones for better performance
-            List<?> products = productRepository.findTop20ByOrderByCreatedAtDesc();
+            List<?> products = productRepository.findTop12ByOrderByCreatedAtDesc();
 
             return ApiResponse.ok()
                     .with("settings", settings)

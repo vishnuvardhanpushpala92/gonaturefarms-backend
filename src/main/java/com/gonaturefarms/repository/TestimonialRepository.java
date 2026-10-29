@@ -12,4 +12,5 @@ public interface TestimonialRepository extends JpaRepository<Testimonial, Long> 
     List<Testimonial> findByEnabledTrueOrderBySortOrderAsc();
     List<Testimonial> findByPendingTrue();
     List<Testimonial> findTop6ByOrderByCreatedAtDesc();
+    List<Testimonial> findTop4ByOrderByCreatedAtDesc();
 }

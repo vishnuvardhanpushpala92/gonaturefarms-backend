@@ -23,4 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT p FROM Product p WHERE (p.pending = true OR p.pending IS NULL) ORDER BY p.createdAt DESC")
     List<Product> findTop20ByOrderByCreatedAtDesc();
+
+    @Query("SELECT p FROM Product p WHERE (p.pending = true OR p.pending IS NULL) ORDER BY p.createdAt DESC")
+    List<Product> findTop12ByOrderByCreatedAtDesc();
 }
