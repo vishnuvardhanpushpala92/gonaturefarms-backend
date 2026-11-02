@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByPhone(String phone);
 
+    Optional<User> findByUsername(String username);
+
     Optional<User> findByPhoneOrEmail(String phone, String email);
 
     boolean existsByPhone(String phone);
@@ -27,9 +29,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "AND (u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
     Optional<User> findCustomerByIdentifier(@Param("identifier") String identifier);
 
-    /** Allow login by username, phone, or email for admin */
+    /** Allow login by username or phone for admin (only unique fields) */
     @Query("SELECT u FROM User u WHERE u.role = :role " +
-           "AND (u.username = :identifier OR u.phone = :identifier OR u.name = :identifier OR u.email = :identifier)")
+           "AND (u.username = :identifier OR u.phone = :identifier)")
     Optional<User> findFirstByRoleAndIdentifier(@Param("role") User.UserRole role,
                                                  @Param("identifier") String identifier);
 

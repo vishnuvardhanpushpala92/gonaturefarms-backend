@@ -49,13 +49,11 @@ public class DataSeeder implements ApplicationRunner {
         log.info("Default admin password from config: {}", defaultAdminPassword != null ? "***" : "null");
 
         try {
-            // Check if admin user already exists
+            // Check if admin user already exists by username (unique field)
             log.info("Checking if admin user already exists...");
-            long adminCount = userRepository.countByRole(User.UserRole.admin);
-            log.info("Admin user count: {}", adminCount);
-
-            if (adminCount > 0) {
-                log.info("Admin user already exists (count: {}), skipping seed", adminCount);
+            User existingAdmin = userRepository.findByUsername(defaultAdminUsername).orElse(null);
+            if (existingAdmin != null) {
+                log.info("Admin user already exists with username: {}, skipping seed", existingAdmin.getUsername());
                 return;
             }
 
