@@ -17,9 +17,11 @@ import com.gonaturefarms.repository.ProductRepository;
 import com.gonaturefarms.repository.ScrollBlockRepository;
 import com.gonaturefarms.repository.SiteContentRepository;
 import com.gonaturefarms.repository.TestimonialRepository;
+import com.gonaturefarms.repository.UserRepository;
 import com.gonaturefarms.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,6 +60,26 @@ public class AdminCommitController {
 
     @Autowired
     private TestimonialRepository testimonialRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @PostMapping("/check-duplicate-emails")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> checkDuplicateEmails() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Map<String, Object>> duplicates = userRepository.findDuplicateEmails();
+            response.put("success", true);
+            response.put("duplicates", duplicates);
+            response.put("message", "Duplicate email check completed");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error checking duplicate emails: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> commitChanges() {

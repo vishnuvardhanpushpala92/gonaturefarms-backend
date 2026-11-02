@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -46,4 +47,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findCustomersWhoHaveNotOptedOut();
 
     long countByRole(User.UserRole role);
+
+    @Query(value = "SELECT email, COUNT(*) as count, STRING_AGG(id::text, ', ') as user_ids FROM users GROUP BY email HAVING COUNT(*) > 1", nativeQuery = true)
+    List<Map<String, Object>> findDuplicateEmails();
 }

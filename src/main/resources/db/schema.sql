@@ -18,7 +18,19 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS idx_users_phone ON users(phone);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-ALTER TABLE users ADD CONSTRAINT IF NOT EXISTS uq_users_email UNIQUE (email);
+
+-- Add unique constraint on email if it doesn't exist (PostgreSQL-compatible)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'uq_users_email' 
+        AND conrelid = 'users'::regclass
+    ) THEN
+        ALTER TABLE users ADD CONSTRAINT uq_users_email UNIQUE (email);
+    END IF;
+END $$;
+
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(10);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires_at TIMESTAMP;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question VARCHAR(255);
