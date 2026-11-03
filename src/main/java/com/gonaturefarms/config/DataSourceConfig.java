@@ -10,10 +10,6 @@ import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
 
-/**
- * DataSource configuration for Prisma PostgreSQL.
- * Ensures connection pooling compatibility with PgBouncer.
- */
 @Configuration
 public class DataSourceConfig {
 
@@ -28,19 +24,6 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        String url = dataSourceProperties.getUrl();
-        String username = dataSourceProperties.getUsername();
-        String password = dataSourceProperties.getPassword();
-
-        log.info("=== DataSource Configuration ===");
-        log.info("URL (masked): {}", url != null ? url.replaceAll(":[^:@]+@", ":****@") : null);
-        log.info("Username: {}", username);
-        log.info("SSL mode: {}", url != null && url.contains("sslmode=require") ? "REQUIRED (Prisma)" : "DISABLED/DEFAULT");
-
-        dataSourceProperties.setUrl(url);
-        dataSourceProperties.setUsername(username);
-        dataSourceProperties.setPassword(password);
-
         HikariDataSource dataSource = dataSourceProperties.initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
@@ -48,7 +31,7 @@ public class DataSourceConfig {
         // CRITICAL: Disable prepared statements for Prisma PgBouncer compatibility
         dataSource.addDataSourceProperty("prepareThreshold", "0");
 
-        log.info("=== DataSource Configuration Complete ===");
+        log.info("=== DataSource Configuration Complete (Prisma PgBouncer Compatible) ===");
         return dataSource;
     }
 }
