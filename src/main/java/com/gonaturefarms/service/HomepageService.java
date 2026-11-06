@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.gonaturefarms.dto.common.ApiResponse;
+import com.gonaturefarms.entity.HomepageLayout;
+import com.gonaturefarms.repository.HomepageLayoutRepository;
 import com.gonaturefarms.repository.ScrollBlockRepository;
 import com.gonaturefarms.repository.SlideRepository;
 import com.gonaturefarms.repository.SiteSettingRepository;
@@ -17,6 +19,7 @@ import com.gonaturefarms.repository.ProductRepository;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Homepage data aggregation service
@@ -34,6 +37,7 @@ public class HomepageService {
     private final TestimonialRepository testimonialRepository;
     private final VideoRepository videoRepository;
     private final ProductRepository productRepository;
+    private final HomepageLayoutRepository homepageLayoutRepository;
 
     public HomepageService(
             SiteSettingRepository siteSettingRepository,
@@ -44,7 +48,8 @@ public class HomepageService {
             FooterLinkRepository footerLinkRepository,
             TestimonialRepository testimonialRepository,
             VideoRepository videoRepository,
-            ProductRepository productRepository) {
+            ProductRepository productRepository,
+            HomepageLayoutRepository homepageLayoutRepository) {
         this.siteSettingRepository = siteSettingRepository;
         this.slideRepository = slideRepository;
         this.scrollBlockRepository = scrollBlockRepository;
@@ -54,6 +59,7 @@ public class HomepageService {
         this.testimonialRepository = testimonialRepository;
         this.videoRepository = videoRepository;
         this.productRepository = productRepository;
+        this.homepageLayoutRepository = homepageLayoutRepository;
     }
 
     @Transactional(readOnly = true)
@@ -73,6 +79,10 @@ public class HomepageService {
             // Limit products to latest ones for better performance
             List<?> products = productRepository.findTop12ByOrderByCreatedAtDesc();
 
+            // Fetch published homepage layout configuration
+            Optional<HomepageLayout> layoutOpt = homepageLayoutRepository.findByIsPublishedTrueOrderByUpdatedAtDesc();
+            HomepageLayout layout = layoutOpt.orElse(null);
+
             return ApiResponse.ok()
                     .with("settings", settings)
                     .with("slides", slides)
@@ -82,7 +92,8 @@ public class HomepageService {
                     .with("footerLinks", footerLinks)
                     .with("testimonials", testimonials)
                     .with("videos", videos)
-                    .with("products", products);
+                    .with("products", products)
+                    .with("layout", layout);
         } catch (Exception e) {
             System.err.println("!!! CRITICAL ERROR IN HomepageService.getHomepageData() !!!");
             e.printStackTrace();
