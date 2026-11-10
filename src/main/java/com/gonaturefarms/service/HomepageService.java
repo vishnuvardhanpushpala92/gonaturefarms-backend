@@ -2,6 +2,8 @@ package com.gonaturefarms.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * Homepage data aggregation service
  * Batches all required homepage data in a single request to reduce API calls
+ * Implements caching for public homepage data to reduce database load
  */
 @Service
 public class HomepageService {
@@ -43,6 +49,7 @@ public class HomepageService {
     private final VideoRepository videoRepository;
     private final ProductRepository productRepository;
     private final HomepageLayoutRepository homepageLayoutRepository;
+    private final Executor taskExecutor;
 
     public HomepageService(
             SiteSettingRepository siteSettingRepository,
@@ -54,7 +61,8 @@ public class HomepageService {
             TestimonialRepository testimonialRepository,
             VideoRepository videoRepository,
             ProductRepository productRepository,
-            HomepageLayoutRepository homepageLayoutRepository) {
+            HomepageLayoutRepository homepageLayoutRepository,
+            Executor taskExecutor) {
         this.siteSettingRepository = siteSettingRepository;
         this.slideRepository = slideRepository;
         this.scrollBlockRepository = scrollBlockRepository;
@@ -65,8 +73,10 @@ public class HomepageService {
         this.videoRepository = videoRepository;
         this.productRepository = productRepository;
         this.homepageLayoutRepository = homepageLayoutRepository;
+        this.taskExecutor = taskExecutor;
     }
 
+    @Cacheable(value = "homepageData", key = "'public'")
     @Transactional(readOnly = true)
     public ApiResponse getHomepageData() {
         String requestId = UUID.randomUUID().toString().substring(0, 8);
@@ -75,65 +85,45 @@ public class HomepageService {
         log.info("=== HOMEPAGE REQUEST START [{}] ===", requestId);
         
         try {
-            long t0 = System.currentTimeMillis();
-            
-            // Critical data for first viewport
-            long t1 = System.currentTimeMillis();
-            Map<String, String> settings = getPublicSettings();
-            long t2 = System.currentTimeMillis();
-            log.info("[{}] Settings: {} records ({}ms)", requestId, settings.size(), (t2 - t1));
-            
-            long t3 = System.currentTimeMillis();
-            List<?> slides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
-            long t4 = System.currentTimeMillis();
-            log.info("[{}] Slides: {} records ({}ms)", requestId, slides.size(), (t4 - t3));
-            
-            long t5 = System.currentTimeMillis();
-            List<?> blocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
-            long t6 = System.currentTimeMillis();
-            log.info("[{}] Blocks: {} records ({}ms)", requestId, blocks.size(), (t6 - t5));
+            // Execute database queries in parallel for better performance
+            CompletableFuture<Map<String, String>> settingsFuture = CompletableFuture.supplyAsync(this::getPublicSettings, taskExecutor);
+            CompletableFuture<List<?>> slidesFuture = CompletableFuture.supplyAsync(() -> slideRepository.findAllByOrderBySortOrderAscIdAsc(), taskExecutor);
+            CompletableFuture<List<?>> blocksFuture = CompletableFuture.supplyAsync(() -> scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc(), taskExecutor);
+            CompletableFuture<List<?>> faqsFuture = CompletableFuture.supplyAsync(() -> faqRepository.findTop6ByOrderBySortOrderAscIdAsc(), taskExecutor);
+            CompletableFuture<List<?>> zonesFuture = CompletableFuture.supplyAsync(() -> deliveryZoneRepository.findAll(), taskExecutor);
+            CompletableFuture<List<?>> footerLinksFuture = CompletableFuture.supplyAsync(() -> footerLinkRepository.findTop8ByOrderBySortOrderAscIdAsc(), taskExecutor);
+            CompletableFuture<List<?>> testimonialsFuture = CompletableFuture.supplyAsync(() -> testimonialRepository.findTop4ByOrderByCreatedAtDesc(), taskExecutor);
+            CompletableFuture<List<?>> videosFuture = CompletableFuture.supplyAsync(() -> videoRepository.findTop3ByEnabledTrueOrderByPriority(), taskExecutor);
+            CompletableFuture<List<?>> productsFuture = CompletableFuture.supplyAsync(() -> productRepository.findTop12ByOrderByCreatedAtDesc(), taskExecutor);
+            CompletableFuture<Optional<HomepageLayout>> layoutFuture = CompletableFuture.supplyAsync(() -> homepageLayoutRepository.findByIsPublishedTrueOrderByUpdatedAtDesc(), taskExecutor);
 
-            // Secondary data - fetch with limits for performance
-            long t7 = System.currentTimeMillis();
-            List<?> faqs = faqRepository.findTop6ByOrderBySortOrderAscIdAsc();
-            long t8 = System.currentTimeMillis();
-            log.info("[{}] FAQs: {} records ({}ms)", requestId, faqs.size(), (t8 - t7));
-            
-            long t9 = System.currentTimeMillis();
-            List<?> zones = deliveryZoneRepository.findAll();
-            long t10 = System.currentTimeMillis();
-            log.info("[{}] Zones: {} records ({}ms)", requestId, zones.size(), (t10 - t9));
-            
-            long t11 = System.currentTimeMillis();
-            List<?> footerLinks = footerLinkRepository.findTop8ByOrderBySortOrderAscIdAsc();
-            long t12 = System.currentTimeMillis();
-            log.info("[{}] FooterLinks: {} records ({}ms)", requestId, footerLinks.size(), (t12 - t11));
-            
-            long t13 = System.currentTimeMillis();
-            List<?> testimonials = testimonialRepository.findTop4ByOrderByCreatedAtDesc();
-            long t14 = System.currentTimeMillis();
-            log.info("[{}] Testimonials: {} records ({}ms)", requestId, testimonials.size(), (t14 - t13));
-            
-            long t15 = System.currentTimeMillis();
-            List<?> videos = videoRepository.findTop3ByEnabledTrueOrderByPriority();
-            long t16 = System.currentTimeMillis();
-            log.info("[{}] Videos: {} records ({}ms)", requestId, videos.size(), (t16 - t15));
-            
-            // Limit products to latest ones for better performance
-            long t17 = System.currentTimeMillis();
-            List<?> products = productRepository.findTop12ByOrderByCreatedAtDesc();
-            long t18 = System.currentTimeMillis();
-            log.info("[{}] Products: {} records ({}ms)", requestId, products.size(), (t18 - t17));
+            // Wait for all queries to complete
+            CompletableFuture.allOf(
+                settingsFuture, slidesFuture, blocksFuture, faqsFuture,
+                zonesFuture, footerLinksFuture, testimonialsFuture,
+                videosFuture, productsFuture, layoutFuture
+            ).join();
 
-            // Fetch published homepage layout configuration
-            long t19 = System.currentTimeMillis();
-            Optional<HomepageLayout> layoutOpt = homepageLayoutRepository.findByIsPublishedTrueOrderByUpdatedAtDesc();
+            // Collect results
+            Map<String, String> settings = settingsFuture.get();
+            List<?> slides = slidesFuture.get();
+            List<?> blocks = blocksFuture.get();
+            List<?> faqs = faqsFuture.get();
+            List<?> zones = zonesFuture.get();
+            List<?> footerLinks = footerLinksFuture.get();
+            List<?> testimonials = testimonialsFuture.get();
+            List<?> videos = videosFuture.get();
+            List<?> products = productsFuture.get();
+            Optional<HomepageLayout> layoutOpt = layoutFuture.get();
             HomepageLayout layout = layoutOpt.orElse(null);
-            long t20 = System.currentTimeMillis();
-            log.info("[{}] Layout: {} ({}ms)", requestId, layout != null ? "published" : "none", (t20 - t19));
 
-            long t21 = System.currentTimeMillis();
-            ApiResponse response = ApiResponse.ok()
+            long endTime = System.currentTimeMillis();
+            long totalTime = endTime - startTime;
+            
+            log.info("=== HOMEPAGE REQUEST COMPLETE [{}] - TOTAL: {}ms ===", requestId, totalTime);
+            log.info("[{}] Cache hit: false (executed queries)", requestId);
+            
+            return ApiResponse.ok()
                     .with("settings", settings)
                     .with("slides", slides)
                     .with("blocks", blocks)
@@ -144,17 +134,21 @@ public class HomepageService {
                     .with("videos", videos)
                     .with("products", products)
                     .with("layout", layout);
-            
-            long endTime = System.currentTimeMillis();
-            log.info("=== HOMEPAGE REQUEST COMPLETE [{}] - TOTAL: {}ms ===", requestId, (endTime - startTime));
-            
-            return response;
         } catch (Exception e) {
             long endTime = System.currentTimeMillis();
             log.error("!!! CRITICAL ERROR IN HomepageService.getHomepageData() [{}] - TOTAL: {}ms !!!", requestId, (endTime - startTime), e);
             e.printStackTrace();
             return ApiResponse.fail("Error loading homepage data: " + e.getMessage());
         }
+    }
+
+    /**
+     * Invalidate homepage cache when admin publishes changes
+     * Called by admin endpoints after content updates
+     */
+    @CacheEvict(value = "homepageData", key = "'public'")
+    public void evictHomepageCache() {
+        log.info("Homepage cache evicted - next request will fetch fresh data");
     }
 
     private Map<String, String> getPublicSettings() {

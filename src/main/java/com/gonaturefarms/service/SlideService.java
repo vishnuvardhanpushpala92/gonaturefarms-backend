@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 public class SlideService {
 
     private final SlideRepository slideRepository;
+    private final HomepageService homepageService;
 
-    public SlideService(SlideRepository slideRepository) {
+    public SlideService(SlideRepository slideRepository, HomepageService homepageService) {
         this.slideRepository = slideRepository;
+        this.homepageService = homepageService;
     }
 
     @Transactional(readOnly = true)
@@ -48,38 +50,66 @@ public class SlideService {
     }
 
     @Transactional
-    public ApiResponse create(SlideRequest req) {
-        if (req.getImageUrl() == null || req.getImageUrl().isBlank()) {
-            throw new ApiException("Image URL required");
+    public ApiResponse create(SlideRequest request) {
+        try {
+            Slide slide = new Slide();
+            slide.setCaption(request.getCaption());
+            slide.setSubText(request.getSubText());
+            slide.setImageUrl(request.getImageUrl());
+            slide.setSortOrder(request.getSortOrder());
+            slide.setPending(false); // Default to false for immediate visibility
+            
+            Slide saved = slideRepository.save(slide);
+            
+            // Evict homepage cache after content update
+            homepageService.evictHomepageCache();
+            
+            return ApiResponse.ok("Slide created successfully").with("slide", saved);
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Slide Service.create() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error creating slide: " + e.getMessage());
         }
-        Slide slide = Slide.builder()
-                .imageUrl(req.getImageUrl())
-                .caption(req.getCaption() == null ? "" : req.getCaption())
-                .subText(req.getSubText() == null ? "" : req.getSubText())
-                .sortOrder(req.getSortOrder() != null ? req.getSortOrder().intValue() : 0)
-                .pending(false)  // Changed to false so slides appear immediately
-                .build();
-        slide = slideRepository.save(slide);
-        return ApiResponse.ok("Slide added").with("id", slide.getId());
     }
 
     @Transactional
-    public ApiResponse update(Long id, SlideRequest req) {
-        Slide slide = slideRepository.findById(id)
-                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Slide not found"));
-        slide.setImageUrl(req.getImageUrl());
-        slide.setCaption(req.getCaption() == null ? "" : req.getCaption());
-        slide.setSubText(req.getSubText() == null ? "" : req.getSubText());
-        slide.setPending(false);  // Changed to false for immediate visibility
-        slideRepository.save(slide);
-        return ApiResponse.ok("Slide updated");
+    public ApiResponse update(Long id, SlideRequest request) {
+        try {
+            Slide slide = slideRepository.findById(id)
+                    .orElseThrow(() -> new ApiException("Slide not found"));
+            
+            slide.setCaption(request.getCaption());
+            slide.setSubText(request.getSubText());
+            slide.setImageUrl(request.getImageUrl());
+            slide.setSortOrder(request.getSortOrder());
+            slide.setPending(false); // Keep visible
+            
+            Slide saved = slideRepository.save(slide);
+            
+            // Evict homepage cache after content update
+            homepageService.evictHomepageCache();
+            
+            return ApiResponse.ok("Slide updated successfully").with("slide", saved);
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Slide Service.update() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error updating slide: " + e.getMessage());
+        }
     }
 
     @Transactional
     public ApiResponse delete(Long id) {
-        Slide slide = slideRepository.findById(id)
-                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Slide not found"));
-        slideRepository.delete(slide);
-        return ApiResponse.ok("Slide deleted");
+        try {
+            slideRepository.deleteById(id);
+            
+            // Evict homepage cache after content update
+            homepageService.evictHomepageCache();
+            
+            return ApiResponse.ok("Slide deleted successfully");
+        } catch (Exception e) {
+            System.err.println("!!! CRITICAL ERROR IN Slide Service.delete() !!!");
+            e.printStackTrace();
+            return ApiResponse.fail("Error deleting slide: " + e.getMessage());
+        }
     }
 }
