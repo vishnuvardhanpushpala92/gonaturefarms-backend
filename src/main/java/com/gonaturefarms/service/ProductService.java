@@ -35,6 +35,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final HomepageService homepageService;
 
     // Utility for generating random file names
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -45,10 +46,12 @@ public class ProductService {
 
     public ProductService(ProductRepository productRepository,
                          CategoryRepository categoryRepository,
-                         ProductVariantRepository productVariantRepository) {
+                         ProductVariantRepository productVariantRepository,
+                         HomepageService homepageService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productVariantRepository = productVariantRepository;
+        this.homepageService = homepageService;
     }
 
     // ──────────────────────────────────────────────
@@ -218,6 +221,9 @@ public class ProductService {
 
         saveUniqueVariants(product, req.getVariants());
 
+        // Evict homepage cache after product changes
+        homepageService.evictHomepageCache();
+
         return ApiResponse.ok("Product added").with("id", product.getId());
     }
 
@@ -246,6 +252,9 @@ public class ProductService {
         // ✅ Re-save only the unique variants from the request
         saveUniqueVariants(product, req.getVariants());
 
+        // Evict homepage cache after product changes
+        homepageService.evictHomepageCache();
+
         return ApiResponse.ok("Product updated");
     }
 
@@ -254,6 +263,9 @@ public class ProductService {
         if (productRepository.existsById(id)) {
             productVariantRepository.deleteByProductId(id);
             productRepository.deleteById(id);
+            
+            // Evict homepage cache after product changes
+            homepageService.evictHomepageCache();
         }
         return ApiResponse.ok("Product deleted");
     }
