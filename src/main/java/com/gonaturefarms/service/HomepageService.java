@@ -2,8 +2,6 @@ package com.gonaturefarms.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 /**
  * Homepage data aggregation service
  * Batches all required homepage data in a single request to reduce API calls
- * Implements caching for public homepage data to reduce database load
  */
 @Service
 public class HomepageService {
@@ -49,7 +43,6 @@ public class HomepageService {
     private final VideoRepository videoRepository;
     private final ProductRepository productRepository;
     private final HomepageLayoutRepository homepageLayoutRepository;
-    private final Executor taskExecutor;
 
     public HomepageService(
             SiteSettingRepository siteSettingRepository,
@@ -61,8 +54,7 @@ public class HomepageService {
             TestimonialRepository testimonialRepository,
             VideoRepository videoRepository,
             ProductRepository productRepository,
-            HomepageLayoutRepository homepageLayoutRepository,
-            Executor taskExecutor) {
+            HomepageLayoutRepository homepageLayoutRepository) {
         this.siteSettingRepository = siteSettingRepository;
         this.slideRepository = slideRepository;
         this.scrollBlockRepository = scrollBlockRepository;
@@ -73,10 +65,8 @@ public class HomepageService {
         this.videoRepository = videoRepository;
         this.productRepository = productRepository;
         this.homepageLayoutRepository = homepageLayoutRepository;
-        this.taskExecutor = taskExecutor;
     }
 
-    @Cacheable(value = "homepageData", key = "'public'")
     @Transactional(readOnly = true)
     public ApiResponse getHomepageData() {
         String requestId = UUID.randomUUID().toString().substring(0, 8);
@@ -127,10 +117,10 @@ public class HomepageService {
     /**
      * Invalidate homepage cache when admin publishes changes
      * Called by admin endpoints after content updates
+     * NOTE: Caching disabled for stability - this is a no-op for now
      */
-    @CacheEvict(value = "homepageData", key = "'public'")
     public void evictHomepageCache() {
-        log.info("Homepage cache evicted - next request will fetch fresh data");
+        log.info("Homepage cache evicted (no-op - caching disabled)");
     }
 
     private Map<String, String> getPublicSettings() {
