@@ -25,6 +25,7 @@ public class VideoService {
 
     private final VideoRepository videoRepository;
     private final ProductRepository productRepository;
+    private final HomepageService homepageService;
     private Cloudinary cloudinary;
 
     // Inject Cloudinary credentials from application.properties
@@ -37,9 +38,10 @@ public class VideoService {
     @Value("${cloudinary.api.secret}")
     private String apiSecret;
 
-    public VideoService(VideoRepository videoRepository, ProductRepository productRepository) {
+    public VideoService(VideoRepository videoRepository, ProductRepository productRepository, HomepageService homepageService) {
         this.videoRepository = videoRepository;
         this.productRepository = productRepository;
+        this.homepageService = homepageService;
     }
 
     // Initialize Cloudinary lazily when needed instead of @PostConstruct
@@ -162,6 +164,10 @@ public class VideoService {
         video.setPending(true);
 
         Video saved = videoRepository.save(video);
+        
+        // Evict homepage cache after video changes
+        homepageService.evictHomepageCache();
+        
         return ApiResponse.ok("Video created successfully").with("video", enrichVideoWithProduct(saved));
     }
 
@@ -190,6 +196,10 @@ public class VideoService {
                 }
 
                 Video updated = videoRepository.save(existing);
+                
+                // Evict homepage cache after video changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Video updated successfully").with("video", enrichVideoWithProduct(updated));
             })
             .orElse(ApiResponse.fail("Video not found"));
@@ -214,6 +224,10 @@ public class VideoService {
             .map(video -> {
                 video.setEnabled(!video.getEnabled());
                 Video updated = videoRepository.save(video);
+                
+                // Evict homepage cache after video changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Video status updated").with("video", updated);
             })
             .orElse(ApiResponse.fail("Video not found"));
@@ -225,6 +239,10 @@ public class VideoService {
             .map(video -> {
                 video.setPending(false);
                 Video updated = videoRepository.save(video);
+                
+                // Evict homepage cache after video changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Video approved successfully").with("video", enrichVideoWithProduct(updated));
             })
             .orElse(ApiResponse.fail("Video not found"));

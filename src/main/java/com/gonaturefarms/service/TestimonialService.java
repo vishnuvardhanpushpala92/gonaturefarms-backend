@@ -14,9 +14,11 @@ import com.gonaturefarms.repository.TestimonialRepository;
 public class TestimonialService {
 
     private final TestimonialRepository testimonialRepository;
+    private final HomepageService homepageService;
 
-    public TestimonialService(TestimonialRepository testimonialRepository) {
+    public TestimonialService(TestimonialRepository testimonialRepository, HomepageService homepageService) {
         this.testimonialRepository = testimonialRepository;
+        this.homepageService = homepageService;
     }
 
     public ApiResponse getAllEnabled() {
@@ -44,6 +46,10 @@ public class TestimonialService {
     public ApiResponse create(Testimonial testimonial) {
         testimonial.setPending(true);
         Testimonial saved = testimonialRepository.save(testimonial);
+        
+        // Evict homepage cache after testimonial changes
+        homepageService.evictHomepageCache();
+        
         return ApiResponse.ok("Testimonial created successfully").with("testimonial", saved);
     }
 
@@ -59,6 +65,10 @@ public class TestimonialService {
                 existing.setSortOrder(testimonial.getSortOrder());
                 existing.setPending(true);
                 Testimonial updated = testimonialRepository.save(existing);
+                
+                // Evict homepage cache after testimonial changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Testimonial updated successfully").with("testimonial", updated);
             })
             .orElse(ApiResponse.fail("Testimonial not found"));
@@ -69,6 +79,10 @@ public class TestimonialService {
         return testimonialRepository.findById(id)
             .map(testimonial -> {
                 testimonialRepository.deleteById(id);
+                
+                // Evict homepage cache after testimonial changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Testimonial deleted successfully");
             })
             .orElse(ApiResponse.fail("Testimonial not found"));
@@ -80,6 +94,10 @@ public class TestimonialService {
             .map(testimonial -> {
                 testimonial.setEnabled(!testimonial.getEnabled());
                 Testimonial updated = testimonialRepository.save(testimonial);
+                
+                // Evict homepage cache after testimonial changes
+                homepageService.evictHomepageCache();
+                
                 return ApiResponse.ok("Testimonial status updated").with("testimonial", updated);
             })
             .orElse(ApiResponse.fail("Testimonial not found"));

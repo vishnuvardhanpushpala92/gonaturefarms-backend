@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 public class FaqService {
 
     private final FaqRepository faqRepository;
+    private final HomepageService homepageService;
 
-    public FaqService(FaqRepository faqRepository) {
+    public FaqService(FaqRepository faqRepository, HomepageService homepageService) {
         this.faqRepository = faqRepository;
+        this.homepageService = homepageService;
     }
 
     @Transactional(readOnly = true)
@@ -49,12 +51,20 @@ public class FaqService {
                 .pending(true)
                 .build();
         faq = faqRepository.save(faq);
+        
+        // Evict homepage cache after FAQ changes
+        homepageService.evictHomepageCache();
+        
         return ApiResponse.ok("FAQ added").with("id", faq.getId());
     }
 
     @Transactional
     public ApiResponse delete(Long id) {
         faqRepository.deleteById(id);
+        
+        // Evict homepage cache after FAQ changes
+        homepageService.evictHomepageCache();
+        
         return ApiResponse.ok("FAQ deleted");
     }
 }
