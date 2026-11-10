@@ -85,43 +85,25 @@ public class HomepageService {
         log.info("=== HOMEPAGE REQUEST START [{}] ===", requestId);
         
         try {
-            // Execute database queries in parallel for better performance
-            CompletableFuture<Map<String, String>> settingsFuture = CompletableFuture.supplyAsync(this::getPublicSettings, taskExecutor);
-            CompletableFuture<List<?>> slidesFuture = CompletableFuture.supplyAsync(() -> slideRepository.findAllByOrderBySortOrderAscIdAsc(), taskExecutor);
-            CompletableFuture<List<?>> blocksFuture = CompletableFuture.supplyAsync(() -> scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc(), taskExecutor);
-            CompletableFuture<List<?>> faqsFuture = CompletableFuture.supplyAsync(() -> faqRepository.findTop6ByOrderBySortOrderAscIdAsc(), taskExecutor);
-            CompletableFuture<List<?>> zonesFuture = CompletableFuture.supplyAsync(() -> deliveryZoneRepository.findAll(), taskExecutor);
-            CompletableFuture<List<?>> footerLinksFuture = CompletableFuture.supplyAsync(() -> footerLinkRepository.findTop8ByOrderBySortOrderAscIdAsc(), taskExecutor);
-            CompletableFuture<List<?>> testimonialsFuture = CompletableFuture.supplyAsync(() -> testimonialRepository.findTop4ByOrderByCreatedAtDesc(), taskExecutor);
-            CompletableFuture<List<?>> videosFuture = CompletableFuture.supplyAsync(() -> videoRepository.findTop3ByEnabledTrueOrderByPriority(), taskExecutor);
-            CompletableFuture<List<?>> productsFuture = CompletableFuture.supplyAsync(() -> productRepository.findTop12ByOrderByCreatedAtDesc(), taskExecutor);
-            CompletableFuture<Optional<HomepageLayout>> layoutFuture = CompletableFuture.supplyAsync(() -> homepageLayoutRepository.findByIsPublishedTrueOrderByUpdatedAtDesc(), taskExecutor);
+            // Critical data for first viewport
+            Map<String, String> settings = getPublicSettings();
+            List<?> slides = slideRepository.findAllByOrderBySortOrderAscIdAsc();
+            List<?> blocks = scrollBlockRepository.findAllByOrderBySortOrderAscIdAsc();
 
-            // Wait for all queries to complete
-            CompletableFuture.allOf(
-                settingsFuture, slidesFuture, blocksFuture, faqsFuture,
-                zonesFuture, footerLinksFuture, testimonialsFuture,
-                videosFuture, productsFuture, layoutFuture
-            ).join();
-
-            // Collect results
-            Map<String, String> settings = settingsFuture.get();
-            List<?> slides = slidesFuture.get();
-            List<?> blocks = blocksFuture.get();
-            List<?> faqs = faqsFuture.get();
-            List<?> zones = zonesFuture.get();
-            List<?> footerLinks = footerLinksFuture.get();
-            List<?> testimonials = testimonialsFuture.get();
-            List<?> videos = videosFuture.get();
-            List<?> products = productsFuture.get();
-            Optional<HomepageLayout> layoutOpt = layoutFuture.get();
+            // Secondary data - fetch with limits for performance
+            List<?> faqs = faqRepository.findTop6ByOrderBySortOrderAscIdAsc();
+            List<?> zones = deliveryZoneRepository.findAll();
+            List<?> footerLinks = footerLinkRepository.findTop8ByOrderBySortOrderAscIdAsc();
+            List<?> testimonials = testimonialRepository.findTop4ByOrderByCreatedAtDesc();
+            List<?> videos = videoRepository.findTop3ByEnabledTrueOrderByPriority();
+            List<?> products = productRepository.findTop12ByOrderByCreatedAtDesc();
+            Optional<HomepageLayout> layoutOpt = homepageLayoutRepository.findByIsPublishedTrueOrderByUpdatedAtDesc();
             HomepageLayout layout = layoutOpt.orElse(null);
 
             long endTime = System.currentTimeMillis();
             long totalTime = endTime - startTime;
             
             log.info("=== HOMEPAGE REQUEST COMPLETE [{}] - TOTAL: {}ms ===", requestId, totalTime);
-            log.info("[{}] Cache hit: false (executed queries)", requestId);
             
             return ApiResponse.ok()
                     .with("settings", settings)
