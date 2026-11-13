@@ -41,28 +41,86 @@ public class WhatsAppApiService {
             throw new IllegalStateException("WhatsApp API is not configured. Please set access token and phone number ID.");
         }
 
-        // For public URLs, we can send them directly without upload
-        // WhatsApp accepts public image URLs in media messages
-        if (imageUrl != null && imageUrl.startsWith("http")) {
-            logger.info("Using public image URL directly: {}", imageUrl);
-            return imageUrl;
+        // Download the image from the public URL
+        if (imageUrl == null || !imageUrl.startsWith("http")) {
+            throw new IllegalArgumentException("Image URL must be a public HTTPS URL");
         }
 
-        throw new IllegalArgumentException("Image URL must be a public HTTPS URL");
+        logger.info("Downloading image from: {}", imageUrl);
+
+        // Download the image
+        Request downloadRequest = new Request.Builder()
+                .url(imageUrl)
+                .get()
+                .build();
+
+        try (Response downloadResponse = httpClient.newCall(downloadRequest).execute()) {
+            if (!downloadResponse.isSuccessful()) {
+                throw new IOException("Failed to download image: " + downloadResponse.code());
+            }
+
+            byte[] imageBytes = downloadResponse.body() != null ? downloadResponse.body().bytes() : null;
+            if (imageBytes == null || imageBytes.length == 0) {
+                throw new IOException("Downloaded image is empty");
+            }
+
+            logger.info("Image downloaded successfully, size: {} bytes", imageBytes.length);
+
+            // Upload to WhatsApp Media API
+            String uploadUrl = config.getApiUrl() + "/" + config.getPhoneNumberId() + "/media";
+
+            // Determine content type (default to image/png as requested)
+            MediaType mediaType = MediaType.parse("image/png");
+
+            RequestBody imageBody = RequestBody.create(imageBytes, mediaType);
+            MultipartBody uploadBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", "product_image.png", imageBody)
+                    .addFormDataPart("messaging_product", "whatsapp")
+                    .addFormDataPart("type", "image/png")
+                    .build();
+
+            Request uploadRequest = new Request.Builder()
+                    .url(uploadUrl)
+                    .addHeader("Authorization", "Bearer " + config.getAccessToken())
+                    .post(uploadBody)
+                    .build();
+
+            try (Response uploadResponse = httpClient.newCall(uploadRequest).execute()) {
+                String responseBody = uploadResponse.body() != null ? uploadResponse.body().string() : "";
+                logger.info("WhatsApp Media API response: {}", responseBody);
+
+                if (!uploadResponse.isSuccessful()) {
+                    logger.error("WhatsApp Media API error: {} - {}", uploadResponse.code(), responseBody);
+                    throw new IOException("WhatsApp Media API error: " + uploadResponse.code() + " - " + responseBody);
+                }
+
+                // Extract media ID from response
+                JsonNode responseJson = objectMapper.readTree(responseBody);
+                String mediaId = responseJson.path("id").asText();
+
+                if (mediaId == null || mediaId.isEmpty()) {
+                    throw new IOException("Media ID not found in response");
+                }
+
+                logger.info("Image uploaded successfully, media ID: {}", mediaId);
+                return mediaId;
+            }
+        }
     }
 
     /**
-     * Send an image message with caption to a phone number
+     * Send an image message with caption to a phone number using media ID
      */
-    public JsonNode sendImageMessage(String toPhone, String mediaUrl, String caption) throws IOException {
+    public JsonNode sendImageMessage(String toPhone, String mediaId, String caption) throws IOException {
         if (!config.isConfigured()) {
             throw new IllegalStateException("WhatsApp API is not configured. Please set access token and phone number ID.");
         }
 
         String url = config.getApiUrl() + "/" + config.getPhoneNumberId() + "/messages";
 
-        // Build the message payload
-        String payload = buildImageMessagePayload(toPhone, mediaUrl, caption);
+        // Build the message payload using media ID
+        String payload = buildImageMessagePayload(toPhone, mediaId, caption);
 
         RequestBody body = RequestBody.create(payload, JSON);
         Request request = new Request.Builder()
@@ -118,16 +176,16 @@ public class WhatsAppApiService {
     }
 
     /**
-     * Build image message payload for direct media sending
+     * Build image message payload using media ID
      */
-    private String buildImageMessagePayload(String toPhone, String mediaUrl, String caption) {
+    private String buildImageMessagePayload(String toPhone, String mediaId, String caption) {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
         sb.append("\"messaging_product\": \"whatsapp\",");
         sb.append("\"to\": \"").append(toPhone).append("\",");
         sb.append("\"type\": \"image\",");
         sb.append("\"image\": {");
-        sb.append("\"link\": \"").append(mediaUrl).append("\",");
+        sb.append("\"id\": \"").append(mediaId).append("\",");
         if (caption != null && !caption.isEmpty()) {
             sb.append("\"caption\": \"").append(escapeJson(caption)).append("\"");
         }

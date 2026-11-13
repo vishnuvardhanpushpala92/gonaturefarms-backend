@@ -191,6 +191,21 @@ public class WhatsAppReminderService {
         int failureCount = 0;
         List<String> errors = new ArrayList<>();
 
+        // Upload image once if using WhatsApp API (to avoid repeated uploads)
+        String mediaId = null;
+        if (useWhatsAppApi && product != null && product.getImgUrl() != null) {
+            try {
+                logger.info("Uploading product image to WhatsApp Media API...");
+                mediaId = whatsappApiService.uploadMedia(product.getImgUrl());
+                logger.info("Image uploaded successfully, media ID: " + mediaId);
+            } catch (IOException e) {
+                logger.severe("Failed to upload image to WhatsApp: " + e.getMessage());
+                errors.add("Image upload failed: " + e.getMessage());
+                // Continue with fallback mode
+                useWhatsAppApi = false;
+            }
+        }
+
         for (Long customerId : request.getCustomerIds()) {
             User customer = userRepository.findById(customerId)
                     .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Customer not found"));
@@ -206,8 +221,8 @@ public class WhatsAppReminderService {
             String phoneNumber = whatsappApiService.normalizePhoneNumber(customer.getPhone());
 
             try {
-                if (useWhatsAppApi && product != null && product.getImgUrl() != null) {
-                    // Use WhatsApp Business Cloud API for image message
+                if (useWhatsAppApi && mediaId != null) {
+                    // Use WhatsApp Business Cloud API for image message with media ID
                     String caption = "🌿 Go Nature Farms\n\n" +
                             "✨ " + product.getName() + "\n\n" +
                             "💰 Price: ₹" + product.getPrice() + "\n" +
@@ -216,7 +231,7 @@ public class WhatsAppReminderService {
                             "\n🌱 Fresh • Natural • Quality Assured\n\n" +
                             "🛒 Shop Now: https://gonaturefarms-frontend.vercel.app/products/" + product.getId();
 
-                    JsonNode response = whatsappApiService.sendImageMessage(phoneNumber, product.getImgUrl(), caption);
+                    JsonNode response = whatsappApiService.sendImageMessage(phoneNumber, mediaId, caption);
                     logger.info("WhatsApp API message sent to " + customer.getName() + ": " + response);
                     successCount++;
                 } else {
