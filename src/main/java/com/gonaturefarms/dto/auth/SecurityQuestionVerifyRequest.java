@@ -8,6 +8,9 @@ public class SecurityQuestionVerifyRequest {
     @NotBlank(message = "Phone or email is required")
     private String identifier;
 
-    // Manual getter as failsafe for Lombok processing issues
+    private String captchaToken;
+
+    // Manual getters as failsafe for Lombok processing issues
     public String getIdentifier() { return identifier; }
+    public String getCaptchaToken() { return captchaToken; }
 }

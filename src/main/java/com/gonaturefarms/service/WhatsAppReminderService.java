@@ -129,17 +129,39 @@ public class WhatsAppReminderService {
             product = productRepository.findById(request.getProductId())
                     .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
 
-            // Get appropriate emoji for product
-            String productEmoji = getProductEmoji(product.getName(), product.getCat());
-
-            // Generate message format with emojis
+            // Generate premium product showcase message format
             StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.append(productEmoji).append(" ").append(product.getName()).append("\n\n");
-            messageBuilder.append(product.getDescription()).append("\n\n");
+            
+            // HEADER
+            messageBuilder.append("══════════════════════════════════\n");
+            messageBuilder.append("🌿 Go Nature Farms\n");
+            messageBuilder.append("══════════════════════════════════\n");
+            messageBuilder.append("Farm-fresh organic products delivered to your door.\n\n");
+            
+            // PRODUCT IMAGE (as clickable URL)
+            if (product.getImgUrl() != null && !product.getImgUrl().isEmpty()) {
+                messageBuilder.append("📸 Product Image:\n");
+                messageBuilder.append(product.getImgUrl()).append("\n\n");
+            }
+            
+            // PRODUCT DETAILS
+            messageBuilder.append("✨ Introducing: ").append(product.getName()).append("\n\n");
+            
+            if (product.getDescription() != null && !product.getDescription().isEmpty()) {
+                messageBuilder.append(product.getDescription()).append("\n\n");
+            }
+            
             messageBuilder.append("💰 Price: ₹").append(product.getPrice()).append("\n");
-            messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n\n");
-            messageBuilder.append("🌿 Fresh • Natural • Quality Assured\n\n");
-            messageBuilder.append("🌱 Go Nature Farms\n\n");
+            if (product.getMrp() != null && product.getMrp().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n");
+            }
+            
+            messageBuilder.append("\n� Fresh • Natural • Quality Assured\n\n");
+            
+            // FOOTER
+            messageBuilder.append("══════════════════════════════════\n");
+            messageBuilder.append("� Go Nature Farms\n");
+            messageBuilder.append("══════════════════════════════════\n\n");
             messageBuilder.append("🛒 Shop Now:\n");
             messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(product.getId());
 
@@ -223,17 +245,39 @@ public class WhatsAppReminderService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Product not found"));
 
-        // Get appropriate emoji for product
-        String productEmoji = getProductEmoji(product.getName(), product.getCat());
-
-        // Generate message format with emojis
+        // Generate premium product showcase message format
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append(productEmoji).append(" ").append(product.getName()).append("\n\n");
-        messageBuilder.append(product.getDescription()).append("\n\n");
+        
+        // HEADER
+        messageBuilder.append("══════════════════════════════════\n");
+        messageBuilder.append("🌿 Go Nature Farms\n");
+        messageBuilder.append("══════════════════════════════════\n");
+        messageBuilder.append("Farm-fresh organic products delivered to your door.\n\n");
+        
+        // PRODUCT IMAGE (as clickable URL)
+        if (product.getImgUrl() != null && !product.getImgUrl().isEmpty()) {
+            messageBuilder.append("📸 Product Image:\n");
+            messageBuilder.append(product.getImgUrl()).append("\n\n");
+        }
+        
+        // PRODUCT DETAILS
+        messageBuilder.append("✨ Introducing: ").append(product.getName()).append("\n\n");
+        
+        if (product.getDescription() != null && !product.getDescription().isEmpty()) {
+            messageBuilder.append(product.getDescription()).append("\n\n");
+        }
+        
         messageBuilder.append("💰 Price: ₹").append(product.getPrice()).append("\n");
-        messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n\n");
-        messageBuilder.append("🌿 Fresh • Natural • Quality Assured\n\n");
-        messageBuilder.append("🌱 Go Nature Farms\n\n");
+        if (product.getMrp() != null && product.getMrp().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n");
+        }
+        
+        messageBuilder.append("\n� Fresh • Natural • Quality Assured\n\n");
+        
+        // FOOTER
+        messageBuilder.append("══════════════════════════════════\n");
+        messageBuilder.append("� Go Nature Farms\n");
+        messageBuilder.append("══════════════════════════════════\n\n");
         messageBuilder.append("🛒 Shop Now:\n");
         messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(productId);
 
