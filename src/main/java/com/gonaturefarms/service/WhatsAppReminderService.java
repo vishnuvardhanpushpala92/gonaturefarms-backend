@@ -143,13 +143,7 @@ public class WhatsAppReminderService {
             messageBuilder.append("══════════════════════════════════\n");
             messageBuilder.append("Farm-fresh organic products delivered to your door.\n\n");
 
-            // PRODUCT IMAGE (as clickable URL - only used for fallback)
-            if (product.getImgUrl() != null && !product.getImgUrl().isEmpty()) {
-                messageBuilder.append("📸 Product Image:\n");
-                messageBuilder.append(product.getImgUrl()).append("\n\n");
-            }
-
-            // PRODUCT DETAILS
+            // PRODUCT DETAILS (no image URL in text)
             messageBuilder.append("✨ Introducing: ").append(product.getName()).append("\n\n");
 
             if (product.getDescription() != null && !product.getDescription().isEmpty()) {
@@ -168,7 +162,7 @@ public class WhatsAppReminderService {
             messageBuilder.append("🌿 Go Nature Farms\n");
             messageBuilder.append("══════════════════════════════════\n\n");
             messageBuilder.append("🛒 Shop Now:\n");
-            messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(product.getId());
+            messageBuilder.append("https://gonaturefarms-frontend.vercel.app/");
 
             message = messageBuilder.toString();
 
@@ -191,16 +185,22 @@ public class WhatsAppReminderService {
         int failureCount = 0;
         List<String> errors = new ArrayList<>();
 
-        // Upload image once if using WhatsApp API (to avoid repeated uploads)
+        // Upload logo image once if using WhatsApp API (to avoid repeated uploads)
         String mediaId = null;
-        if (useWhatsAppApi && product != null && product.getImgUrl() != null) {
+        if (useWhatsAppApi) {
             try {
-                logger.info("Uploading product image to WhatsApp Media API...");
-                mediaId = whatsappApiService.uploadMedia(product.getImgUrl());
-                logger.info("Image uploaded successfully, media ID: " + mediaId);
+                String logoUrl = whatsappConfig.getLogoUrl();
+                if (logoUrl == null || logoUrl.isEmpty()) {
+                    logger.warning("WhatsApp logo URL not configured, using fallback mode");
+                    useWhatsAppApi = false;
+                } else {
+                    logger.info("Uploading Go Nature Farms logo to WhatsApp Media API...");
+                    mediaId = whatsappApiService.uploadMedia(logoUrl);
+                    logger.info("Logo uploaded successfully, media ID: " + mediaId);
+                }
             } catch (IOException e) {
-                logger.severe("Failed to upload image to WhatsApp: " + e.getMessage());
-                errors.add("Image upload failed: " + e.getMessage());
+                logger.severe("Failed to upload logo to WhatsApp: " + e.getMessage());
+                errors.add("Logo upload failed: " + e.getMessage());
                 // Continue with fallback mode
                 useWhatsAppApi = false;
             }
@@ -222,14 +222,14 @@ public class WhatsAppReminderService {
 
             try {
                 if (useWhatsAppApi && mediaId != null) {
-                    // Use WhatsApp Business Cloud API for image message with media ID
+                    // Use WhatsApp Business Cloud API for image message with media ID (logo)
                     String caption = "🌿 Go Nature Farms\n\n" +
                             "✨ " + product.getName() + "\n\n" +
                             "💰 Price: ₹" + product.getPrice() + "\n" +
                             (product.getMrp() != null && product.getMrp().compareTo(java.math.BigDecimal.ZERO) > 0 ?
                                     "🏷️ MRP: ₹" + product.getMrp() + "\n" : "") +
                             "\n🌱 Fresh • Natural • Quality Assured\n\n" +
-                            "🛒 Shop Now: https://gonaturefarms-frontend.vercel.app/products/" + product.getId();
+                            "🛒 Shop Now: https://gonaturefarms-frontend.vercel.app/";
 
                     JsonNode response = whatsappApiService.sendImageMessage(phoneNumber, mediaId, caption);
                     logger.info("WhatsApp API message sent to " + customer.getName() + ": " + response);
@@ -282,10 +282,6 @@ public class WhatsAppReminderService {
                     .with("errors", errors);
         }
 
-        if (product != null && product.getImgUrl() != null) {
-            response.with("productImageUrl", product.getImgUrl());
-        }
-
         return response;
     }
 
@@ -311,14 +307,8 @@ public class WhatsAppReminderService {
         messageBuilder.append("🌿 Go Nature Farms\n");
         messageBuilder.append("══════════════════════════════════\n");
         messageBuilder.append("Farm-fresh organic products delivered to your door.\n\n");
-        
-        // PRODUCT IMAGE (as clickable URL)
-        if (product.getImgUrl() != null && !product.getImgUrl().isEmpty()) {
-            messageBuilder.append("📸 Product Image:\n");
-            messageBuilder.append(product.getImgUrl()).append("\n\n");
-        }
-        
-        // PRODUCT DETAILS
+
+        // PRODUCT DETAILS (no image URL in text)
         messageBuilder.append("✨ Introducing: ").append(product.getName()).append("\n\n");
         
         if (product.getDescription() != null && !product.getDescription().isEmpty()) {
@@ -330,14 +320,14 @@ public class WhatsAppReminderService {
             messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n");
         }
         
-        messageBuilder.append("\n� Fresh • Natural • Quality Assured\n\n");
+        messageBuilder.append("\n🌱 Fresh • Natural • Quality Assured\n\n");
         
         // FOOTER
         messageBuilder.append("══════════════════════════════════\n");
-        messageBuilder.append("� Go Nature Farms\n");
+        messageBuilder.append("🌿 Go Nature Farms\n");
         messageBuilder.append("══════════════════════════════════\n\n");
         messageBuilder.append("🛒 Shop Now:\n");
-        messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(productId);
+        messageBuilder.append("https://gonaturefarms-frontend.vercel.app/");
 
         String message = messageBuilder.toString();
 

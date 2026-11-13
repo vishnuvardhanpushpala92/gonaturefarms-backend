@@ -16,6 +16,9 @@ public class WhatsAppConfig {
     private String templateName;
     private String templateLanguage = "en";
 
+    // Logo configuration
+    private String logoUrl;
+
     public String getAccessToken() {
         return accessToken;
     }
@@ -62,6 +65,14 @@ public class WhatsAppConfig {
 
     public void setTemplateLanguage(String templateLanguage) {
         this.templateLanguage = templateLanguage;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 
     public String getApiUrl() {
