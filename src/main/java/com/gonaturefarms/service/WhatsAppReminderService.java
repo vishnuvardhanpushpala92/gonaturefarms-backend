@@ -1,5 +1,7 @@
 package com.gonaturefarms.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.gonaturefarms.config.WhatsAppConfig;
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.whatsapp.WhatsAppReminderRequest;
 import com.gonaturefarms.entity.User;
@@ -13,10 +15,9 @@ import com.gonaturefarms.security.CurrentUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -55,12 +56,16 @@ public class WhatsAppReminderService {
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final WhatsAppApiService whatsappApiService;
+    private final WhatsAppConfig whatsappConfig;
 
-    public WhatsAppReminderService(WhatsAppReminderRepository reminderRepository, UserRepository userRepository, OrderRepository orderRepository, ProductRepository productRepository) {
+    public WhatsAppReminderService(WhatsAppReminderRepository reminderRepository, UserRepository userRepository, OrderRepository orderRepository, ProductRepository productRepository, WhatsAppApiService whatsappApiService, WhatsAppConfig whatsappConfig) {
         this.reminderRepository = reminderRepository;
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.whatsappApiService = whatsappApiService;
+        this.whatsappConfig = whatsappConfig;
     }
 
     @Transactional(readOnly = true)
@@ -131,36 +136,36 @@ public class WhatsAppReminderService {
 
             // Generate premium product showcase message format
             StringBuilder messageBuilder = new StringBuilder();
-            
+
             // HEADER
             messageBuilder.append("══════════════════════════════════\n");
             messageBuilder.append("🌿 Go Nature Farms\n");
             messageBuilder.append("══════════════════════════════════\n");
             messageBuilder.append("Farm-fresh organic products delivered to your door.\n\n");
-            
-            // PRODUCT IMAGE (as clickable URL)
+
+            // PRODUCT IMAGE (as clickable URL - only used for fallback)
             if (product.getImgUrl() != null && !product.getImgUrl().isEmpty()) {
                 messageBuilder.append("📸 Product Image:\n");
                 messageBuilder.append(product.getImgUrl()).append("\n\n");
             }
-            
+
             // PRODUCT DETAILS
             messageBuilder.append("✨ Introducing: ").append(product.getName()).append("\n\n");
-            
+
             if (product.getDescription() != null && !product.getDescription().isEmpty()) {
                 messageBuilder.append(product.getDescription()).append("\n\n");
             }
-            
+
             messageBuilder.append("💰 Price: ₹").append(product.getPrice()).append("\n");
             if (product.getMrp() != null && product.getMrp().compareTo(java.math.BigDecimal.ZERO) > 0) {
                 messageBuilder.append("🏷️ MRP: ₹").append(product.getMrp()).append("\n");
             }
-            
-            messageBuilder.append("\n� Fresh • Natural • Quality Assured\n\n");
-            
+
+            messageBuilder.append("\n🌱 Fresh • Natural • Quality Assured\n\n");
+
             // FOOTER
             messageBuilder.append("══════════════════════════════════\n");
-            messageBuilder.append("� Go Nature Farms\n");
+            messageBuilder.append("🌿 Go Nature Farms\n");
             messageBuilder.append("══════════════════════════════════\n\n");
             messageBuilder.append("🛒 Shop Now:\n");
             messageBuilder.append("https://gonaturefarms-frontend.vercel.app/products/").append(product.getId());
@@ -177,7 +182,14 @@ public class WhatsAppReminderService {
             logger.info("Custom message contains emojis: " + message.matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
         }
 
-        java.util.List<String> whatsappLinks = new java.util.ArrayList<>();
+        // Check if WhatsApp API is configured
+        boolean useWhatsAppApi = whatsappConfig.isConfigured();
+        logger.info("WhatsApp API configured: " + useWhatsAppApi);
+
+        Map<String, Object> results = new HashMap<>();
+        int successCount = 0;
+        int failureCount = 0;
+        List<String> errors = new ArrayList<>();
 
         for (Long customerId : request.getCustomerIds()) {
             User customer = userRepository.findById(customerId)
@@ -186,25 +198,45 @@ public class WhatsAppReminderService {
             // Check if customer has opted out
             if (Boolean.TRUE.equals(customer.getWhatsappOptOut())) {
                 logger.info("Customer " + customer.getName() + " has opted out of WhatsApp reminders");
+                errors.add(customer.getName() + " opted out of WhatsApp");
+                failureCount++;
                 continue;
             }
 
-            // Normalize phone number for WhatsApp (add 91 for Indian numbers if not present)
-            String phoneNumber = customer.getPhone();
-            if (phoneNumber != null && !phoneNumber.startsWith("91") && phoneNumber.length() == 10) {
-                phoneNumber = "91" + phoneNumber;
+            String phoneNumber = whatsappApiService.normalizePhoneNumber(customer.getPhone());
+
+            try {
+                if (useWhatsAppApi && product != null && product.getImgUrl() != null) {
+                    // Use WhatsApp Business Cloud API for image message
+                    String caption = "🌿 Go Nature Farms\n\n" +
+                            "✨ " + product.getName() + "\n\n" +
+                            "💰 Price: ₹" + product.getPrice() + "\n" +
+                            (product.getMrp() != null && product.getMrp().compareTo(java.math.BigDecimal.ZERO) > 0 ?
+                                    "🏷️ MRP: ₹" + product.getMrp() + "\n" : "") +
+                            "\n🌱 Fresh • Natural • Quality Assured\n\n" +
+                            "🛒 Shop Now: https://gonaturefarms-frontend.vercel.app/products/" + product.getId();
+
+                    JsonNode response = whatsappApiService.sendImageMessage(phoneNumber, product.getImgUrl(), caption);
+                    logger.info("WhatsApp API message sent to " + customer.getName() + ": " + response);
+                    successCount++;
+                } else {
+                    // Fallback to wa.me click-to-chat links
+                    String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
+                    String whatsappLink = "https://wa.me/" + phoneNumber + "?text=" + encodedMessage;
+                    logger.info("WhatsApp link generated for " + customer.getName() + " (" + phoneNumber + ")");
+                    results.put("link_" + customerId, whatsappLink);
+                    successCount++;
+                }
+            } catch (IOException e) {
+                logger.severe("Failed to send WhatsApp message to " + customer.getName() + ": " + e.getMessage());
+                errors.add(customer.getName() + ": " + e.getMessage());
+                failureCount++;
+
+                // Fallback to wa.me link on API failure
+                String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
+                String whatsappLink = "https://wa.me/" + phoneNumber + "?text=" + encodedMessage;
+                results.put("fallback_link_" + customerId, whatsappLink);
             }
-
-            // Create WhatsApp click-to-chat link with UTF-8 encoding
-            logger.info("Encoding message for WhatsApp link: " + message);
-            logger.info("Message before encoding contains emojis: " + message.matches(".*[🥜✨💰🏷️🌿🌱🛒].*"));
-            String encodedMessage = java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8);
-            logger.info("Encoded message: " + encodedMessage);
-            String whatsappLink = "https://wa.me/" + phoneNumber + "?text=" + encodedMessage;
-            logger.info("WhatsApp link: " + whatsappLink);
-            whatsappLinks.add(whatsappLink);
-
-            logger.info("WhatsApp link generated for " + customer.getName() + " (" + phoneNumber + ")");
         }
 
         // Create a reminder record
@@ -220,9 +252,20 @@ public class WhatsAppReminderService {
 
         reminderRepository.save(reminder);
 
-        // Include product image URL if product was selected
-        ApiResponse response = ApiResponse.ok("WhatsApp links generated for " + whatsappLinks.size() + " customers")
-                .with("whatsappLinks", whatsappLinks);
+        // Build response
+        ApiResponse response;
+        if (useWhatsAppApi) {
+            response = ApiResponse.ok("WhatsApp messages sent via API. Success: " + successCount + ", Failed: " + failureCount)
+                    .with("successCount", successCount)
+                    .with("failureCount", failureCount)
+                    .with("errors", errors);
+        } else {
+            response = ApiResponse.ok("WhatsApp links generated for " + successCount + " customers (API not configured, using fallback)")
+                    .with("whatsappLinks", results.values())
+                    .with("successCount", successCount)
+                    .with("failureCount", failureCount)
+                    .with("errors", errors);
+        }
 
         if (product != null && product.getImgUrl() != null) {
             response.with("productImageUrl", product.getImgUrl());
