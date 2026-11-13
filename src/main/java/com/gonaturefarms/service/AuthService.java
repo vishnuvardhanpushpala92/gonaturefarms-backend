@@ -14,18 +14,9 @@ import com.gonaturefarms.exception.ApiException;
 import com.gonaturefarms.exception.ResourceNotFoundException;
 import com.gonaturefarms.repository.UserRepository;
 import com.gonaturefarms.security.JwtService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-
-import java.util.Map;
 
 @Service
 public class AuthService {
@@ -33,49 +24,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final RestTemplate restTemplate;
-
-    @Value("${captcha.secret.key:}")
-    private String captchaSecretKey;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.restTemplate = new RestTemplate();
-    }
-
-    /**
-     * Verify Cloudflare Turnstile CAPTCHA token
-     */
-    private boolean verifyCaptcha(String token) {
-        if (captchaSecretKey == null || captchaSecretKey.isEmpty()) {
-            System.err.println("CAPTCHA secret key not configured - skipping verification");
-            return true; // Allow if not configured (dev mode)
-        }
-
-        try {
-            String url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("secret", captchaSecretKey);
-            params.add("response", token);
-            
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-            
-            Map<String, Object> response = restTemplate.postForObject(url, request, Map.class);
-            
-            boolean success = response != null && Boolean.TRUE.equals(response.get("success"));
-            System.out.println("CAPTCHA verification result: " + success);
-            
-            return success;
-        } catch (Exception e) {
-            System.err.println("CAPTCHA verification failed: " + e.getMessage());
-            return false;
-        }
     }
 
     /**
@@ -220,14 +173,6 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public ApiResponse verifySecurityQuestion(SecurityQuestionVerifyRequest request) {
-        // Verify CAPTCHA token if provided
-        if (request.getCaptchaToken() != null && !request.getCaptchaToken().isEmpty()) {
-            boolean captchaValid = verifyCaptcha(request.getCaptchaToken());
-            if (!captchaValid) {
-                throw new ApiException("CAPTCHA verification failed. Please try again.");
-            }
-        }
-        
         // Normalize identifier for phone numbers
         String normalizedIdentifier = request.getIdentifier();
         boolean isPhone = normalizedIdentifier != null && normalizedIdentifier.matches("^\\d+$");
