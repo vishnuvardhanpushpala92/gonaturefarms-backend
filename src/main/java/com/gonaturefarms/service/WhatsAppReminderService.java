@@ -354,27 +354,29 @@ public class WhatsAppReminderService {
 
     @Transactional(readOnly = true)
     public ApiResponse getCustomersByProduct(Long productId) {
-        // Find customers who ordered this specific product
-        List<com.gonaturefarms.entity.Order> orders = orderRepository.findAll();
-        Set<Long> customerIds = new HashSet<>();
-        
-        for (com.gonaturefarms.entity.Order order : orders) {
-            if (order.getItems() != null) {
-                for (com.gonaturefarms.entity.OrderItem item : order.getItems()) {
-                    if (item.getProductId() != null && item.getProductId().equals(productId)) {
-                        customerIds.add(order.getUserId());
-                        break;
-                    }
-                }
+        try {
+            // Use optimized database query to find customer IDs
+            Set<Long> customerIds = orderRepository.findCustomerIdsByProductId(productId);
+
+            if (customerIds.isEmpty()) {
+                logger.info("No customers found for product ID: " + productId);
+                return ApiResponse.ok("No customers have purchased this product")
+                        .with("customers", List.of());
             }
+
+            // Fetch customers by IDs
+            List<User> customers = userRepository.findAllById(customerIds).stream()
+                    .filter(u -> u.getRole() == User.UserRole.customer)
+                    .filter(u -> !Boolean.TRUE.equals(u.getWhatsappOptOut()))
+                    .collect(Collectors.toList());
+
+            logger.info("Found " + customers.size() + " customers for product ID: " + productId);
+            return ApiResponse.ok().with("customers", customers);
+        } catch (Exception e) {
+            logger.severe("Error fetching customers by product ID " + productId + ": " + e.getMessage());
+            return ApiResponse.ok("Error fetching customers. Please try again.")
+                    .with("customers", List.of());
         }
-        
-        List<User> customers = userRepository.findAllById(customerIds).stream()
-                .filter(u -> u.getRole() == User.UserRole.customer)
-                .filter(u -> !Boolean.TRUE.equals(u.getWhatsappOptOut()))
-                .collect(Collectors.toList());
-        
-        return ApiResponse.ok().with("customers", customers);
     }
 
     @Transactional(readOnly = true)
