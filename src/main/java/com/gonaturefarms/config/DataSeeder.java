@@ -1,6 +1,8 @@
 package com.gonaturefarms.config;
 
+import com.gonaturefarms.entity.FooterLink;
 import com.gonaturefarms.entity.User;
+import com.gonaturefarms.repository.FooterLinkRepository;
 import com.gonaturefarms.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ public class DataSeeder implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final UserRepository userRepository;
+    private final FooterLinkRepository footerLinkRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.admin.default-user:Vishnu}")
@@ -36,8 +39,9 @@ public class DataSeeder implements ApplicationRunner {
     @Value("${app.admin.default-pass:918252}")
     private String defaultAdminPassword;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, FooterLinkRepository footerLinkRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.footerLinkRepository = footerLinkRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -79,6 +83,9 @@ public class DataSeeder implements ApplicationRunner {
             log.info("Admin Email: {}", savedAdmin.getEmail());
             log.warn("=== SECURITY WARNING: Please change the default admin password immediately after first login! ===");
 
+            // Seed default customer care links
+            seedCustomerCareLinks();
+
         } catch (Exception e) {
             log.error("=== FAILED to seed default admin user ===", e);
             log.error("Error message: {}", e.getMessage());
@@ -86,5 +93,43 @@ public class DataSeeder implements ApplicationRunner {
         }
 
         log.info("=== DataSeeder Complete ===");
+    }
+
+    private void seedCustomerCareLinks() {
+        try {
+            if (footerLinkRepository.count() > 0) {
+                log.info("Footer links already exist, skipping seed");
+                return;
+            }
+
+            log.info("Seeding default customer care links...");
+            String[] customerCareLinks = {
+                "WhatsApp Support|https://wa.me/919182526xxx",
+                "Contact Support|support",
+                "Track My Order|/tracking",
+                "Raise a Complaint|/support",
+                "Track Support Ticket|/support/tickets",
+                "FAQs / Help Center|/help",
+                "Shipping Policy|/policies/shipping",
+                "Return & Refund Policy|/policies/return",
+                "Contact Us|/contact"
+            };
+
+            for (int i = 0; i < customerCareLinks.length; i++) {
+                String[] parts = customerCareLinks[i].split("\\|");
+                FooterLink link = FooterLink.builder()
+                        .name(parts[0])
+                        .url(parts[1])
+                        .category(FooterLink.LinkCategory.CUSTOMER_CARE)
+                        .sortOrder(i)
+                        .enabled(true)
+                        .openInNewTab(parts[1].startsWith("http"))
+                        .build();
+                footerLinkRepository.save(link);
+            }
+            log.info("Default customer care links seeded successfully");
+        } catch (Exception e) {
+            log.error("Failed to seed customer care links", e);
+        }
     }
 }
