@@ -42,6 +42,9 @@ public class FooterLinkService {
         if (req.getUrl() == null || req.getUrl().isBlank()) {
             throw new ApiException("Link URL is required");
         }
+        if (!isValidUrl(req.getUrl())) {
+            throw new ApiException("Invalid URL format");
+        }
         
         // Parse category
         LinkCategory category = parseCategory(req.getCategory());
@@ -69,6 +72,9 @@ public class FooterLinkService {
             link.setName(req.getName());
         }
         if (req.getUrl() != null && !req.getUrl().isBlank()) {
+            if (!isValidUrl(req.getUrl())) {
+                throw new ApiException("Invalid URL format");
+            }
             link.setUrl(req.getUrl());
         }
         if (req.getCategory() != null) {
@@ -102,12 +108,35 @@ public class FooterLinkService {
         return ApiResponse.ok("Footer link deleted successfully");
     }
 
+    @Transactional
+    public ApiResponse reorder(Long id, Integer newSortOrder) {
+        FooterLink link = footerLinkRepository.findById(id)
+                .orElseThrow(() -> new ApiException("Footer link not found"));
+        link.setSortOrder(newSortOrder);
+        link.setUpdatedAt(java.time.LocalDateTime.now());
+        footerLinkRepository.save(link);
+        return ApiResponse.ok("Footer link reordered successfully");
+    }
+
     private LinkCategory parseCategory(String category) {
         if (category == null || category.isBlank()) return LinkCategory.QUICK_LINKS;
         try {
             return LinkCategory.valueOf(category.toUpperCase());
         } catch (IllegalArgumentException e) {
             return LinkCategory.QUICK_LINKS;
+        }
+    }
+
+    private boolean isValidUrl(String url) {
+        if (url == null || url.isBlank()) return false;
+        // Allow internal routes starting with / or #
+        if (url.startsWith("/") || url.startsWith("#")) return true;
+        // Validate external URLs
+        try {
+            new java.net.URL(url);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 }

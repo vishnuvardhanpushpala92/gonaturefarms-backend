@@ -53,4 +53,10 @@ public class FooterLinkController {
     public ApiResponse delete(@PathVariable Long id) {
         return footerLinkService.delete(id);
     }
+
+    @PutMapping("/{id}/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse reorder(@PathVariable Long id, @RequestBody Integer sortOrder) {
+        return footerLinkService.reorder(id, sortOrder);
+    }
 }
