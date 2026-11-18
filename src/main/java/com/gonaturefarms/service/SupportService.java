@@ -97,6 +97,7 @@ public class SupportService {
             case open -> 0;
             case in_progress -> 1;
             case resolved -> 2;
+            case rejected -> 3;
         };
     }
 

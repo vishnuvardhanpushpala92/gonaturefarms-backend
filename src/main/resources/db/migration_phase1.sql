@@ -70,3 +70,19 @@ INSERT INTO faq_categories (name, description, sort_order) VALUES
 ('Account & Registration', 'Questions about account creation, login, and profile management', 5)
 ON CONFLICT DO NOTHING;
 
+-- 9. Extend support_tickets table with new fields
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS ticket_number VARCHAR(20) UNIQUE;
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS category VARCHAR(50);
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS order_id BIGINT;
+
+-- 10. Create ticket_replies table
+CREATE TABLE IF NOT EXISTS ticket_replies (
+    id BIGSERIAL PRIMARY KEY,
+    ticket_id BIGINT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+    user_id BIGINT,
+    is_admin BOOLEAN DEFAULT false,
+    message TEXT NOT NULL,
+    is_private BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

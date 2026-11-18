@@ -30,6 +30,15 @@ public class SupportTicket {
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "ticket_number", unique = true, length = 20)
+    private String ticketNumber;
+
+    @Column(name = "category", length = 50)
+    private String category;
+
+    @Column(name = "order_id")
+    private Long orderId;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String data;
 
@@ -50,11 +59,14 @@ public class SupportTicket {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum TicketStatus {
-        open, in_progress, resolved
+        open, in_progress, resolved, rejected
     }
 
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
+    public String getTicketNumber() { return ticketNumber; }
+    public String getCategory() { return category; }
+    public Long getOrderId() { return orderId; }
     public String getData() { return data; }
     public TicketStatus getStatus() { return status; }
     public String getAdminNote() { return adminNote; }
@@ -63,6 +75,9 @@ public class SupportTicket {
 
     public void setId(Long id) { this.id = id; }
     public void setUserId(Long userId) { this.userId = userId; }
+    public void setTicketNumber(String ticketNumber) { this.ticketNumber = ticketNumber; }
+    public void setCategory(String category) { this.category = category; }
+    public void setOrderId(Long orderId) { this.orderId = orderId; }
     public void setData(String data) { this.data = data; }
     public void setStatus(TicketStatus status) { this.status = status; }
     public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
@@ -76,6 +91,9 @@ public class SupportTicket {
     public static class SupportTicketBuilder {
         private Long id;
         private Long userId;
+        private String ticketNumber;
+        private String category;
+        private Long orderId;
         private String data;
         private TicketStatus status = TicketStatus.open;
         private String adminNote;
@@ -84,6 +102,9 @@ public class SupportTicket {
 
         public SupportTicketBuilder id(Long id) { this.id = id; return this; }
         public SupportTicketBuilder userId(Long userId) { this.userId = userId; return this; }
+        public SupportTicketBuilder ticketNumber(String ticketNumber) { this.ticketNumber = ticketNumber; return this; }
+        public SupportTicketBuilder category(String category) { this.category = category; return this; }
+        public SupportTicketBuilder orderId(Long orderId) { this.orderId = orderId; return this; }
         public SupportTicketBuilder data(String data) { this.data = data; return this; }
         public SupportTicketBuilder status(TicketStatus status) { this.status = status; return this; }
         public SupportTicketBuilder adminNote(String adminNote) { this.adminNote = adminNote; return this; }
@@ -94,6 +115,9 @@ public class SupportTicket {
             SupportTicket ticket = new SupportTicket();
             ticket.id = this.id;
             ticket.userId = this.userId;
+            ticket.ticketNumber = this.ticketNumber;
+            ticket.category = this.category;
+            ticket.orderId = this.orderId;
             ticket.data = this.data;
             ticket.status = this.status;
             ticket.adminNote = this.adminNote;
