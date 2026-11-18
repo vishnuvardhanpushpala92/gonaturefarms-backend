@@ -92,6 +92,32 @@ public class SupportService {
         return ApiResponse.ok().with("tickets", result);
     }
 
+    @Transactional(readOnly = true)
+    public ApiResponse getTicketsByUserId(Long userId) {
+        List<SupportTicket> tickets = ticketRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Map<String, Object>> result = tickets.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+        return ApiResponse.ok().with("tickets", result);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getTicketById(Long id) {
+        SupportTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Ticket not found"));
+        return ApiResponse.ok().with("ticket", toDto(ticket));
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse getTicketByIdAndUserId(Long id, Long userId) {
+        SupportTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new com.gonaturefarms.exception.ResourceNotFoundException("Ticket not found"));
+        if (!ticket.getUserId().equals(userId)) {
+            throw new com.gonaturefarms.exception.ApiException("Access denied");
+        }
+        return ApiResponse.ok().with("ticket", toDto(ticket));
+    }
+
     private int statusPriority(SupportTicket t) {
         return switch (t.getStatus()) {
             case open -> 0;

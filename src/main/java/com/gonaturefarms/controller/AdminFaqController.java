@@ -22,6 +22,24 @@ public class AdminFaqController {
         return faqService.list();
     }
 
+    @GetMapping("/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse listCategories() {
+        return faqService.listCategories();
+    }
+
+    @PostMapping("/categories")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse createCategory(@RequestBody com.gonaturefarms.entity.FaqCategory category) {
+        return faqService.createCategory(category);
+    }
+
+    @DeleteMapping("/categories/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse deleteCategory(@PathVariable Long id) {
+        return faqService.deleteCategory(id);
+    }
+
     @GetMapping("/admin-list")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse adminList() {
