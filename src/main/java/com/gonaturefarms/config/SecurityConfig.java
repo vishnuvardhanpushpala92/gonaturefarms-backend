@@ -116,7 +116,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/orders/lookup").permitAll()
 
                     // ── Public admin endpoints (Scrolling Blocks, FAQ, Slides, etc.) ───────────────
-                    .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/videos", "/api/admin/scroll-content", "/api/footer-links", "/api/testimonials").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/admin/faqs/categories", "/api/videos", "/api/admin/scroll-content", "/api/footer-links", "/api/testimonials").permitAll()
 
                     // ── Public homepage endpoint (batched data) ─────────────────────
                     .requestMatchers(HttpMethod.GET, "/api/homepage").permitAll()
