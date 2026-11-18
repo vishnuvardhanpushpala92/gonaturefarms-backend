@@ -23,12 +23,8 @@ public class FooterLinkService {
 
     @Transactional(readOnly = true)
     public ApiResponse list() {
-        List<FooterLink> links = footerLinkRepository.findAllByOrderBySortOrderAscIdAsc();
-        // Filter out pending links for public view
-        List<FooterLink> activeLinks = links.stream()
-                .filter(link -> link.getPending() == null || !link.getPending())
-                .toList();
-        return ApiResponse.ok().with("links", activeLinks);
+        List<FooterLink> links = footerLinkRepository.findEnabledByOrderBySortOrderAsc();
+        return ApiResponse.ok().with("links", links);
     }
 
     @Transactional(readOnly = true)
@@ -55,6 +51,9 @@ public class FooterLinkService {
                 .url(req.getUrl())
                 .category(category)
                 .sortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0)
+                .enabled(req.getEnabled() != null ? req.getEnabled() : true)
+                .openInNewTab(req.getOpenInNewTab() != null ? req.getOpenInNewTab() : false)
+                .columnHeading(req.getColumnHeading())
                 .pending(true)
                 .build();
         link = footerLinkRepository.save(link);
@@ -77,6 +76,15 @@ public class FooterLinkService {
         }
         if (req.getSortOrder() != null) {
             link.setSortOrder(req.getSortOrder());
+        }
+        if (req.getEnabled() != null) {
+            link.setEnabled(req.getEnabled());
+        }
+        if (req.getOpenInNewTab() != null) {
+            link.setOpenInNewTab(req.getOpenInNewTab());
+        }
+        if (req.getColumnHeading() != null) {
+            link.setColumnHeading(req.getColumnHeading());
         }
         
         link.setPending(true);

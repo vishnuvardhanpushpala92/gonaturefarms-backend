@@ -15,14 +15,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Maps to the "support_tickets" table.
- * The original MySQL column was a JSON type holding an arbitrary object whose shape
- * is defined at runtime by the admin-configurable "support_fields" site setting.
- * We store it as TEXT (serialized JSON string) for maximum portability across
- * PostgreSQL versions; PostgreSQL's native JSON/JSONB type could be used instead
- * if stronger query support over the ticket contents is required later.
- */
 @Entity
 @Table(name = "support_tickets")
 @Data
@@ -61,7 +53,6 @@ public class SupportTicket {
         open, in_progress, resolved
     }
 
-    // Manual getters as failsafe for Lombok processing issues
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public String getData() { return data; }
@@ -70,7 +61,6 @@ public class SupportTicket {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    // Manual setters as failsafe for Lombok processing issues
     public void setId(Long id) { this.id = id; }
     public void setUserId(Long userId) { this.userId = userId; }
     public void setData(String data) { this.data = data; }
@@ -79,7 +69,6 @@ public class SupportTicket {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    // Static builder method as failsafe for Lombok @Builder
     public static SupportTicketBuilder builder() {
         return new SupportTicketBuilder();
     }

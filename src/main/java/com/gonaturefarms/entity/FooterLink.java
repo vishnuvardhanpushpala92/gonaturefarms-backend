@@ -47,6 +47,17 @@ public class FooterLink {
     @Column
     private Boolean pending = false;
 
+    @Builder.Default
+    @Column
+    private Boolean enabled = true;
+
+    @Builder.Default
+    @Column
+    private Boolean openInNewTab = false;
+
+    @Column(name = "column_heading", length = 100)
+    private String columnHeading;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -78,6 +89,15 @@ public class FooterLink {
     public Boolean getPending() { return pending; }
     public void setPending(Boolean pending) { this.pending = pending; }
 
+    public Boolean getEnabled() { return enabled; }
+    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+
+    public Boolean getOpenInNewTab() { return openInNewTab; }
+    public void setOpenInNewTab(Boolean openInNewTab) { this.openInNewTab = openInNewTab; }
+
+    public String getColumnHeading() { return columnHeading; }
+    public void setColumnHeading(String columnHeading) { this.columnHeading = columnHeading; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -96,6 +116,9 @@ public class FooterLink {
         private LinkCategory category = LinkCategory.QUICK_LINKS;
         private Integer sortOrder = 0;
         private Boolean pending = false;
+        private Boolean enabled = true;
+        private Boolean openInNewTab = false;
+        private String columnHeading;
         private LocalDateTime createdAt = LocalDateTime.now();
         private LocalDateTime updatedAt;
 
@@ -129,6 +152,21 @@ public class FooterLink {
             return this;
         }
 
+        public FooterLinkBuilder enabled(Boolean enabled) {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public FooterLinkBuilder openInNewTab(Boolean openInNewTab) {
+            this.openInNewTab = openInNewTab;
+            return this;
+        }
+
+        public FooterLinkBuilder columnHeading(String columnHeading) {
+            this.columnHeading = columnHeading;
+            return this;
+        }
+
         public FooterLinkBuilder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -146,6 +184,10 @@ public class FooterLink {
             footerLink.url = this.url;
             footerLink.category = this.category;
             footerLink.sortOrder = this.sortOrder;
+            footerLink.pending = this.pending;
+            footerLink.enabled = this.enabled;
+            footerLink.openInNewTab = this.openInNewTab;
+            footerLink.columnHeading = this.columnHeading;
             footerLink.createdAt = this.createdAt;
             footerLink.updatedAt = this.updatedAt;
             return footerLink;

@@ -10,10 +10,15 @@ public class FooterLinkRequest {
     private String url;
     private String category;
     private Integer sortOrder;
+    private Boolean enabled;
+    private Boolean openInNewTab;
+    private String columnHeading;
 
-    // Manual getters as failsafe for Lombok processing issues
     public String getName() { return name; }
     public String getUrl() { return url; }
     public String getCategory() { return category; }
     public Integer getSortOrder() { return sortOrder; }
+    public Boolean getEnabled() { return enabled; }
+    public Boolean getOpenInNewTab() { return openInNewTab; }
+    public String getColumnHeading() { return columnHeading; }
 }
