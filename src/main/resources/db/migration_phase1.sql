@@ -86,3 +86,23 @@ CREATE TABLE IF NOT EXISTS ticket_replies (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 11. Create policies table
+CREATE TABLE IF NOT EXISTS policies (
+    id BIGSERIAL PRIMARY KEY,
+    policy_type VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by BIGINT
+);
+
+-- 12. Insert default policies
+INSERT INTO policies (policy_type, title, content) VALUES
+('shipping', 'Shipping Policy', 'We deliver fresh organic products to your doorstep within 2-3 business days for Hyderabad and 5-7 business days for other cities.'),
+('cancellation', 'Cancellation Policy', 'Orders can be cancelled within 2 hours of placement. After that, cancellation requests will be reviewed on a case-by-case basis.'),
+('return', 'Return Policy', 'If you receive damaged or incorrect products, please contact us within 24 hours for a replacement or refund.'),
+('refund', 'Refund Policy', 'Refunds are processed within 5-7 business days after approval. Refunds will be credited to the original payment method.'),
+('privacy', 'Privacy Policy', 'We respect your privacy and are committed to protecting your personal information. Read our full privacy policy for details.'),
+('terms', 'Terms & Conditions', 'By using our website and services, you agree to these terms and conditions. Please read them carefully.')
+ON CONFLICT DO NOTHING;
+

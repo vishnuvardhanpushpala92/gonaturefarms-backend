@@ -105,6 +105,7 @@ public class WhatsAppReminder {
         private Long id;
         private Long adminId;
         private ReminderType reminderType;
+        private Long productId;
         private String message;
         private LocalDateTime scheduledAt;
         private ReminderStatus status = ReminderStatus.Pending;

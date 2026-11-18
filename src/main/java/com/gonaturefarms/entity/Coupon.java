@@ -71,6 +71,7 @@ public class Coupon {
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public Integer getMaxUses() { return maxUses; }
     public Integer getUsedCount() { return usedCount; }
+    public void setUsedCount(Integer usedCount) { this.usedCount = usedCount; }
 
     // Static builder method as failsafe for Lombok @Builder
     public static CouponBuilder builder() {

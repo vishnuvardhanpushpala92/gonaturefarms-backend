@@ -67,6 +67,7 @@ public class Slide {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setCaption(String caption) { this.caption = caption; }
     public void setSubText(String subText) { this.subText = subText; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public void setPending(Boolean pending) { this.pending = pending; }
 
     // Static builder method as failsafe for Lombok @Builder

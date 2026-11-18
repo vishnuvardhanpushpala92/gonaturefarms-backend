@@ -75,10 +75,14 @@ public class OrderItem {
     public void setProductImage(String productImage) { this.productImage = productImage; }
 
     public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
     public BigDecimal getGst() { return gst; }
+    public void setGst(BigDecimal gst) { this.gst = gst; }
 
     public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
     public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
 }
