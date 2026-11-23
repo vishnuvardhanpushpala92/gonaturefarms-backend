@@ -244,6 +244,9 @@ public class ProductService {
         product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
         product.setStatus(parseStatus(req.getStatus()));
         product.setPending(false);
+        if (req.getReturnEligible() != null) {
+            product.setReturnEligible(req.getReturnEligible());
+        }
         productRepository.save(product);
 
         // ✅ CRITICAL: Delete ALL old variants first so we don't create duplicates

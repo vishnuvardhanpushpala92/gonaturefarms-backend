@@ -29,13 +29,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final DeliveryZoneRepository deliveryZoneRepository;
     private final CouponRepository couponRepository;
+    private final com.gonaturefarms.repository.ProductRepository productRepository;
 
     public OrderService(OrderRepository orderRepository,
                          DeliveryZoneRepository deliveryZoneRepository,
-                         CouponRepository couponRepository) {
+                         CouponRepository couponRepository,
+                         com.gonaturefarms.repository.ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.deliveryZoneRepository = deliveryZoneRepository;
         this.couponRepository = couponRepository;
+        this.productRepository = productRepository;
     }
 
     @Transactional
@@ -246,6 +249,17 @@ public class OrderService {
         // Only allow returns for delivered orders
         if (order.getStatus() != Order.OrderStatus.Delivered) {
             throw new ApiException("Returns are only allowed for delivered orders");
+        }
+
+        // Product-wise return eligibility: reject if any ordered product is non-returnable
+        if (order.getItems() != null) {
+            for (OrderItem item : order.getItems()) {
+                productRepository.findById(item.getProductId()).ifPresent(p -> {
+                    if (Boolean.FALSE.equals(p.getReturnEligible())) {
+                        throw new ApiException("Product '" + p.getName() + "' is not eligible for return");
+                    }
+                });
+            }
         }
 
         order.setReturnRequested(true);

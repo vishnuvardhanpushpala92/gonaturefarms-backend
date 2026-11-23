@@ -25,6 +25,7 @@ public class ProductRequest {
     private String imgUrl;
     private String status;
     private String additionalImages;
+    private Boolean returnEligible;
 
     @Valid
     private List<ProductVariantRequest> variants;
@@ -40,5 +41,6 @@ public class ProductRequest {
     public String getImgUrl() { return imgUrl; }
     public String getStatus() { return status; }
     public String getAdditionalImages() { return additionalImages; }
+    public Boolean getReturnEligible() { return returnEligible; }
     public List<ProductVariantRequest> getVariants() { return variants; }
 }

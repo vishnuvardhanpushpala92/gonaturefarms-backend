@@ -78,6 +78,10 @@ public class Product {
     @Column
     private Boolean pending = false;
 
+    @Builder.Default
+    @Column(name = "return_eligible", nullable = false)
+    private Boolean returnEligible = true;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -99,6 +103,9 @@ public class Product {
     
     public Boolean getPending() { return pending; }
     public void setPending(Boolean pending) { this.pending = pending; }
+
+    public Boolean getReturnEligible() { return returnEligible; }
+    public void setReturnEligible(Boolean returnEligible) { this.returnEligible = returnEligible; }
     
     public java.util.List<com.gonaturefarms.entity.ProductVariant> getVariants() { return variants; }
     public void setVariants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; }
