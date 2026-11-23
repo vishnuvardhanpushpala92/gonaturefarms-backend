@@ -184,6 +184,10 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_utr VARCHAR(50);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_screenshot_url TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT false;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_gateway VARCHAR(30) DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(64);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_paid_at TIMESTAMP;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_idempotency ON orders(idempotency_key) WHERE idempotency_key IS NOT NULL;
 
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
@@ -197,6 +201,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   quantity      INT NOT NULL,
   total         DECIMAL(10,2) NOT NULL
 );
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant_name VARCHAR(100) DEFAULT '';
 
 -- ── WISHLIST ─────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS wishlist (

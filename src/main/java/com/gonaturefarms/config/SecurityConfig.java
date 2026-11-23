@@ -115,6 +115,9 @@ public class SecurityConfig {
                     // ── Public order lookup endpoint ─────────────────────
                     .requestMatchers(HttpMethod.GET, "/api/orders/lookup").permitAll()
 
+                    // ── Public UPI payment config (UPI ID + active QR are public info) ──
+                    .requestMatchers(HttpMethod.GET, "/api/payments/config").permitAll()
+
                     // ── Public admin endpoints (Scrolling Blocks, FAQ, Slides, etc.) ───────────────
                     .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/admin/faqs/categories", "/api/videos", "/api/admin/scroll-content", "/api/footer-links", "/api/testimonials").permitAll()
 

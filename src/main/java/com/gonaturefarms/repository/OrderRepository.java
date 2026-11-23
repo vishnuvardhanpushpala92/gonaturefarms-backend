@@ -20,6 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     Optional<Order> findByOrderId(String orderId);
 
+    Optional<Order> findByIdempotencyKey(String idempotencyKey);
+
     void deleteByOrderId(String orderId);
 
     long countByStatus(Order.OrderStatus status);

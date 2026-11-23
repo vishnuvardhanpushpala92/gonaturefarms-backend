@@ -129,6 +129,16 @@ public class Order {
     private Boolean paymentVerified = false;
 
     @Builder.Default
+    @Column(name = "payment_gateway", length = 30)
+    private String paymentGateway = "";
+
+    @Column(name = "idempotency_key", length = 64, unique = true)
+    private String idempotencyKey;
+
+    @Column(name = "payment_paid_at")
+    private LocalDateTime paymentPaidAt;
+
+    @Builder.Default
     @Column(name = "return_requested", columnDefinition = "boolean default false")
     private Boolean returnRequested = false;
 
@@ -184,7 +194,7 @@ public class Order {
     }
 
     public enum PaymentStatus {
-        Pending, Paid, Failed, Refunded
+        Pending, VerificationPending, Paid, Failed, Refunded, Cancelled
     }
 
     // Manual getters as failsafe for Lombok processing issues
@@ -237,6 +247,12 @@ public class Order {
     public String getPaymentScreenshotUrl() { return paymentScreenshotUrl; }
 
     public Boolean getPaymentVerified() { return paymentVerified; }
+
+    public String getPaymentGateway() { return paymentGateway; }
+
+    public String getIdempotencyKey() { return idempotencyKey; }
+
+    public LocalDateTime getPaymentPaidAt() { return paymentPaidAt; }
 
     public Boolean getReturnRequested() { return returnRequested; }
 
@@ -306,6 +322,12 @@ public class Order {
     public void setPaymentScreenshotUrl(String paymentScreenshotUrl) { this.paymentScreenshotUrl = paymentScreenshotUrl; }
 
     public void setPaymentVerified(Boolean paymentVerified) { this.paymentVerified = paymentVerified; }
+
+    public void setPaymentGateway(String paymentGateway) { this.paymentGateway = paymentGateway; }
+
+    public void setIdempotencyKey(String idempotencyKey) { this.idempotencyKey = idempotencyKey; }
+
+    public void setPaymentPaidAt(LocalDateTime paymentPaidAt) { this.paymentPaidAt = paymentPaidAt; }
 
     public void setReturnRequested(Boolean returnRequested) { this.returnRequested = returnRequested; }
 

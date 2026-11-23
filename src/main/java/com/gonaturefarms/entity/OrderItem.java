@@ -43,6 +43,10 @@ public class OrderItem {
     @Column(name = "product_name", nullable = false, length = 120)
     private String productName;
 
+    @Builder.Default
+    @Column(name = "variant_name", length = 100)
+    private String variantName = "";
+
     @Column(name = "product_image", length = 500)
     private String productImage;
 
@@ -70,6 +74,9 @@ public class OrderItem {
 
     public String getProductName() { return productName; }
     public void setProductName(String productName) { this.productName = productName; }
+
+    public String getVariantName() { return variantName; }
+    public void setVariantName(String variantName) { this.variantName = variantName; }
 
     public String getProductImage() { return productImage; }
     public void setProductImage(String productImage) { this.productImage = productImage; }

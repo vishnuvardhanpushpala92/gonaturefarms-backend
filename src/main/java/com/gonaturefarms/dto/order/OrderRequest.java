@@ -48,6 +48,7 @@ public class OrderRequest {
     private BigDecimal total;
     private String couponCode;
     private Long userId;
+    private String idempotencyKey;
 
     // Manual getters as failsafe for Lombok processing issues
     public Long getUserId() { return userId; }
@@ -69,4 +70,5 @@ public class OrderRequest {
     public BigDecimal getTotal() { return total; }
     public String getCouponCode() { return couponCode; }
     public List<OrderItemRequest> getItems() { return items; }
+    public String getIdempotencyKey() { return idempotencyKey; }
 }

@@ -15,6 +15,8 @@ import lombok.Data;
 public class OrderItemRequest {
     private Long id;
 
+    private Long variantId;
+
     @NotBlank(message = "Item name is required")
     private String name;
 
@@ -31,6 +33,7 @@ public class OrderItemRequest {
 
     // Manual getters as failsafe for Lombok processing issues
     public Long getId() { return id; }
+    public Long getVariantId() { return variantId; }
     public String getName() { return name; }
     public String getImg() { return img; }
     public BigDecimal getPrice() { return price; }

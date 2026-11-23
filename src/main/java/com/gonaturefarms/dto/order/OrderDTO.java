@@ -31,6 +31,8 @@ public class OrderDTO {
     private String paymentUtr;
     private String paymentScreenshotUrl;
     private Boolean paymentVerified;
+    private String paymentGateway;
+    private LocalDateTime paymentPaidAt;
     private Boolean returnRequested;
     private String returnReason;
     private LocalDateTime returnRequestedAt;
@@ -70,6 +72,8 @@ public class OrderDTO {
         dto.setPaymentUtr(order.getPaymentUtr());
         dto.setPaymentScreenshotUrl(order.getPaymentScreenshotUrl());
         dto.setPaymentVerified(order.getPaymentVerified());
+        dto.setPaymentGateway(order.getPaymentGateway());
+        dto.setPaymentPaidAt(order.getPaymentPaidAt());
         dto.setReturnRequested(order.getReturnRequested());
         dto.setReturnReason(order.getReturnReason());
         dto.setReturnRequestedAt(order.getReturnRequestedAt());
@@ -153,6 +157,12 @@ public class OrderDTO {
 
     public Boolean getPaymentVerified() { return paymentVerified; }
     public void setPaymentVerified(Boolean paymentVerified) { this.paymentVerified = paymentVerified; }
+
+    public String getPaymentGateway() { return paymentGateway; }
+    public void setPaymentGateway(String paymentGateway) { this.paymentGateway = paymentGateway; }
+
+    public LocalDateTime getPaymentPaidAt() { return paymentPaidAt; }
+    public void setPaymentPaidAt(LocalDateTime paymentPaidAt) { this.paymentPaidAt = paymentPaidAt; }
 
     public Boolean getReturnRequested() { return returnRequested; }
     public void setReturnRequested(Boolean returnRequested) { this.returnRequested = returnRequested; }

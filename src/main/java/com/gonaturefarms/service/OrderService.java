@@ -201,6 +201,7 @@ public class OrderService {
             order.setPaymentVerified(true);
             order.setPaymentStatus(Order.PaymentStatus.Paid);
             order.setStatus(Order.OrderStatus.Confirmed);
+            order.setPaymentPaidAt(LocalDateTime.now());
         } else {
             order.setPaymentVerified(false);
             order.setPaymentStatus(Order.PaymentStatus.Failed);
