@@ -22,6 +22,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     Optional<Order> findByIdempotencyKey(String idempotencyKey);
 
+    boolean existsByPaymentUtrAndIdNot(String paymentUtr, Long id);
+
     void deleteByOrderId(String orderId);
 
     long countByStatus(Order.OrderStatus status);

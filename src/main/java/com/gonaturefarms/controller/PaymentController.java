@@ -49,9 +49,10 @@ public class PaymentController {
      * Moves the order to VERIFICATION_PENDING — never marks it paid.
      */
     @PostMapping("/{orderId}/confirm")
-    public ApiResponse confirm(@PathVariable String orderId) {
+    public ApiResponse confirm(@PathVariable String orderId,
+                               @org.springframework.web.bind.annotation.RequestParam(required = false) String utr) {
         CurrentUser user = SecurityUtils.getCurrentUser().orElse(null);
-        return upiPaymentService.confirmPaymentCompleted(orderId, user);
+        return upiPaymentService.confirmPaymentCompleted(orderId, user, utr);
     }
 
     /** Poll current payment status (e.g. after returning from a UPI app). */

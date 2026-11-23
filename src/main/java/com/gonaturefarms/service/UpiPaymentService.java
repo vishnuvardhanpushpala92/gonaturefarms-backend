@@ -250,7 +250,7 @@ public class UpiPaymentService {
      * This NEVER marks the order paid — it only moves it to verification pending.
      */
     @Transactional
-    public ApiResponse confirmPaymentCompleted(String orderId, com.gonaturefarms.security.CurrentUser user) {
+    public ApiResponse confirmPaymentCompleted(String orderId, com.gonaturefarms.security.CurrentUser user, String utr) {
         Order order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
@@ -269,6 +269,16 @@ public class UpiPaymentService {
         }
         if (order.getPaymentStatus() == Order.PaymentStatus.VerificationPending
                 || order.getStatus() == Order.OrderStatus.PaymentVerificationPending) {
+            // Idempotent: allow UTR to be filled in if missing, otherwise return as-is.
+            if (!isBlank(utr) && isBlank(order.getPaymentUtr())) {
+                String cleanUtr = validateUtr(utr);
+                if (orderRepository.existsByPaymentUtrAndIdNot(cleanUtr, order.getId())) {
+                    throw new ApiException("This transaction ID has already been submitted for another order");
+                }
+                order.setPaymentUtr(cleanUtr);
+                appendNote(order, "[PAYMENT] UPI transaction ID submitted at " + LocalDateTime.now());
+                orderRepository.save(order);
+            }
             return paymentResponse(order, "Payment verification already pending");
         }
         if (order.getPaymentStatus() == Order.PaymentStatus.Failed
@@ -277,9 +287,16 @@ public class UpiPaymentService {
             throw new ApiException("This order can no longer be paid. Please place a new order.");
         }
 
+        // Mandatory UPI transaction ID / UTR validation
+        String cleanUtr = validateUtr(utr);
+        if (orderRepository.existsByPaymentUtrAndIdNot(cleanUtr, order.getId())) {
+            throw new ApiException("This transaction ID has already been submitted for another order");
+        }
+
         order.setPaymentStatus(Order.PaymentStatus.VerificationPending);
         order.setStatus(Order.OrderStatus.PaymentVerificationPending);
-        appendNote(order, "[PAYMENT] Customer marked paid via UPI at " + LocalDateTime.now());
+        order.setPaymentUtr(cleanUtr);
+        appendNote(order, "[PAYMENT] Customer submitted UPI transaction ID at " + LocalDateTime.now());
         order = orderRepository.save(order);
         return paymentResponse(order, "Payment submitted for verification. Our team will confirm shortly.");
     }
@@ -399,6 +416,24 @@ public class UpiPaymentService {
                 || req.getItems() == null || req.getItems().isEmpty()) {
             throw new ApiException("Missing required order fields");
         }
+    }
+
+    /** Validates a customer-submitted UPI transaction ID / UTR. Never trusts it as proof of payment. */
+    private String validateUtr(String utr) {
+        if (isBlank(utr)) {
+            throw new ApiException("UPI Transaction ID is required");
+        }
+        String clean = utr.trim();
+        if (clean.length() < 6 || clean.length() > 50) {
+            throw new ApiException("Transaction ID must be between 6 and 50 characters");
+        }
+        if (!clean.matches("^[A-Za-z0-9]+$")) {
+            throw new ApiException("Transaction ID contains invalid characters");
+        }
+        if (clean.matches("(?i).*(test|demo|fake|sample|example|abcd|xxxx).*")) {
+            throw new ApiException("Please enter the real transaction ID from your UPI app");
+        }
+        return clean;
     }
 
     private void appendNote(Order order, String line) {
