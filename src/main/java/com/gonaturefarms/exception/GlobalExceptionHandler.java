@@ -76,8 +76,12 @@ public class GlobalExceptionHandler {
         if (ex.getMessage() != null) {
             String msg = ex.getMessage().toLowerCase();
             
-            // Detect duplicate field violations
-            if (msg.contains("duplicate") || msg.contains("unique") || msg.contains("constraint")) {
+            // Detect duplicate field violations — only genuine unique/duplicate violations.
+            // CHECK-constraint violations must NOT be mislabeled as duplicate fields.
+            boolean isUniqueViolation = msg.contains("duplicate key")
+                    || msg.contains("unique constraint")
+                    || msg.contains("unique_violation");
+            if (isUniqueViolation) {
                 errorType = "DUPLICATE_FIELD";
                 
                 if (msg.contains("phone") || msg.contains("contact")) {

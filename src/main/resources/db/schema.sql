@@ -188,6 +188,13 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_gateway VARCHAR(30) DEFAULT 
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS idempotency_key VARCHAR(64);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_paid_at TIMESTAMP;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_idempotency ON orders(idempotency_key) WHERE idempotency_key IS NOT NULL;
+-- Status CHECK constraints (must include all current enum values)
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_payment_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_payment_status_check
+  CHECK (payment_status IN ('Pending','VerificationPending','Paid','Failed','Refunded','Cancelled'));
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_status_check
+  CHECK (status IN ('Pending','Placed','Confirmed','Processing','Packed','Shipped','OutForDelivery','Delivered','Cancelled','PaymentVerificationPending'));
 
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
