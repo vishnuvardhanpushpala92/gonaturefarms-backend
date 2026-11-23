@@ -58,6 +58,7 @@ public class PaymentController {
     /** Poll current payment status (e.g. after returning from a UPI app). */
     @GetMapping("/{orderId}/status")
     public ApiResponse status(@PathVariable String orderId) {
-        return upiPaymentService.paymentStatus(orderId);
+        CurrentUser user = SecurityUtils.getCurrentUser().orElse(null);
+        return upiPaymentService.paymentStatus(orderId, user);
     }
 }

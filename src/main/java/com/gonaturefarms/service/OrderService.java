@@ -95,7 +95,13 @@ public class OrderService {
 
         Order order = new Order();
         order.setOrderId(newOrderId);
-        order.setUserId(req.getUserId());
+        // Link order to the authenticated customer from the JWT — never trust client-sent userId.
+        var currentUser = com.gonaturefarms.security.SecurityUtils.getCurrentUser().orElse(null);
+        if (currentUser != null) {
+            order.setUserId(currentUser.id());
+        } else {
+            order.setUserId(req.getUserId()); // fallback for unauthenticated/legacy paths
+        }
         order.setCustomerName(req.getCustomerName());
         order.setPhone(req.getPhone());
         order.setEmail(isBlank(req.getEmail()) ? null : req.getEmail());

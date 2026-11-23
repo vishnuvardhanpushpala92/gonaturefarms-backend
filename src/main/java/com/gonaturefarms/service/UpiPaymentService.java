@@ -124,7 +124,13 @@ public class UpiPaymentService {
         BigDecimal gstAmount = BigDecimal.ZERO;
         Order order = new Order();
         order.setOrderId(OrderIdGenerator.generate());
-        order.setUserId(req.getUserId());
+        // Link order to the authenticated customer from the JWT — never trust client-sent userId.
+        var currentUser = com.gonaturefarms.security.SecurityUtils.getCurrentUser().orElse(null);
+        if (currentUser != null) {
+            order.setUserId(currentUser.id());
+        } else {
+            order.setUserId(req.getUserId()); // fallback for unauthenticated/legacy paths
+        }
         order.setCustomerName(req.getCustomerName().trim());
         order.setPhone(req.getPhone().trim());
         order.setEmail(isBlank(req.getEmail()) ? null : req.getEmail().trim());
@@ -303,9 +309,17 @@ public class UpiPaymentService {
 
     /** Current payment state — used for status polling after the customer returns from a UPI app. */
     @Transactional(readOnly = true)
-    public ApiResponse paymentStatus(String orderId) {
+    public ApiResponse paymentStatus(String orderId, com.gonaturefarms.security.CurrentUser user) {
         Order order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        if (user != null) {
+            boolean ownsById = order.getUserId() != null && order.getUserId().equals(user.id());
+            boolean ownsByPhone = user.phone() != null && !user.phone().isBlank()
+                    && user.phone().equals(order.getPhone());
+            if (!ownsById && !ownsByPhone) {
+                throw new ApiException("This order does not belong to the logged-in customer");
+            }
+        }
         return ApiResponse.ok()
                 .with("order_id", order.getOrderId())
                 .with("status", order.getStatus())
