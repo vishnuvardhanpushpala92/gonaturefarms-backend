@@ -2,6 +2,8 @@ package com.gonaturefarms.controller;
 
 import com.gonaturefarms.dto.common.ApiResponse;
 import com.gonaturefarms.dto.order.OrderRequest;
+import com.gonaturefarms.security.CurrentUser;
+import com.gonaturefarms.security.SecurityUtils;
 import com.gonaturefarms.service.UpiPaymentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,7 +50,8 @@ public class PaymentController {
      */
     @PostMapping("/{orderId}/confirm")
     public ApiResponse confirm(@PathVariable String orderId) {
-        return upiPaymentService.confirmPaymentCompleted(orderId);
+        CurrentUser user = SecurityUtils.getCurrentUser().orElse(null);
+        return upiPaymentService.confirmPaymentCompleted(orderId, user);
     }
 
     /** Poll current payment status (e.g. after returning from a UPI app). */

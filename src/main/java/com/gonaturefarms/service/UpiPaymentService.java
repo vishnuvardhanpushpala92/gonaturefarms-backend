@@ -250,9 +250,19 @@ public class UpiPaymentService {
      * This NEVER marks the order paid — it only moves it to verification pending.
      */
     @Transactional
-    public ApiResponse confirmPaymentCompleted(String orderId) {
+    public ApiResponse confirmPaymentCompleted(String orderId, com.gonaturefarms.security.CurrentUser user) {
         Order order = orderRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        // Ownership check: an authenticated customer may only confirm their own order.
+        if (user != null) {
+            boolean ownsById = order.getUserId() != null && order.getUserId().equals(user.id());
+            boolean ownsByPhone = user.phone() != null && !user.phone().isBlank()
+                    && user.phone().equals(order.getPhone());
+            if (!ownsById && !ownsByPhone) {
+                throw new ApiException("This order does not belong to the logged-in customer");
+            }
+        }
 
         if (order.getPaymentStatus() == Order.PaymentStatus.Paid) {
             return paymentResponse(order, "Payment already verified");
