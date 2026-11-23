@@ -199,6 +199,22 @@ ALTER TABLE orders ADD CONSTRAINT orders_status_check
 -- Product-wise return eligibility (added after initial release)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE;
 
+-- Support settings (single-row admin-editable contact info)
+CREATE TABLE IF NOT EXISTS support_settings (
+  id BIGINT PRIMARY KEY,
+  support_phone VARCHAR(20),
+  whatsapp_number VARCHAR(20),
+  whatsapp_country_code VARCHAR(10) DEFAULT '91',
+  support_email VARCHAR(100),
+  business_hours VARCHAR(200),
+  working_days VARCHAR(100),
+  store_address TEXT,
+  whatsapp_welcome_message TEXT,
+  response_info TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP
+);
+
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
   id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

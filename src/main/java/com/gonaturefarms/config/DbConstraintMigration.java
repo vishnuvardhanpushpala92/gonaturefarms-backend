@@ -30,6 +30,28 @@ public class DbConstraintMigration implements ApplicationRunner {
         // Prod runs ddl-auto=validate, so entity columns are never auto-added.
         // Add return_eligible to products (idempotent). Default TRUE preserves
         // the pre-existing behavior where returns were allowed for all products.
+        // Prod runs ddl-auto=validate, so new entity tables are never auto-created.
+        // Create support_settings if missing (idempotent). Single settings row (id=1).
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS support_settings (" +
+                "id BIGINT PRIMARY KEY, " +
+                "support_phone VARCHAR(20), " +
+                "whatsapp_number VARCHAR(20), " +
+                "whatsapp_country_code VARCHAR(10) DEFAULT '91', " +
+                "support_email VARCHAR(100), " +
+                "business_hours VARCHAR(200), " +
+                "working_days VARCHAR(100), " +
+                "store_address TEXT, " +
+                "whatsapp_welcome_message TEXT, " +
+                "response_info TEXT, " +
+                "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP)");
+            log.info("support_settings table ensured");
+        } catch (Exception e) {
+            log.error("Failed to create support_settings: {}", e.getMessage());
+        }
+
         try {
             jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE");
             log.info("products.return_eligible column ensured");
