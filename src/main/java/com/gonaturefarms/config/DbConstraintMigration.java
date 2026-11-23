@@ -27,6 +27,16 @@ public class DbConstraintMigration implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        // Prod runs ddl-auto=validate, so entity columns are never auto-added.
+        // Add return_eligible to products (idempotent). Default TRUE preserves
+        // the pre-existing behavior where returns were allowed for all products.
+        try {
+            jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE");
+            log.info("products.return_eligible column ensured");
+        } catch (Exception e) {
+            log.error("Failed to add products.return_eligible: {}", e.getMessage());
+        }
+
         try {
             jdbcTemplate.execute("ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_payment_status_check");
             jdbcTemplate.execute("ALTER TABLE orders ADD CONSTRAINT orders_payment_status_check " +

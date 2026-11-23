@@ -196,6 +196,9 @@ ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
 ALTER TABLE orders ADD CONSTRAINT orders_status_check
   CHECK (status IN ('Pending','Placed','Confirmed','Processing','Packed','Shipped','OutForDelivery','Delivered','Cancelled','PaymentVerificationPending'));
 
+-- Product-wise return eligibility (added after initial release)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE;
+
 -- ── ORDER ITEMS ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS order_items (
   id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
