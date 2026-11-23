@@ -79,11 +79,17 @@ public class UpiPaymentService {
     /** Public UPI details for the payment screen (UPI ID is not a secret — it is printed on the QR anyway). */
     @Transactional(readOnly = true)
     public ApiResponse upiConfig() {
+        boolean enabled = upiEnabled();
+        String id = upiId();
+        boolean valid = isValidUpiId(id);
         return ApiResponse.ok()
-                .with("upi_id", upiId())
+                .with("upi_enabled", enabled)
+                .with("upi_id", id)
                 .with("payee_name", payeeName())
                 .with("qr_image_url", upiQrService.activeImageUrl())
-                .with("configured", !upiId().isBlank());
+                .with("payment_instructions", setting("payment_instructions"))
+                .with("configured", enabled && valid)
+                .with("config_error", configError(enabled, valid));
     }
 
     /**
@@ -102,9 +108,15 @@ public class UpiPaymentService {
 
         validateRequest(req);
 
+        if (!upiEnabled()) {
+            throw new ApiException("UPI payments are currently disabled. Please contact the store.");
+        }
         String upiId = upiId();
         if (upiId.isBlank()) {
             throw new ApiException("UPI payments are not configured yet. Please contact the store.");
+        }
+        if (!isValidUpiId(upiId)) {
+            throw new ApiException("The store's UPI ID is invalid. Please contact support.");
         }
 
         // ── Server-side pricing from PostgreSQL ──────────────────────────
@@ -327,12 +339,31 @@ public class UpiPaymentService {
         }
     }
 
+    private boolean upiEnabled() {
+        // Enabled unless admin explicitly sets upi_enabled=false
+        String v = setting("upi_enabled").trim().toLowerCase();
+        return !v.equals("false") && !v.equals("0") && !v.equals("no");
+    }
+
+    private boolean isValidUpiId(String id) {
+        // Standard UPI handle: local-part@bank (e.g. gonaturefarms@okaxis)
+        return id != null && id.matches("^[A-Za-z0-9._\\-]{2,256}@[A-Za-z][A-Za-z0-9]{1,64}$");
+    }
+
+    private String configError(boolean enabled, boolean valid) {
+        if (!enabled) return "UPI payments are disabled";
+        if (upiId().isBlank()) return "Merchant UPI ID is not configured";
+        if (!valid) return "Merchant UPI ID is invalid";
+        return "";
+    }
+
     private String upiId() {
         return setting("upi_id").trim();
     }
 
     private String payeeName() {
-        String name = setting("site_name").trim();
+        String name = setting("upi_payee_name").trim();
+        if (name.isBlank()) name = setting("site_name").trim();
         return name.isBlank() ? "Go Nature Farms" : name;
     }
 
