@@ -257,6 +257,7 @@ public class UpiPaymentService {
 
         order.setPaymentStatus(Order.PaymentStatus.VerificationPending);
         order.setStatus(Order.OrderStatus.PaymentVerificationPending);
+        appendNote(order, "[PAYMENT] Customer marked paid via UPI at " + LocalDateTime.now());
         order = orderRepository.save(order);
         return paymentResponse(order, "Payment submitted for verification. Our team will confirm shortly.");
     }
@@ -287,6 +288,10 @@ public class UpiPaymentService {
                 .with("payment_status", order.getPaymentStatus())
                 .with("payment_gateway", order.getPaymentGateway())
                 .with("total", order.getTotal())
+                .with("subtotal", order.getSubtotal())
+                .with("gst_amount", order.getGstAmount())
+                .with("delivery_charge", order.getDeliveryCharge())
+                .with("discount", order.getDiscount())
                 .with("currency", "INR")
                 .with("upi_id", upiId())
                 .with("payee_name", payeeName())
@@ -353,6 +358,11 @@ public class UpiPaymentService {
                 || req.getItems() == null || req.getItems().isEmpty()) {
             throw new ApiException("Missing required order fields");
         }
+    }
+
+    private void appendNote(Order order, String line) {
+        String existing = order.getNotes() == null ? "" : order.getNotes();
+        order.setNotes(existing.isBlank() ? line : existing + "\n" + line);
     }
 
     private String enc(String s) {

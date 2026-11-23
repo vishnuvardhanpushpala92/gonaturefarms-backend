@@ -202,10 +202,16 @@ public class OrderService {
             order.setPaymentStatus(Order.PaymentStatus.Paid);
             order.setStatus(Order.OrderStatus.Confirmed);
             order.setPaymentPaidAt(LocalDateTime.now());
+            String existing = order.getNotes() == null ? "" : order.getNotes();
+            String line = "[PAYMENT] Verified PAID by admin at " + LocalDateTime.now();
+            order.setNotes(existing.isBlank() ? line : existing + "\n" + line);
         } else {
             order.setPaymentVerified(false);
             order.setPaymentStatus(Order.PaymentStatus.Failed);
             order.setStatus(Order.OrderStatus.Cancelled);
+            String existing = order.getNotes() == null ? "" : order.getNotes();
+            String line = "[PAYMENT] Rejected by admin at " + LocalDateTime.now();
+            order.setNotes(existing.isBlank() ? line : existing + "\n" + line);
         }
 
         orderRepository.save(order);
