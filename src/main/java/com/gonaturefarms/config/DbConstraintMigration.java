@@ -93,6 +93,20 @@ public class DbConstraintMigration implements ApplicationRunner {
             log.error("Failed to add support_tickets complaint columns: {}", e.getMessage());
         }
 
+        // whatsapp_reminders: entity maps updated_at but older prod table lacks it.
+        try {
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS whatsapp_reminders (" +
+                "id BIGSERIAL PRIMARY KEY, admin_id BIGINT NOT NULL, reminder_type VARCHAR(50) NOT NULL, " +
+                "product_id BIGINT, message TEXT NOT NULL, scheduled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "sent_at TIMESTAMP, status VARCHAR(20) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "updated_at TIMESTAMP)");
+            jdbcTemplate.execute("ALTER TABLE whatsapp_reminders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE whatsapp_reminders ADD COLUMN IF NOT EXISTS product_id BIGINT");
+            log.info("whatsapp_reminders columns ensured");
+        } catch (Exception e) {
+            log.error("Failed to ensure whatsapp_reminders columns: {}", e.getMessage());
+        }
+
         try {
             jdbcTemplate.execute(
                 "CREATE TABLE IF NOT EXISTS admin_audit_log (" +

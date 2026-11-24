@@ -515,7 +515,8 @@ CREATE TABLE IF NOT EXISTS whatsapp_reminders (
     scheduled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     sent_at TIMESTAMP,
     status VARCHAR(20) DEFAULT 'Pending' CHECK (status IN ('Pending','Sent','Failed')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_whatsapp_reminders_admin_id ON whatsapp_reminders(admin_id);
 ALTER TABLE whatsapp_reminders ADD COLUMN IF NOT EXISTS product_id BIGINT;

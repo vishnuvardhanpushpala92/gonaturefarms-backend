@@ -219,7 +219,9 @@ public class AdminDataDeletionController {
         } catch (ApiException e) {
             return ResponseEntity.status(400).body(ApiResponse.fail(e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(ApiResponse.fail("Deletion failed"));
+            org.slf4j.LoggerFactory.getLogger(AdminDataDeletionController.class)
+                    .error("Data deletion failed for categories {}: {}", body.get("categories"), e.getMessage(), e);
+            return ResponseEntity.status(500).body(ApiResponse.fail("Deletion failed: " + e.getMessage()));
         }
     }
 
