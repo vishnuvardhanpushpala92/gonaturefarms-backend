@@ -118,6 +118,9 @@ public class SecurityConfig {
                     // ── Public UPI payment config (UPI ID + active QR are public info) ──
                     .requestMatchers(HttpMethod.GET, "/api/payments/config").permitAll()
 
+                    // ── Public support contact settings (phone/WhatsApp/email/hours) ──
+                    .requestMatchers(HttpMethod.GET, "/api/support-settings/public").permitAll()
+
                     // ── Public admin endpoints (Scrolling Blocks, FAQ, Slides, etc.) ───────────────
                     .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/admin/faqs/categories", "/api/videos", "/api/admin/scroll-content", "/api/footer-links", "/api/testimonials").permitAll()
 
