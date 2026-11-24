@@ -75,6 +75,7 @@ public class AdminDataDeletionController {
     private final WhatsAppReminderRepository whatsappReminderRepository;
     private final OrderRepository orderRepository;
     private final SiteSettingRepository siteSettingRepository;
+    private final org.springframework.transaction.support.TransactionTemplate auditTx;
 
     public AdminDataDeletionController(SupportTicketRepository supportTicketRepository,
                                        TestimonialRepository testimonialRepository,
@@ -99,7 +100,8 @@ public class AdminDataDeletionController {
                                        WishlistRepository wishlistRepository,
                                        WhatsAppReminderRepository whatsappReminderRepository,
                                        OrderRepository orderRepository,
-                                       SiteSettingRepository siteSettingRepository) {
+                                       SiteSettingRepository siteSettingRepository,
+                                       org.springframework.transaction.PlatformTransactionManager transactionManager) {
         this.supportTicketRepository = supportTicketRepository;
         this.testimonialRepository = testimonialRepository;
         this.videoRepository = videoRepository;
@@ -124,6 +126,8 @@ public class AdminDataDeletionController {
         this.whatsappReminderRepository = whatsappReminderRepository;
         this.orderRepository = orderRepository;
         this.siteSettingRepository = siteSettingRepository;
+        this.auditTx = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        this.auditTx.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     @GetMapping("/categories")
@@ -204,27 +208,37 @@ public class AdminDataDeletionController {
                 log.info("Data deletion: category={} completed", cat);
             }
 
-            try {
-                auditLogRepository.save(AdminAuditLog.builder()
-                        .adminId(admin.id())
-                        .adminName(admin.name())
-                        .action("DATA_DELETION")
-                        .details(objectMapper.writeValueAsString(Map.of(
-                                "categories", categories, "deleted_counts", deleted)))
-                        .build());
-            } catch (Exception e) {
-                // Audit failure must not roll back the deletion silently — log via response details.
-                deleted.put("_audit_error", -1L);
-            }
+            // Audit in a SEPARATE transaction (REQUIRES_NEW) so an audit failure
+            // can never mark the deletion transaction rollback-only.
+            final Map<String, Long> auditCounts = new LinkedHashMap<>(deleted);
+            final List<String> auditCats = new ArrayList<>(categories);
+            auditTx.execute(status -> {
+                try {
+                    auditLogRepository.save(AdminAuditLog.builder()
+                            .adminId(admin.id())
+                            .adminName(admin.name())
+                            .action("DATA_DELETION")
+                            .details(objectMapper.writeValueAsString(Map.of(
+                                    "categories", auditCats, "deleted_counts", auditCounts,
+                                    "result", "SUCCESS")))
+                            .build());
+                } catch (Exception e) {
+                    org.slf4j.LoggerFactory.getLogger(AdminDataDeletionController.class)
+                            .error("Audit log write failed (deletion already committed): {}", e.getMessage());
+                }
+                return null;
+            });
 
             return ResponseEntity.ok(ApiResponse.ok("Selected data deleted successfully")
                     .with("deleted", deleted));
         } catch (ApiException e) {
             return ResponseEntity.status(400).body(ApiResponse.fail(e.getMessage()));
         } catch (Exception e) {
+            // Rethrow so the transaction rolls back cleanly — swallowing the
+            // exception here would surface as UnexpectedRollbackException (HTTP 500).
             org.slf4j.LoggerFactory.getLogger(AdminDataDeletionController.class)
                     .error("Data deletion failed for categories {}: {}", body.get("categories"), e.getMessage(), e);
-            return ResponseEntity.status(500).body(ApiResponse.fail("Deletion failed: " + e.getMessage()));
+            throw e;
         }
     }
 
