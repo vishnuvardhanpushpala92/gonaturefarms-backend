@@ -46,6 +46,7 @@ public class AdminDataDeletionController {
         CATEGORIES.put("social_links", "Social Media Links");
         CATEGORIES.put("wishlists", "Wishlists");
         CATEGORIES.put("whatsapp_reminders", "WhatsApp Reminders");
+        CATEGORIES.put("dashboard_analytics", "Dashboard & Revenue Analytics");
         // NEVER deletable: admin users, site settings, support settings,
         // homepage layout, categories, delivery zones, audit log, auth data.
     }
@@ -73,6 +74,7 @@ public class AdminDataDeletionController {
     private final WishlistRepository wishlistRepository;
     private final WhatsAppReminderRepository whatsappReminderRepository;
     private final OrderRepository orderRepository;
+    private final SiteSettingRepository siteSettingRepository;
 
     public AdminDataDeletionController(SupportTicketRepository supportTicketRepository,
                                        TestimonialRepository testimonialRepository,
@@ -96,7 +98,8 @@ public class AdminDataDeletionController {
                                        OrderItemRepository orderItemRepository,
                                        WishlistRepository wishlistRepository,
                                        WhatsAppReminderRepository whatsappReminderRepository,
-                                       OrderRepository orderRepository) {
+                                       OrderRepository orderRepository,
+                                       SiteSettingRepository siteSettingRepository) {
         this.supportTicketRepository = supportTicketRepository;
         this.testimonialRepository = testimonialRepository;
         this.videoRepository = videoRepository;
@@ -120,14 +123,22 @@ public class AdminDataDeletionController {
         this.wishlistRepository = wishlistRepository;
         this.whatsappReminderRepository = whatsappReminderRepository;
         this.orderRepository = orderRepository;
+        this.siteSettingRepository = siteSettingRepository;
     }
 
     @GetMapping("/categories")
     public ApiResponse categories() {
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("categories", CATEGORIES);
-        result.put("counts", counts());
-        return ApiResponse.ok().with("data", result);
+        // Return arrays (not maps) so the frontend snake→camel key transform
+        // cannot mangle category identifiers like whatsapp_reminders.
+        List<Map<String, Object>> cats = new ArrayList<>();
+        CATEGORIES.forEach((k, v) -> cats.add(Map.of("key", k, "label", v)));
+        Map<String, Long> raw = counts();
+        List<Map<String, Object>> cnts = new ArrayList<>();
+        raw.forEach((k, v) -> cnts.add(Map.of("key", k, "count", v)));
+        return ApiResponse.ok()
+                .with("categories", cats)
+                .with("counts", cnts)
+                .with("export_categories", com.gonaturefarms.service.AdminExportService.EXPORT_CATEGORIES);
     }
 
     private Map<String, Long> counts() {
@@ -148,6 +159,8 @@ public class AdminDataDeletionController {
         c.put("social_links", socialMediaLinkRepository.count());
         c.put("wishlists", wishlistRepository.count());
         c.put("whatsapp_reminders", whatsappReminderRepository.count());
+        c.put("dashboard_analytics", siteSettingRepository.findAll().stream()
+                .filter(s -> s.getKey() != null && s.getKey().startsWith("dashboard")).count());
         return c;
     }
 
@@ -228,6 +241,8 @@ public class AdminDataDeletionController {
             case "social_links" -> socialMediaLinkRepository.count();
             case "wishlists" -> wishlistRepository.count();
             case "whatsapp_reminders" -> whatsappReminderRepository.count();
+            case "dashboard_analytics" -> siteSettingRepository.findAll().stream()
+                    .filter(s -> s.getKey() != null && s.getKey().startsWith("dashboard")).count();
             default -> 0L;
         };
     }
@@ -260,6 +275,11 @@ public class AdminDataDeletionController {
             case "social_links" -> socialMediaLinkRepository.deleteAll();
             case "wishlists" -> wishlistRepository.deleteAll();
             case "whatsapp_reminders" -> whatsappReminderRepository.deleteAll();
+            // Dashboard analytics are computed live from orders; only stored
+            // dashboard_* snapshot settings are cleared — orders/payments untouched.
+            case "dashboard_analytics" -> siteSettingRepository.findAll().stream()
+                    .filter(s -> s.getKey() != null && s.getKey().startsWith("dashboard"))
+                    .forEach(siteSettingRepository::delete);
             default -> throw new ApiException("Invalid category: " + cat);
         }
     }
