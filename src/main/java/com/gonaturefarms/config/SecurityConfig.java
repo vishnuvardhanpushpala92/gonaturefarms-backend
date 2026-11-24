@@ -121,6 +121,10 @@ public class SecurityConfig {
                     // ── Public support contact settings (phone/WhatsApp/email/hours) ──
                     .requestMatchers(HttpMethod.GET, "/api/support-settings/public").permitAll()
 
+                    // ── Public complaint submission, image upload and tracking ──
+                    .requestMatchers(HttpMethod.POST, "/api/support", "/api/support/upload").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/support/track").permitAll()
+
                     // ── Public admin endpoints (Scrolling Blocks, FAQ, Slides, etc.) ───────────────
                     .requestMatchers(HttpMethod.GET, "/api/admin/settings/public", "/api/admin/slides", "/api/admin/faqs", "/api/admin/faqs/categories", "/api/videos", "/api/admin/scroll-content", "/api/footer-links", "/api/testimonials").permitAll()
 

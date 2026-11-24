@@ -78,5 +78,19 @@ public class DbConstraintMigration implements ApplicationRunner {
         } catch (Exception e) {
             log.error("Failed to update orders_status_check: {}", e.getMessage());
         }
+
+        // Complaint inbox columns on support_tickets (entity fields added for complaints).
+        try {
+            jdbcTemplate.execute("ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS customer_name VARCHAR(120)");
+            jdbcTemplate.execute("ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS customer_mobile VARCHAR(20)");
+            jdbcTemplate.execute("ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS customer_email VARCHAR(120)");
+            jdbcTemplate.execute("ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS customer_response TEXT");
+            jdbcTemplate.execute("ALTER TABLE support_tickets DROP CONSTRAINT IF EXISTS support_tickets_status_check");
+            jdbcTemplate.execute("ALTER TABLE support_tickets ADD CONSTRAINT support_tickets_status_check " +
+                    "CHECK (status IN ('open','pending','in_progress','resolved','rejected'))");
+            log.info("support_tickets complaint columns ensured");
+        } catch (Exception e) {
+            log.error("Failed to add support_tickets complaint columns: {}", e.getMessage());
+        }
     }
 }

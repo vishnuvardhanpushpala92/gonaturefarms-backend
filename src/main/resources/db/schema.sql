@@ -311,13 +311,20 @@ ON CONFLICT (setting_key) DO NOTHING;
 
 -- ── CUSTOMER SUPPORT TICKETS ─────────────────────────────────────
 CREATE TABLE IF NOT EXISTS support_tickets (
-  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id    BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
-  data       TEXT NOT NULL,
-  status     VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open','in_progress','resolved')),
-  admin_note TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id           BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+  ticket_number     VARCHAR(20) UNIQUE,
+  category          VARCHAR(50),
+  order_id          BIGINT,
+  data              TEXT NOT NULL,
+  status            VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open','pending','in_progress','resolved','rejected')),
+  admin_note        TEXT,
+  customer_name     VARCHAR(120),
+  customer_mobile   VARCHAR(20),
+  customer_email    VARCHAR(120),
+  customer_response TEXT,
+  created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
 

@@ -14,14 +14,27 @@ import org.springframework.web.bind.annotation.*;
 public class SupportController {
 
     private final SupportService supportService;
+    private final com.gonaturefarms.service.FileStorageService fileStorageService;
 
-    public SupportController(SupportService supportService) {
+    public SupportController(SupportService supportService,
+                             com.gonaturefarms.service.FileStorageService fileStorageService) {
         this.supportService = supportService;
+        this.fileStorageService = fileStorageService;
     }
 
     @PostMapping
     public ApiResponse submit(@RequestBody SupportTicketRequest request) {
         return supportService.submit(request);
+    }
+
+    @PostMapping("/upload")
+    public ApiResponse uploadImage(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        return fileStorageService.store(file);
+    }
+
+    @GetMapping("/track")
+    public ApiResponse track(@RequestParam String ref, @RequestParam String mobile) {
+        return supportService.trackComplaint(ref, mobile);
     }
 
     @GetMapping("/my-tickets")

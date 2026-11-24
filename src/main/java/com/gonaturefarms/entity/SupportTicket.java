@@ -50,6 +50,18 @@ public class SupportTicket {
     @Column(name = "admin_note", columnDefinition = "TEXT")
     private String adminNote;
 
+    @Column(name = "customer_name", length = 120)
+    private String customerName;
+
+    @Column(name = "customer_mobile", length = 20)
+    private String customerMobile;
+
+    @Column(name = "customer_email", length = 120)
+    private String customerEmail;
+
+    @Column(name = "customer_response", columnDefinition = "TEXT")
+    private String customerResponse;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -59,7 +71,7 @@ public class SupportTicket {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum TicketStatus {
-        open, in_progress, resolved, rejected
+        open, pending, in_progress, resolved, rejected
     }
 
     public Long getId() { return id; }
