@@ -195,10 +195,13 @@ public class AdminDataDeletionController {
             }
 
             Map<String, Long> deleted = new LinkedHashMap<>();
+            org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AdminDataDeletionController.class);
             for (String cat : categories) {
                 long before = countFor(cat);
+                log.info("Data deletion: category={} records={}", cat, before);
                 deleteFor(cat);
                 deleted.put(cat, before);
+                log.info("Data deletion: category={} completed", cat);
             }
 
             try {
