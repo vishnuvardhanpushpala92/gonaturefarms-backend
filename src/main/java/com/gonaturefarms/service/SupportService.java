@@ -101,12 +101,13 @@ public class SupportService {
                     .ticketNumber(generateTicketNumber())
                     .category(str(fields.get("category")))
                     .orderId(toLong(fields.get("order_id")))
-                    .customerName(name)
-                    .customerMobile(mobile != null ? mobile.replaceAll("\\D", "") : null)
-                    .customerEmail(str(fields.get("email")))
                     .data(objectMapper.writeValueAsString(cleaned))
                     .status(SupportTicket.TicketStatus.open)
                     .build();
+            // Manual builder doesn't cover newer fields — set via setters.
+            ticket.setCustomerName(name);
+            ticket.setCustomerMobile(mobile != null ? mobile.replaceAll("\\D", "") : null);
+            ticket.setCustomerEmail(str(fields.get("email")));
             ticketRepository.save(ticket);
             return ApiResponse.ok("Complaint submitted successfully")
                     .with("ticket_number", ticket.getTicketNumber())
