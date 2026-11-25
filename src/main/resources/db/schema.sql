@@ -198,6 +198,7 @@ ALTER TABLE orders ADD CONSTRAINT orders_status_check
 
 -- Product-wise return eligibility (added after initial release)
 ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS return_policy VARCHAR(20) NOT NULL DEFAULT 'RETURNABLE';
 
 -- Support settings (single-row admin-editable contact info)
 CREATE TABLE IF NOT EXISTS support_settings (

@@ -56,6 +56,8 @@ public class DbConstraintMigration implements ApplicationRunner {
 
         try {
             jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS return_eligible BOOLEAN NOT NULL DEFAULT TRUE");
+            jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS return_policy VARCHAR(20) NOT NULL DEFAULT 'RETURNABLE'");
+            jdbcTemplate.execute("UPDATE products SET return_policy = 'NON_RETURNABLE' WHERE return_eligible = FALSE AND (return_policy IS NULL OR return_policy = 'RETURNABLE')");
             log.info("products.return_eligible column ensured");
         } catch (Exception e) {
             log.error("Failed to add products.return_eligible: {}", e.getMessage());

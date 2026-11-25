@@ -26,6 +26,7 @@ public class ProductRequest {
     private String status;
     private String additionalImages;
     private Boolean returnEligible;
+    private String returnPolicy;
 
     @Valid
     private List<ProductVariantRequest> variants;
@@ -42,5 +43,6 @@ public class ProductRequest {
     public String getStatus() { return status; }
     public String getAdditionalImages() { return additionalImages; }
     public Boolean getReturnEligible() { return returnEligible; }
+    public String getReturnPolicy() { return returnPolicy; }
     public List<ProductVariantRequest> getVariants() { return variants; }
 }

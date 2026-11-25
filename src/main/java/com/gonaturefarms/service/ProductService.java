@@ -244,9 +244,19 @@ public class ProductService {
         product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
         product.setStatus(parseStatus(req.getStatus()));
         product.setPending(false);
-        if (req.getReturnEligible() != null) {
-            product.setReturnEligible(req.getReturnEligible());
+        // Return policy: enum is authoritative; keep legacy boolean in sync.
+        if (req.getReturnPolicy() != null && !req.getReturnPolicy().isBlank()) {
+            try {
+                product.setReturnPolicy(com.gonaturefarms.entity.Product.ReturnPolicy.valueOf(req.getReturnPolicy()));
+            } catch (IllegalArgumentException e) {
+                throw new ApiException("Invalid return policy: " + req.getReturnPolicy());
+            }
+        } else if (req.getReturnEligible() != null) {
+            product.setReturnPolicy(req.getReturnEligible()
+                    ? com.gonaturefarms.entity.Product.ReturnPolicy.RETURNABLE
+                    : com.gonaturefarms.entity.Product.ReturnPolicy.NON_RETURNABLE);
         }
+        product.setReturnEligible(product.getReturnPolicy() == com.gonaturefarms.entity.Product.ReturnPolicy.RETURNABLE);
         productRepository.save(product);
 
         // ✅ CRITICAL: Delete ALL old variants first so we don't create duplicates

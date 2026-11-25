@@ -255,7 +255,9 @@ public class OrderService {
         if (order.getItems() != null) {
             for (OrderItem item : order.getItems()) {
                 productRepository.findById(item.getProductId()).ifPresent(p -> {
-                    if (Boolean.FALSE.equals(p.getReturnEligible())) {
+                    boolean blocked = p.getReturnPolicy() == com.gonaturefarms.entity.Product.ReturnPolicy.NON_RETURNABLE
+                            || Boolean.FALSE.equals(p.getReturnEligible());
+                    if (blocked) {
                         throw new ApiException("Product '" + p.getName() + "' is not eligible for return");
                     }
                 });

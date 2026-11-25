@@ -82,6 +82,11 @@ public class Product {
     @Column(name = "return_eligible", nullable = false)
     private Boolean returnEligible = true;
 
+    @Builder.Default
+    @Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "return_policy", nullable = false, length = 20)
+    private ReturnPolicy returnPolicy = ReturnPolicy.RETURNABLE;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -106,6 +111,13 @@ public class Product {
 
     public Boolean getReturnEligible() { return returnEligible; }
     public void setReturnEligible(Boolean returnEligible) { this.returnEligible = returnEligible; }
+
+    public ReturnPolicy getReturnPolicy() { return returnPolicy; }
+    public void setReturnPolicy(ReturnPolicy returnPolicy) { this.returnPolicy = returnPolicy; }
+
+    public enum ReturnPolicy {
+        RETURNABLE, NON_RETURNABLE
+    }
     
     public java.util.List<com.gonaturefarms.entity.ProductVariant> getVariants() { return variants; }
     public void setVariants(java.util.List<com.gonaturefarms.entity.ProductVariant> variants) { this.variants = variants; }
