@@ -240,8 +240,14 @@ public class ProductService {
         product.setGst(req.getGst() == null ? BigDecimal.ZERO : req.getGst());
         product.setHsn(req.getHsn() == null ? "" : req.getHsn());
         product.setCat(req.getCat() == null ? "" : req.getCat());
-        product.setImgUrl(req.getImgUrl() == null ? "" : req.getImgUrl());
-        product.setAdditionalImages(req.getAdditionalImages() == null ? "" : req.getAdditionalImages());
+        // Preserve existing images when the request omits them — never wipe
+        // the primary image or additional gallery on partial updates.
+        if (req.getImgUrl() != null) {
+            product.setImgUrl(req.getImgUrl());
+        }
+        if (req.getAdditionalImages() != null) {
+            product.setAdditionalImages(req.getAdditionalImages());
+        }
         product.setStatus(parseStatus(req.getStatus()));
         product.setPending(false);
         // Return policy: enum is authoritative; keep legacy boolean in sync.
