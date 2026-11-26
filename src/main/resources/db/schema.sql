@@ -551,3 +551,36 @@ CREATE INDEX IF NOT EXISTS idx_site_content_slug ON site_content(slug);
 
 -- ── DONE ─────────────────────────────────────────────────────────
 -- Admin login -> Username: Vishnu | Password: 918252
+-- ── Admin Notifications ──────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_notifications (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  order_id         VARCHAR(64),
+  notification_type VARCHAR(40) NOT NULL,
+  title            VARCHAR(200) NOT NULL,
+  message          VARCHAR(500) NOT NULL,
+  order_amount     NUMERIC(12,2),
+  is_read          BOOLEAN NOT NULL DEFAULT FALSE,
+  read_at          TIMESTAMP,
+  created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_admin_notifications_read ON admin_notifications(is_read);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_admin_notifications_order_type ON admin_notifications(order_id, notification_type);
+
+CREATE TABLE IF NOT EXISTS admin_notification_settings (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  sound_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+  desktop_enabled  BOOLEAN NOT NULL DEFAULT TRUE,
+  push_enabled     BOOLEAN NOT NULL DEFAULT TRUE
+);
+INSERT INTO admin_notification_settings (sound_enabled, desktop_enabled, push_enabled)
+  SELECT TRUE, TRUE, TRUE WHERE NOT EXISTS (SELECT 1 FROM admin_notification_settings);
+
+CREATE TABLE IF NOT EXISTS admin_device_tokens (
+  id               BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  admin_id         BIGINT,
+  fcm_token        VARCHAR(512) NOT NULL UNIQUE,
+  device_info      VARCHAR(200),
+  enabled          BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at       TIMESTAMP
+);

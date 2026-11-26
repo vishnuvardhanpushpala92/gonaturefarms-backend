@@ -30,15 +30,21 @@ public class OrderService {
     private final DeliveryZoneRepository deliveryZoneRepository;
     private final CouponRepository couponRepository;
     private final com.gonaturefarms.repository.ProductRepository productRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    /** Published after an order is persisted; listeners react post-commit. */
+    public record NewOrderPlacedEvent(Order order) {}
 
     public OrderService(OrderRepository orderRepository,
                          DeliveryZoneRepository deliveryZoneRepository,
                          CouponRepository couponRepository,
-                         com.gonaturefarms.repository.ProductRepository productRepository) {
+                         com.gonaturefarms.repository.ProductRepository productRepository,
+                         org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.deliveryZoneRepository = deliveryZoneRepository;
         this.couponRepository = couponRepository;
         this.productRepository = productRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -140,6 +146,7 @@ public class OrderService {
         }
 
         order = orderRepository.save(order);
+        eventPublisher.publishEvent(new NewOrderPlacedEvent(order));
         System.out.println("Order saved successfully with ID: " + order.getId());
 
         if (!isBlank(req.getCouponCode())) {
